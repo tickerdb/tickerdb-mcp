@@ -1,7 +1,11 @@
 {
   "name": "tickerapi-mcp",
   "private": true,
-  "workspaces": ["shared", "remote", "local"],
+  "workspaces": [
+    "shared",
+    "remote",
+    "local"
+  ],
   "scripts": {
     "build": "npm run build --workspaces",
     "build:shared": "npm run build -w shared",
