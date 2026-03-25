@@ -1,5 +1,5 @@
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
-import { createTickerApiServer } from "tickerapi-mcp-shared";
+import { createTickerApiServer } from "../../shared/src/server-factory.js";
 
 export default {
   async fetch(request: Request): Promise<Response> {

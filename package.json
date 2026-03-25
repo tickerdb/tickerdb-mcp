@@ -1,18 +1,20 @@
 {
   "name": "tickerapi-mcp",
+  "version": "0.1.0",
   "private": true,
-  "workspaces": [
-    "shared",
-    "remote",
-    "local"
-  ],
+  "type": "module",
   "scripts": {
-    "build": "npm run build --workspaces",
-    "build:shared": "npm run build -w shared",
-    "build:remote": "npm run build -w remote",
-    "build:local": "npm run build -w local"
+    "dev": "wrangler dev",
+    "build": "tsc",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "wrangler": "^4.0.0",
+    "zod": "^3.24.0"
   },
   "devDependencies": {
-    "wrangler": "^4.0.0"
+    "@cloudflare/workers-types": "^4.20250310.0",
+    "typescript": "^5.7.0"
   }
 }
