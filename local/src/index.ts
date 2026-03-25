@@ -1,5 +1,5 @@
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { createTickerApiServer } from "tickerapi-mcp-shared";
+import { createTickerApiServer } from "../../shared/src/server-factory.js";
 
 const apiKey = process.env.TICKERAPI_KEY;
 
