@@ -11,5 +11,8 @@
     "build:shared": "npm run build -w shared",
     "build:remote": "npm run build -w remote",
     "build:local": "npm run build -w local"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
   }
 }
