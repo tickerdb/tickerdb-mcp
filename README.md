@@ -10,7 +10,7 @@ This is a three-package workspace:
 
 - **`shared/`** — Shared tool definitions, API client, and server factory (internal, not published)
 - **`remote/`** — Cloudflare Worker deployed at `mcp.tickerapi.ai` (Streamable HTTP transport)
-- **`local/`** — Published npm package `@tickerapi/mcp-server` (stdio transport)
+- **`local/`** — Published npm package `tickerapi-mcp-server` (stdio transport)
 
 Both the remote server and npm package use the same tool definitions from `shared/`. The MCP server is a thin proxy — all tier-based access control, rate limiting, and field filtering is handled by the TickerAPI HTTP API.
 
@@ -43,7 +43,7 @@ Add to your Claude Desktop config (`claude_desktop_config.json`):
   "mcpServers": {
     "tickerapi": {
       "command": "npx",
-      "args": ["@tickerapi/mcp-server"],
+      "args": ["tickerapi-mcp-server"],
       "env": {
         "TICKERAPI_KEY": "tapi_your_api_key_here"
       }
@@ -60,30 +60,25 @@ Get an API key at [tickerapi.ai/dashboard](https://tickerapi.ai/dashboard).
 # Install dependencies
 npm install
 
-# Build all packages
+# Build the remote worker
 npm run build
 
-# Build individually
-npm run build:shared
-npm run build:remote
-npm run build:local
-
 # Dev server for remote worker
-cd remote && npm run dev
+npx wrangler dev
+
+# Build the npm package
+cd local && npm install && npm run build
 ```
 
 ## Deployment
 
 **Remote server:**
 ```bash
-cd remote
 npx wrangler deploy
 ```
-
-Then add the custom domain `mcp.tickerapi.ai` in the Cloudflare dashboard.
 
 **npm package:**
 ```bash
 cd local
-npm publish --access public
+npm publish
 ```
