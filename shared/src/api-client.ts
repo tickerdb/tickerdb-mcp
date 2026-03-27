@@ -1,7 +1,7 @@
 const API_BASE = "https://api.tickerapi.ai/v1";
 
 export interface ApiCallOptions {
-  method?: "GET" | "POST";
+  method?: "GET" | "POST" | "DELETE";
   body?: unknown;
 }
 

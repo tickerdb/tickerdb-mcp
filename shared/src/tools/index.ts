@@ -8,6 +8,9 @@ import { registerScanBreakouts } from "./scan-breakouts.js";
 import { registerScanUnusualVolume } from "./scan-unusual-volume.js";
 import { registerScanValuation } from "./scan-valuation.js";
 import { registerScanInsiderActivity } from "./scan-insider-activity.js";
+import { registerCreateWebhook } from "./create-webhook.js";
+import { registerListWebhooks } from "./list-webhooks.js";
+import { registerDeleteWebhook } from "./delete-webhook.js";
 
 export function registerAllTools(server: McpServer, apiKey: string) {
   registerGetSummary(server, apiKey);
@@ -19,4 +22,7 @@ export function registerAllTools(server: McpServer, apiKey: string) {
   registerScanUnusualVolume(server, apiKey);
   registerScanValuation(server, apiKey);
   registerScanInsiderActivity(server, apiKey);
+  registerCreateWebhook(server, apiKey);
+  registerListWebhooks(server, apiKey);
+  registerDeleteWebhook(server, apiKey);
 }
