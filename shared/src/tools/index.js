@@ -2,6 +2,8 @@ import { registerGetSummary } from "./get-summary.js";
 import { registerCompareAssets } from "./compare-assets.js";
 import { registerListAssets } from "./list-assets.js";
 import { registerGetWatchlist } from "./get-watchlist.js";
+import { registerAddToWatchlist } from "./add-to-watchlist.js";
+import { registerRemoveFromWatchlist } from "./remove-from-watchlist.js";
 import { registerScanOversold } from "./scan-oversold.js";
 import { registerScanBreakouts } from "./scan-breakouts.js";
 import { registerScanUnusualVolume } from "./scan-unusual-volume.js";
@@ -15,6 +17,8 @@ export function registerAllTools(server, apiKey) {
     registerCompareAssets(server, apiKey);
     registerListAssets(server, apiKey);
     registerGetWatchlist(server, apiKey);
+    registerAddToWatchlist(server, apiKey);
+    registerRemoveFromWatchlist(server, apiKey);
     registerScanOversold(server, apiKey);
     registerScanBreakouts(server, apiKey);
     registerScanUnusualVolume(server, apiKey);
