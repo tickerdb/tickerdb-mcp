@@ -2,10 +2,10 @@ import { z } from "zod";
 import { callTickerApi } from "../api-client.js";
 import { formatApiError } from "../errors.js";
 export function registerCompareAssets(server, apiKey) {
-    server.tool("compare_assets", "Compare multiple assets side-by-side. Returns individual summaries plus a comparison highlighting divergences in trend, momentum, and valuation. Requires Plus or Pro plan. Plus: up to 5 tickers. Pro: up to 10.", {
+    server.tool("compare_assets", "Compare multiple assets side-by-side. Returns individual summaries plus a comparison highlighting divergences in trend, momentum, and valuation. Requires Plus or Pro plan. Plus: up to 25 tickers. Pro: up to 50.", {
         tickers: z
             .string()
-            .describe("Comma-separated ticker symbols, e.g. AAPL,MSFT,GOOGL (2-10 tickers)"),
+            .describe("Comma-separated ticker symbols, e.g. AAPL,MSFT,GOOGL (2-50 tickers)"),
         timeframe: z
             .enum(["daily", "weekly"])
             .optional()
