@@ -23,9 +23,9 @@ export function registerScanUnusualVolume(server, apiKey) {
             .optional()
             .describe("Filter by asset class. Default: all"),
         min_ratio_band: z
-            .enum(["elevated", "high", "extremely_high"])
+            .enum(["above_average", "high", "extremely_high"])
             .optional()
-            .describe("Minimum volume ratio band threshold. Default: elevated"),
+            .describe("Minimum volume ratio band threshold. Default: above_average"),
         sort_by: z
             .enum(["volume_percentile"])
             .optional()

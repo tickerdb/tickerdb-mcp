@@ -23,7 +23,7 @@ export function registerScanValuation(server, apiKey) {
             .optional()
             .describe("Filter by valuation direction. Default: all"),
         min_severity: z
-            .enum(["deep_value", "extreme_premium"])
+            .enum(["deep_value", "deeply_overvalued"])
             .optional()
             .describe("Only return the most extreme valuations"),
         sort_by: z
