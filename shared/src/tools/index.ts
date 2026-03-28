@@ -3,6 +3,7 @@ import { registerGetSummary } from "./get-summary.js";
 import { registerCompareAssets } from "./compare-assets.js";
 import { registerListAssets } from "./list-assets.js";
 import { registerGetWatchlist } from "./get-watchlist.js";
+import { registerGetWatchlistChanges } from "./get-watchlist-changes.js";
 import { registerAddToWatchlist } from "./add-to-watchlist.js";
 import { registerRemoveFromWatchlist } from "./remove-from-watchlist.js";
 import { registerScanOversold } from "./scan-oversold.js";
@@ -19,6 +20,7 @@ export function registerAllTools(server: McpServer, apiKey: string) {
   registerCompareAssets(server, apiKey);
   registerListAssets(server, apiKey);
   registerGetWatchlist(server, apiKey);
+  registerGetWatchlistChanges(server, apiKey);
   registerAddToWatchlist(server, apiKey);
   registerRemoveFromWatchlist(server, apiKey);
   registerScanOversold(server, apiKey);
