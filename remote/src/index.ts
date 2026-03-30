@@ -1,17 +1,48 @@
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { createTickerApiServer } from "../../shared/src/server-factory.js";
+import {
+  handleAuthorizationServerMetadata,
+  handleProtectedResourceMetadata,
+  handleRegister,
+  handleToken,
+  handleRevoke,
+  resolveOAuthToken,
+  type Env,
+} from "./oauth/handlers.js";
 
 export default {
-  async fetch(request: Request): Promise<Response> {
-    // Handle CORS preflight
+  async fetch(request: Request, env: Env): Promise<Response> {
+    const url = new URL(request.url);
+
+    // ── CORS preflight ─────────────────────────────────────────────────────
     if (request.method === "OPTIONS") {
-      return new Response(null, {
-        status: 204,
-        headers: corsHeaders(),
-      });
+      return new Response(null, { status: 204, headers: corsHeaders() });
     }
 
-    // Extract API key from Authorization header
+    // ── OAuth discovery & endpoints (no auth required) ─────────────────────
+    if (url.pathname === "/.well-known/oauth-authorization-server" && request.method === "GET") {
+      return withCors(handleAuthorizationServerMetadata(env));
+    }
+
+    if (url.pathname === "/.well-known/oauth-protected-resource" && request.method === "GET") {
+      return withCors(handleProtectedResourceMetadata(env));
+    }
+
+    if (url.pathname === "/register") {
+      return withCors(await handleRegister(request, env));
+    }
+
+    if (url.pathname === "/token") {
+      return withCors(await handleToken(request, env));
+    }
+
+    if (url.pathname === "/revoke") {
+      return withCors(await handleRevoke(request, env));
+    }
+
+    // ── MCP protocol requests (auth required) ──────────────────────────────
+
+    // Extract Bearer token
     const authHeader = request.headers.get("Authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return jsonError(
@@ -20,12 +51,19 @@ export default {
       );
     }
 
-    const apiKey = authHeader.slice(7);
-    if (!apiKey.startsWith("tapi_")) {
-      return jsonError(
-        401,
-        "Invalid API key format. Keys start with tapi_. Get one at https://tickerapi.ai/dashboard",
-      );
+    const bearerToken = authHeader.slice(7);
+    let apiKey: string;
+
+    if (bearerToken.startsWith("ta_")) {
+      // Direct API key auth (local MCP clients)
+      apiKey = bearerToken;
+    } else {
+      // OAuth access token (Claude.ai Connectors)
+      const result = await resolveOAuthToken(bearerToken, env);
+      if (!result) {
+        return jsonError(401, "Invalid or expired OAuth token.");
+      }
+      apiKey = result.apiKey;
     }
 
     // Create a fresh MCP server per request with the user's API key
@@ -52,7 +90,7 @@ export default {
       headers,
     });
   },
-} satisfies ExportedHandler;
+} satisfies ExportedHandler<Env>;
 
 function corsHeaders(): Record<string, string> {
   return {
@@ -63,6 +101,17 @@ function corsHeaders(): Record<string, string> {
     "Access-Control-Expose-Headers": "Mcp-Session-Id",
     "Access-Control-Max-Age": "86400",
   };
+}
+
+function withCors(response: Response): Response {
+  const headers = new Headers(response.headers);
+  for (const [k, v] of Object.entries(corsHeaders())) {
+    headers.set(k, v);
+  }
+  return new Response(response.body, {
+    status: response.status,
+    headers,
+  });
 }
 
 function jsonError(status: number, message: string): Response {
