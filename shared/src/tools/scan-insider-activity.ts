@@ -16,13 +16,17 @@ export function registerScanInsiderActivity(server: McpServer, apiKey: string) {
         .number()
         .int()
         .min(1)
-        .max(50)
+        .max(100)
         .optional()
-        .describe("Max results to return (1-50). Default: 20"),
+        .describe("Max results to return (1-100). Default: 20"),
       sector: z
         .string()
         .optional()
         .describe("Filter by sector name, e.g. Technology"),
+      market_cap_tier: z
+        .enum(["nano", "micro", "small", "mid", "large", "mega", "ultra_mega"])
+        .optional()
+        .describe("Filter by market cap tier"),
       direction: z
         .enum(["buying", "selling", "all"])
         .optional()
@@ -36,11 +40,12 @@ export function registerScanInsiderActivity(server: McpServer, apiKey: string) {
         .optional()
         .describe("Historical date (YYYY-MM-DD). Requires Plus or Pro."),
     },
-    async ({ timeframe, limit, sector, direction, sort_by, date }) => {
+    async ({ timeframe, limit, sector, market_cap_tier, direction, sort_by, date }) => {
       const params: Record<string, string | undefined> = {
         timeframe,
         limit: limit?.toString(),
         sector,
+        market_cap_tier,
         direction,
         sort_by,
         date,

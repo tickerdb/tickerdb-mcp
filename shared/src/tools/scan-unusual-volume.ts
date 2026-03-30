@@ -16,9 +16,9 @@ export function registerScanUnusualVolume(server: McpServer, apiKey: string) {
         .number()
         .int()
         .min(1)
-        .max(50)
+        .max(100)
         .optional()
-        .describe("Max results to return (1-50). Default: 20"),
+        .describe("Max results to return (1-100). Default: 20"),
       sector: z
         .string()
         .optional()
@@ -27,6 +27,10 @@ export function registerScanUnusualVolume(server: McpServer, apiKey: string) {
         .enum(["stock", "crypto", "etf", "all"])
         .optional()
         .describe("Filter by asset class. Default: all"),
+      market_cap_tier: z
+        .enum(["nano", "micro", "small", "mid", "large", "mega", "ultra_mega"])
+        .optional()
+        .describe("Filter by market cap tier"),
       min_ratio_band: z
         .enum(["above_average", "high", "extremely_high"])
         .optional()
@@ -42,12 +46,13 @@ export function registerScanUnusualVolume(server: McpServer, apiKey: string) {
         .optional()
         .describe("Historical date (YYYY-MM-DD). Requires Plus or Pro."),
     },
-    async ({ timeframe, limit, sector, asset_class, min_ratio_band, sort_by, date }) => {
+    async ({ timeframe, limit, sector, asset_class, market_cap_tier, min_ratio_band, sort_by, date }) => {
       const params: Record<string, string | undefined> = {
         timeframe,
         limit: limit?.toString(),
         sector,
         asset_class,
+        market_cap_tier,
         min_ratio_band,
         sort_by,
         date,

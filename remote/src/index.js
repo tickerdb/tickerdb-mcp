@@ -1,22 +1,55 @@
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { createTickerApiServer } from "../../shared/src/server-factory.js";
+import { handleAuthorizationServerMetadata, handleProtectedResourceMetadata, handleRegister, handleToken, handleRevoke, resolveOAuthToken, } from "./oauth/handlers.js";
 export default {
-    async fetch(request) {
-        // Handle CORS preflight
+    async fetch(request, env) {
+        const url = new URL(request.url);
+        // ── CORS preflight ─────────────────────────────────────────────────────
         if (request.method === "OPTIONS") {
-            return new Response(null, {
-                status: 204,
-                headers: corsHeaders(),
-            });
+            return new Response(null, { status: 204, headers: corsHeaders() });
         }
-        // Extract API key from Authorization header
+        // ── OAuth discovery & endpoints (no auth required) ─────────────────────
+        if (url.pathname === "/.well-known/oauth-authorization-server" && request.method === "GET") {
+            return withCors(handleAuthorizationServerMetadata(env));
+        }
+        if (url.pathname === "/.well-known/oauth-protected-resource" && request.method === "GET") {
+            return withCors(handleProtectedResourceMetadata(env));
+        }
+        // Claude.ai sends users to /authorize on the MCP origin — redirect to the
+        // main site's consent page which has session management and the sign-in UI.
+        if (url.pathname === "/authorize") {
+            const authorizeUrl = new URL(`${env.SITE_URL}/oauth/authorize`);
+            url.searchParams.forEach((v, k) => authorizeUrl.searchParams.set(k, v));
+            return new Response(null, { status: 302, headers: { Location: authorizeUrl.toString() } });
+        }
+        if (url.pathname === "/register") {
+            return withCors(await handleRegister(request, env));
+        }
+        if (url.pathname === "/token") {
+            return withCors(await handleToken(request, env));
+        }
+        if (url.pathname === "/revoke") {
+            return withCors(await handleRevoke(request, env));
+        }
+        // ── MCP protocol requests (auth required) ──────────────────────────────
+        // Extract Bearer token
         const authHeader = request.headers.get("Authorization");
         if (!authHeader || !authHeader.startsWith("Bearer ")) {
             return jsonError(401, "Missing Authorization header. Use: Authorization: Bearer <your_api_key>");
         }
-        const apiKey = authHeader.slice(7);
-        if (!apiKey.startsWith("tapi_")) {
-            return jsonError(401, "Invalid API key format. Keys start with tapi_. Get one at https://tickerapi.ai/dashboard");
+        const bearerToken = authHeader.slice(7);
+        let apiKey;
+        if (bearerToken.startsWith("ta_")) {
+            // Direct API key auth (local MCP clients)
+            apiKey = bearerToken;
+        }
+        else {
+            // OAuth access token (Claude.ai Connectors)
+            const result = await resolveOAuthToken(bearerToken, env);
+            if (!result) {
+                return jsonError(401, "Invalid or expired OAuth token.");
+            }
+            apiKey = result.apiKey;
         }
         // Create a fresh MCP server per request with the user's API key
         const server = createTickerApiServer(apiKey);
@@ -46,6 +79,16 @@ function corsHeaders() {
         "Access-Control-Expose-Headers": "Mcp-Session-Id",
         "Access-Control-Max-Age": "86400",
     };
+}
+function withCors(response) {
+    const headers = new Headers(response.headers);
+    for (const [k, v] of Object.entries(corsHeaders())) {
+        headers.set(k, v);
+    }
+    return new Response(response.body, {
+        status: response.status,
+        headers,
+    });
 }
 function jsonError(status, message) {
     return new Response(JSON.stringify({ error: { message } }), {

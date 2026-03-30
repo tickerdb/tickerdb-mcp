@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { callTickerApi } from "../api-client.js";
 import { formatApiError } from "../errors.js";
-export function registerScanBreakouts(server, apiKey) {
-    server.tool("scan_breakouts", "Scan for assets breaking through support or resistance levels. Returns breakout type, level details, and volume confirmation. Free: basic fields. Plus: expanded fields. Pro: all fields.", {
+export function registerScanOverbought(server, apiKey) {
+    server.tool("scan_overbought", "Scan for assets in overbought conditions based on RSI and other technical indicators. Returns assets ranked by severity with condition rarity context. Free: basic fields. Plus: expanded fields. Pro: all fields.", {
         timeframe: z
             .enum(["daily", "weekly"])
             .optional()
@@ -26,30 +26,30 @@ export function registerScanBreakouts(server, apiKey) {
             .enum(["nano", "micro", "small", "mid", "large", "mega", "ultra_mega"])
             .optional()
             .describe("Filter by market cap tier"),
-        direction: z
-            .enum(["bullish", "bearish", "all"])
+        min_severity: z
+            .enum(["deep_overbought"])
             .optional()
-            .describe("Filter by direction — bullish (resistance breaks) or bearish (support breaks). Default: all"),
+            .describe("Only return deep_overbought assets"),
         sort_by: z
-            .enum(["volume_ratio", "level_strength", "condition_percentile"])
+            .enum(["severity", "days_overbought", "condition_percentile"])
             .optional()
-            .describe("Sort order. Default: volume_ratio"),
+            .describe("Sort order. Default: severity"),
         date: z
             .string()
             .optional()
             .describe("Historical date (YYYY-MM-DD). Requires Plus or Pro."),
-    }, async ({ timeframe, limit, sector, asset_class, market_cap_tier, direction, sort_by, date }) => {
+    }, async ({ timeframe, limit, sector, asset_class, market_cap_tier, min_severity, sort_by, date }) => {
         const params = {
             timeframe,
             limit: limit?.toString(),
             sector,
             asset_class,
             market_cap_tier,
-            direction,
+            min_severity,
             sort_by,
             date,
         };
-        const { status, data } = await callTickerApi(apiKey, "/scan/breakouts", params);
+        const { status, data } = await callTickerApi(apiKey, "/scan/overbought", params);
         if (status !== 200)
             return formatApiError(status, data);
         return {
