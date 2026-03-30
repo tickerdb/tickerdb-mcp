@@ -28,6 +28,14 @@ export default {
       return withCors(handleProtectedResourceMetadata(env));
     }
 
+    // Claude.ai sends users to /authorize on the MCP origin — redirect to the
+    // main site's consent page which has session management and the sign-in UI.
+    if (url.pathname === "/authorize") {
+      const authorizeUrl = new URL(`${env.SITE_URL}/oauth/authorize`);
+      url.searchParams.forEach((v, k) => authorizeUrl.searchParams.set(k, v));
+      return new Response(null, { status: 302, headers: { Location: authorizeUrl.toString() } });
+    }
+
     if (url.pathname === "/register") {
       return withCors(await handleRegister(request, env));
     }
