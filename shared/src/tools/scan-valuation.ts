@@ -26,7 +26,11 @@ export function registerScanValuation(server: McpServer, apiKey: string) {
       market_cap_tier: z
         .enum(["nano", "micro", "small", "mid", "large", "mega", "ultra_mega"])
         .optional()
-        .describe("Filter by market cap tier"),
+        .describe("Filter by exact market cap tier"),
+      min_market_cap_tier: z
+        .enum(["nano", "micro", "small", "mid", "large", "mega", "ultra_mega"])
+        .optional()
+        .describe("Minimum market cap tier — returns this tier and all larger (e.g. mid returns mid, large, mega, ultra_mega)"),
       direction: z
         .enum(["undervalued", "overvalued", "all"])
         .optional()
@@ -44,12 +48,13 @@ export function registerScanValuation(server: McpServer, apiKey: string) {
         .optional()
         .describe("Historical date (YYYY-MM-DD). Requires Plus or Pro."),
     },
-    async ({ timeframe, limit, sector, market_cap_tier, direction, min_severity, sort_by, date }) => {
+    async ({ timeframe, limit, sector, market_cap_tier, min_market_cap_tier, direction, min_severity, sort_by, date }) => {
       const params: Record<string, string | undefined> = {
         timeframe,
         limit: limit?.toString(),
         sector,
         market_cap_tier,
+        min_market_cap_tier,
         direction,
         min_severity,
         sort_by,
