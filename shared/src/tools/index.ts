@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { registerGetSummary } from "./get-summary.js";
 import { registerCompareAssets } from "./compare-assets.js";
 import { registerListAssets } from "./list-assets.js";
+import { registerListSectors } from "./list-sectors.js";
 import { registerGetWatchlist } from "./get-watchlist.js";
 import { registerGetWatchlistChanges } from "./get-watchlist-changes.js";
 import { registerAddToWatchlist } from "./add-to-watchlist.js";
@@ -21,6 +22,7 @@ export function registerAllTools(server: McpServer, apiKey: string) {
   registerGetSummary(server, apiKey);
   registerCompareAssets(server, apiKey);
   registerListAssets(server, apiKey);
+  registerListSectors(server, apiKey);
   registerGetWatchlist(server, apiKey);
   registerGetWatchlistChanges(server, apiKey);
   registerAddToWatchlist(server, apiKey);
