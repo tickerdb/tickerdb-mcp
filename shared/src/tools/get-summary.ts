@@ -6,7 +6,7 @@ import { formatApiError } from "../errors.js";
 export function registerGetSummary(server: McpServer, apiKey: string) {
   server.tool(
     "get_summary",
-    "Get a pre-computed market summary for a single ticker. Returns categorical data: trend direction, RSI zone, volatility regime, volume context, support/resistance levels, and fundamentals (valuation, growth, earnings). Fields vary by plan tier — Free: core technical. Plus: adds levels and fundamentals. Pro: all fields including sector context.",
+    "Get a pre-computed market summary for a single ticker. Returns categorical data: performance band (candle move vs. asset history), trend direction, RSI zone, volatility regime, volume context, support/resistance levels, and fundamentals (valuation, growth, earnings). Fields vary by plan tier — Free: core technical + performance. Plus: adds levels and fundamentals. Pro: all fields including sector context.",
     {
       ticker: z
         .string()
