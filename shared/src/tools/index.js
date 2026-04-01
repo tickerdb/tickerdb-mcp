@@ -1,6 +1,7 @@
 import { registerGetSummary } from "./get-summary.js";
 import { registerCompareAssets } from "./compare-assets.js";
 import { registerListAssets } from "./list-assets.js";
+import { registerListSectors } from "./list-sectors.js";
 import { registerGetWatchlist } from "./get-watchlist.js";
 import { registerGetWatchlistChanges } from "./get-watchlist-changes.js";
 import { registerAddToWatchlist } from "./add-to-watchlist.js";
@@ -15,10 +16,13 @@ import { registerGetAccount } from "./get-account.js";
 import { registerCreateWebhook } from "./create-webhook.js";
 import { registerListWebhooks } from "./list-webhooks.js";
 import { registerDeleteWebhook } from "./delete-webhook.js";
+import { registerListEvents } from "./list-events.js";
 export function registerAllTools(server, apiKey) {
     registerGetSummary(server, apiKey);
     registerCompareAssets(server, apiKey);
+    registerListEvents(server, apiKey);
     registerListAssets(server, apiKey);
+    registerListSectors(server, apiKey);
     registerGetWatchlist(server, apiKey);
     registerGetWatchlistChanges(server, apiKey);
     registerAddToWatchlist(server, apiKey);

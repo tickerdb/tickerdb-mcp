@@ -25,7 +25,11 @@ export function registerScanOversold(server, apiKey) {
         market_cap_tier: z
             .enum(["nano", "micro", "small", "mid", "large", "mega", "ultra_mega"])
             .optional()
-            .describe("Filter by market cap tier"),
+            .describe("Filter by exact market cap tier"),
+        min_market_cap_tier: z
+            .enum(["nano", "micro", "small", "mid", "large", "mega", "ultra_mega"])
+            .optional()
+            .describe("Minimum market cap tier — returns this tier and all larger (e.g. mid returns mid, large, mega, ultra_mega)"),
         min_severity: z
             .enum(["deep_oversold"])
             .optional()
@@ -38,13 +42,14 @@ export function registerScanOversold(server, apiKey) {
             .string()
             .optional()
             .describe("Historical date (YYYY-MM-DD). Requires Plus or Pro."),
-    }, async ({ timeframe, limit, sector, asset_class, market_cap_tier, min_severity, sort_by, date }) => {
+    }, async ({ timeframe, limit, sector, asset_class, market_cap_tier, min_market_cap_tier, min_severity, sort_by, date }) => {
         const params = {
             timeframe,
             limit: limit?.toString(),
             sector,
             asset_class,
             market_cap_tier,
+            min_market_cap_tier,
             min_severity,
             sort_by,
             date,
