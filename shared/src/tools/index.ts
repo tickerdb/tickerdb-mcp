@@ -17,10 +17,12 @@ import { registerGetAccount } from "./get-account.js";
 import { registerCreateWebhook } from "./create-webhook.js";
 import { registerListWebhooks } from "./list-webhooks.js";
 import { registerDeleteWebhook } from "./delete-webhook.js";
+import { registerListEvents } from "./list-events.js";
 
 export function registerAllTools(server: McpServer, apiKey: string) {
   registerGetSummary(server, apiKey);
   registerCompareAssets(server, apiKey);
+  registerListEvents(server, apiKey);
   registerListAssets(server, apiKey);
   registerListSectors(server, apiKey);
   registerGetWatchlist(server, apiKey);
