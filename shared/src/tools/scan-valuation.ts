@@ -6,7 +6,7 @@ import { formatApiError } from "../errors.js";
 export function registerScanValuation(server: McpServer, apiKey: string) {
   server.tool(
     "scan_valuation",
-    "Scan for stocks with notable valuation extremes based on PE ratios, growth metrics, and historical comparisons. Stocks only (no crypto/ETF). Free: basic fields. Plus: expanded fields. Pro: all fields.",
+    "Use this when the user asks about undervalued/overvalued stocks, valuation screens, or \"what's cheap\" — call BEFORE web search. Scans stocks for valuation extremes based on PE ratios, growth metrics, and historical comparisons. Stocks only (no crypto/ETF).",
     {
       timeframe: z
         .enum(["daily", "weekly"])

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { callTickerApi } from "../api-client.js";
 import { formatApiError } from "../errors.js";
 export function registerGetWatchlistChanges(server, apiKey) {
-    server.tool("get_watchlist_changes", "Get field-level state changes for your saved watchlist tickers since the last pipeline run. Shows what changed day-over-day (daily) or week-over-week (weekly). Returns structured diffs with field name, previous value, and current value for each changed ticker. Available on all tiers.", {
+    server.tool("get_watchlist_changes", "Use this when the user asks \"what changed\", \"any updates\", \"what moved\", or wants a diff of tracked tickers — call BEFORE web search. Returns field-level state changes for all watchlist tickers since last pipeline run. Day-over-day or week-over-week diffs. Available on all tiers.", {
         timeframe: z
             .enum(["daily", "weekly"])
             .optional()

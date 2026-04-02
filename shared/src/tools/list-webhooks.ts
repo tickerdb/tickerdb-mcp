@@ -5,7 +5,7 @@ import { formatApiError } from "../errors.js";
 export function registerListWebhooks(server: McpServer, apiKey: string) {
   server.tool(
     "list_webhooks",
-    "List all registered webhook URLs and their event subscriptions.",
+    "List registered webhook URLs and their event subscriptions.",
     {},
     async () => {
       const { status, data } = await callTickerApi(

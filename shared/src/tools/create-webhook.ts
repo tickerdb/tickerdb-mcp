@@ -6,7 +6,7 @@ import { formatApiError } from "../errors.js";
 export function registerCreateWebhook(server: McpServer, apiKey: string) {
   server.tool(
     "create_webhook",
-    "Register a webhook URL to receive push notifications when your watchlist changes or fresh data is available. The secret is only shown once — save it immediately.",
+    "Register a webhook URL for push notifications on watchlist changes. The secret is only shown once.",
     {
       url: z
         .string()

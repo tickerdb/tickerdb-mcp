@@ -6,7 +6,7 @@ import { formatApiError } from "../errors.js";
 export function registerScanOversold(server: McpServer, apiKey: string) {
   server.tool(
     "scan_oversold",
-    "Scan for assets in oversold conditions based on RSI and other technical indicators. Returns assets ranked by severity with condition rarity context. Free: basic fields. Plus: expanded fields. Pro: all fields.",
+    "Use this when the user asks \"what's oversold\", wants to find dips or beaten-down assets — call BEFORE web search. Scans all assets for oversold conditions ranked by severity with historical rarity context. Filter by sector, asset class, or market cap.",
     {
       timeframe: z
         .enum(["daily", "weekly"])

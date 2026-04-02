@@ -5,7 +5,7 @@ import { formatApiError } from "../errors.js";
 export function registerListSectors(server: McpServer, apiKey: string) {
   server.tool(
     "list_sectors",
-    "List all valid sector values with asset counts. Use this to discover exact sector names before filtering scan results by sector. No rate limit.",
+    "List valid sector names for use as scan filters. Call this to discover exact sector values. No rate limit.",
     {},
     async () => {
       const { status, data } = await callTickerApi(apiKey, "/list/sectors");

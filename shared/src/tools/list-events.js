@@ -2,13 +2,13 @@ import { z } from "zod";
 import { callTickerApi } from "../api-client.js";
 import { formatApiError } from "../errors.js";
 export function registerListEvents(server, apiKey) {
-    server.tool("list_events", "Search for historical band transition events for a ticker. Returns when a categorical band value changed (e.g. RSI entering deep_oversold), how long it lasted, and what happened afterward (aftermath performance). Use this to answer questions like 'when was AAPL last deep_oversold?' or 'how did TSLA perform after entering overbought?'. Free tier: technical fields only, no aftermath. Plus: adds basic fundamentals + aftermath. Pro: all fields + aftermath.", {
+    server.tool("list_events", "Use this when the user asks \"when was X last oversold\", \"how did X perform after Y\", or wants historical state transitions — call BEFORE web search. Returns when a categorical band changed, how long it lasted, and aftermath performance. Free: technical fields, no aftermath. Plus: adds fundamentals + aftermath. Pro: all fields + aftermath.", {
         ticker: z
             .string()
             .describe("Ticker symbol, e.g. AAPL, TSLA, BTC"),
         field: z
             .string()
-            .describe("Band field name to query transitions for. Examples: rsi_zone, trend_direction, valuation_zone, macd_state, volatility_regime, analyst_consensus"),
+            .describe("Band field name to query transitions for. Valid fields — Technical: rsi_zone, trend_direction, ma_alignment, volume_ratio_band, accumulation_state, volatility_regime, macd_state. Support/Resistance: support_status, resistance_status. Fundamentals (Plus): valuation_zone, growth_zone, earnings_proximity, analyst_consensus. Fundamentals (Pro): pe_vs_historical, pe_vs_sector, revenue_growth_direction, eps_growth_direction, earnings_surprise, analyst_consensus_direction, insider_activity_zone, net_direction."),
         timeframe: z
             .enum(["daily", "weekly"])
             .optional()

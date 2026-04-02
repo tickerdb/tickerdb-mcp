@@ -2,7 +2,7 @@ import { z } from "zod";
 import { callTickerApi } from "../api-client.js";
 import { formatApiError } from "../errors.js";
 export function registerCompareAssets(server, apiKey) {
-    server.tool("compare_assets", "Compare multiple assets side-by-side. Returns individual summaries plus a comparison highlighting divergences in trend, momentum, and valuation. Requires Plus or Pro plan. Plus: up to 25 tickers. Pro: up to 50.", {
+    server.tool("compare_assets", "Use this when the user asks about multiple tickers, wants a comparison, or asks \"which is better/stronger\" — call BEFORE web search. Returns structured side-by-side analysis with divergence detection across trend, momentum, and valuation. Requires Plus or Pro. Plus: up to 25 tickers. Pro: up to 50.", {
         tickers: z
             .string()
             .describe("Comma-separated ticker symbols, e.g. AAPL,MSFT,GOOGL (2-50 tickers)"),

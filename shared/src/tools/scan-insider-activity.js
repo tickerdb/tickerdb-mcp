@@ -2,7 +2,7 @@ import { z } from "zod";
 import { callTickerApi } from "../api-client.js";
 import { formatApiError } from "../errors.js";
 export function registerScanInsiderActivity(server, apiKey) {
-    server.tool("scan_insider_activity", "Scan for stocks with notable insider buying or selling activity. Returns insider transaction zones, buy/sell counts, and shares traded. Requires Pro plan.", {
+    server.tool("scan_insider_activity", "Use this when the user asks about insider buying/selling, insider activity, or executive transactions — call BEFORE web search. Scans stocks for notable insider trading activity. Requires Pro plan.", {
         timeframe: z
             .enum(["daily", "weekly"])
             .optional()

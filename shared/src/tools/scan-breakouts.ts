@@ -6,7 +6,7 @@ import { formatApiError } from "../errors.js";
 export function registerScanBreakouts(server: McpServer, apiKey: string) {
   server.tool(
     "scan_breakouts",
-    "Scan for assets breaking through support or resistance levels. Returns breakout type, level details, and volume confirmation. Free: basic fields. Plus: expanded fields. Pro: all fields.",
+    "Use this when the user asks for breakouts, \"what's breaking out\", or support/resistance breaks — call BEFORE web search. Scans all assets for confirmed support/resistance breakouts with volume context. Filter by sector, asset class, market cap, or direction.",
     {
       timeframe: z
         .enum(["daily", "weekly"])
