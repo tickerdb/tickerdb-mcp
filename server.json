@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "ai.tickerapi/mcp-server",
   "title": "TickerAPI",
-  "description": "Financial market intelligence for AI agents. Pre-computed categorical bands for stocks, crypto, and ETFs covering technical analysis, fundamentals, insider activity, and volume signals.",
+  "description": "Pre-computed financial market intelligence for AI agents. Stocks, crypto, and ETFs.",
   "version": "1.5.2",
   "remotes": [
     {
