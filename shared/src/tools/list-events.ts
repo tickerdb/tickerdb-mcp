@@ -41,9 +41,27 @@ export function registerListEvents(server: McpServer, apiKey: string) {
         .string()
         .optional()
         .describe("Return events after this date (YYYY-MM-DD)"),
+      context_ticker: z
+        .string()
+        .optional()
+        .describe(
+          "Cross-asset correlation: a second ticker to filter against. Requires context_field and context_band. Plus/Pro only. Example: set context_ticker=SPY to only return events where SPY was in a specific state.",
+        ),
+      context_field: z
+        .string()
+        .optional()
+        .describe(
+          "Band field to check on the context ticker (e.g. trend_direction, rsi_zone). Must be provided with context_ticker and context_band.",
+        ),
+      context_band: z
+        .string()
+        .optional()
+        .describe(
+          "Only return events where the context ticker was in this band on the event date (e.g. downtrend, deep_oversold). Must be provided with context_ticker and context_field.",
+        ),
     },
     { readOnlyHint: true, openWorldHint: true },
-    async ({ ticker, field, timeframe, band, limit, before, after }) => {
+    async ({ ticker, field, timeframe, band, limit, before, after, context_ticker, context_field, context_band }) => {
       const params: Record<string, string | undefined> = {
         ticker: ticker.toUpperCase(),
         field,
@@ -52,6 +70,9 @@ export function registerListEvents(server: McpServer, apiKey: string) {
         limit: limit?.toString(),
         before,
         after,
+        context_ticker: context_ticker?.toUpperCase(),
+        context_field,
+        context_band,
       };
       const { status, data } = await callTickerApi(
         apiKey,
