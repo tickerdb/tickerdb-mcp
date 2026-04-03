@@ -1,6 +1,7 @@
 {
   "name": "tickerapi-mcp-server",
-  "version": "1.5.0",
+  "version": "1.5.2",
+  "mcpName": "ai.tickerapi/mcp-server",
   "description": "TickerAPI MCP server for Claude Desktop and other MCP clients",
   "type": "module",
   "main": "dist/index.js",
