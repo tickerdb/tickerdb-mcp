@@ -32,5 +32,14 @@
     "ai",
     "claude"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TickerAPI/tickerapi-mcp.git"
+  },
+  "homepage": "https://tickerapi.ai",
+  "author": "TickerAPI",
+  "bugs": {
+    "url": "https://github.com/TickerAPI/tickerapi-mcp/issues"
+  }
 }
