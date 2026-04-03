@@ -1,0 +1,14 @@
+{
+  "type": "object",
+  "properties": {
+    "apiKey": {
+      "type": "string",
+      "title": "API Key",
+      "description": "Your TickerAPI API key (get one at tickerapi.ai/dashboard)",
+      "x-from": {
+        "header": "x-api-key"
+      }
+    }
+  },
+  "required": []
+}

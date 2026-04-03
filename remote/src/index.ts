@@ -50,16 +50,17 @@ export default {
 
     // ── MCP protocol requests (auth required) ──────────────────────────────
 
-    // Extract Bearer token
+    // Extract Bearer token or x-api-key header (Smithery gateway)
     const authHeader = request.headers.get("Authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    const xApiKey = request.headers.get("x-api-key");
+    if (!authHeader?.startsWith("Bearer ") && !xApiKey) {
       return jsonError(
         401,
         "Missing Authorization header. Use: Authorization: Bearer <your_api_key>",
       );
     }
 
-    const bearerToken = authHeader.slice(7);
+    const bearerToken = xApiKey || authHeader!.slice(7);
     let apiKey: string;
 
     if (bearerToken.startsWith("ta_")) {

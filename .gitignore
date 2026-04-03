@@ -4,3 +4,4 @@ dist/
 key.pem
 gen-keys.sh
 mcp-publisher.exe
+publish-smithery.sh
