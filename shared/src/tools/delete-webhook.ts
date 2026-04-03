@@ -12,6 +12,7 @@ export function registerDeleteWebhook(server: McpServer, apiKey: string) {
         .string()
         .describe("Webhook ID to remove"),
     },
+    { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: true },
     async ({ id }) => {
       const { status, data } = await callTickerApi(
         apiKey,

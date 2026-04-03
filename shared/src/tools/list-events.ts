@@ -42,6 +42,7 @@ export function registerListEvents(server: McpServer, apiKey: string) {
         .optional()
         .describe("Return events after this date (YYYY-MM-DD)"),
     },
+    { readOnlyHint: true, openWorldHint: true },
     async ({ ticker, field, timeframe, band, limit, before, after }) => {
       const params: Record<string, string | undefined> = {
         ticker: ticker.toUpperCase(),

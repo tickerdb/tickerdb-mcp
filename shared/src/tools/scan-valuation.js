@@ -42,7 +42,7 @@ export function registerScanValuation(server, apiKey) {
             .string()
             .optional()
             .describe("Historical date (YYYY-MM-DD). Requires Plus or Pro."),
-    }, async ({ timeframe, limit, sector, market_cap_tier, min_market_cap_tier, direction, min_severity, sort_by, date }) => {
+    }, { readOnlyHint: true, openWorldHint: true }, async ({ timeframe, limit, sector, market_cap_tier, min_market_cap_tier, direction, min_severity, sort_by, date }) => {
         const params = {
             timeframe,
             limit: limit?.toString(),

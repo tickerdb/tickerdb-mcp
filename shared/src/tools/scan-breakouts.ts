@@ -50,6 +50,7 @@ export function registerScanBreakouts(server: McpServer, apiKey: string) {
         .optional()
         .describe("Historical date (YYYY-MM-DD). Requires Plus or Pro."),
     },
+    { readOnlyHint: true, openWorldHint: true },
     async ({ timeframe, limit, sector, asset_class, market_cap_tier, min_market_cap_tier, direction, sort_by, date }) => {
       const params: Record<string, string | undefined> = {
         timeframe,

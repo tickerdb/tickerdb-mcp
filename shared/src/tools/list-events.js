@@ -32,7 +32,7 @@ export function registerListEvents(server, apiKey) {
             .string()
             .optional()
             .describe("Return events after this date (YYYY-MM-DD)"),
-    }, async ({ ticker, field, timeframe, band, limit, before, after }) => {
+    }, { readOnlyHint: true, openWorldHint: true }, async ({ ticker, field, timeframe, band, limit, before, after }) => {
         const params = {
             ticker: ticker.toUpperCase(),
             field,

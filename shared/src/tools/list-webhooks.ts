@@ -7,6 +7,7 @@ export function registerListWebhooks(server: McpServer, apiKey: string) {
     "list_webhooks",
     "List registered webhook URLs and their event subscriptions.",
     {},
+    { readOnlyHint: true, openWorldHint: true },
     async () => {
       const { status, data } = await callTickerApi(
         apiKey,

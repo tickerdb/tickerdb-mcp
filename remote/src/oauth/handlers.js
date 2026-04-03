@@ -31,7 +31,7 @@ export function handleAuthorizationServerMetadata(env) {
 }
 export function handleProtectedResourceMetadata(env) {
     return jsonResponse({
-        resource: env.MCP_URL,
+        resource: `${env.MCP_URL}/mcp`,
         authorization_servers: [env.MCP_URL],
         resource_name: 'TickerAPI MCP',
         resource_documentation: `${env.SITE_URL}/docs`,

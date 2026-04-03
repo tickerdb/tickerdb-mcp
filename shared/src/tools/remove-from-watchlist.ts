@@ -14,6 +14,7 @@ export function registerRemoveFromWatchlist(server: McpServer, apiKey: string) {
           'Array of ticker symbols to remove, e.g. ["MSFT"]',
         ),
     },
+    { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: true },
     async ({ tickers }) => {
       const body = {
         tickers: tickers.map((t) => t.toUpperCase()),

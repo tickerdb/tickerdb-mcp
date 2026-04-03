@@ -13,6 +13,7 @@ export function registerGetWatchlist(server: McpServer, apiKey: string) {
         .optional()
         .describe("Analysis timeframe. Default: daily"),
     },
+    { readOnlyHint: true, openWorldHint: true },
     async ({ timeframe }) => {
       const params: Record<string, string | undefined> = {};
       if (timeframe) params.timeframe = timeframe;

@@ -14,6 +14,7 @@ export function registerAddToWatchlist(server: McpServer, apiKey: string) {
           'Array of ticker symbols to add, e.g. ["AAPL", "MSFT", "BTCUSD"]',
         ),
     },
+    { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
     async ({ tickers }) => {
       const body = {
         tickers: tickers.map((t) => t.toUpperCase()),

@@ -7,7 +7,7 @@ export function registerGetWatchlist(server, apiKey) {
             .enum(["daily", "weekly"])
             .optional()
             .describe("Analysis timeframe. Default: daily"),
-    }, async ({ timeframe }) => {
+    }, { readOnlyHint: true, openWorldHint: true }, async ({ timeframe }) => {
         const params = {};
         if (timeframe)
             params.timeframe = timeframe;

@@ -22,6 +22,7 @@ export function registerGetSummary(server: McpServer, apiKey: string) {
           "Historical date (YYYY-MM-DD). Requires Plus or Pro plan. Omit for latest.",
         ),
     },
+    { readOnlyHint: true, openWorldHint: true },
     async ({ ticker, timeframe, date }) => {
       const params: Record<string, string | undefined> = {
         timeframe,

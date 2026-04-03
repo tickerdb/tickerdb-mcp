@@ -7,6 +7,7 @@ export function registerListSectors(server: McpServer, apiKey: string) {
     "list_sectors",
     "List valid sector names for use as scan filters. Call this to discover exact sector values. No rate limit.",
     {},
+    { readOnlyHint: true, openWorldHint: true },
     async () => {
       const { status, data } = await callTickerApi(apiKey, "/list/sectors");
 

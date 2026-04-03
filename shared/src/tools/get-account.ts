@@ -7,6 +7,7 @@ export function registerGetAccount(server: McpServer, apiKey: string) {
     "get_account",
     "Get your account details including current plan tier, rate limits, and today's API usage.",
     {},
+    { readOnlyHint: true, openWorldHint: true },
     async () => {
       const { status, data } = await callTickerApi(apiKey, "/account");
 

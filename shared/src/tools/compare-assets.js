@@ -14,7 +14,7 @@ export function registerCompareAssets(server, apiKey) {
             .string()
             .optional()
             .describe("Historical date (YYYY-MM-DD). Requires Plus or Pro plan. Omit for latest."),
-    }, async ({ tickers, timeframe, date }) => {
+    }, { readOnlyHint: true, openWorldHint: true }, async ({ tickers, timeframe, date }) => {
         const params = {
             tickers,
             timeframe,

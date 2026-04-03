@@ -17,6 +17,7 @@ export function registerCreateWebhook(server: McpServer, apiKey: string) {
         .optional()
         .describe("Optional event subscriptions"),
     },
+    { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
     async ({ url, events }) => {
       const body: Record<string, unknown> = { url };
       if (events) body.events = events;

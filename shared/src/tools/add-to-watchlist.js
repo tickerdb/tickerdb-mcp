@@ -6,7 +6,7 @@ export function registerAddToWatchlist(server, apiKey) {
         tickers: z
             .array(z.string())
             .describe('Array of ticker symbols to add, e.g. ["AAPL", "MSFT", "BTCUSD"]'),
-    }, async ({ tickers }) => {
+    }, { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true }, async ({ tickers }) => {
         const body = {
             tickers: tickers.map((t) => t.toUpperCase()),
         };

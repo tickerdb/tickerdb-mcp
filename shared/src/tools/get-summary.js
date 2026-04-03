@@ -14,7 +14,7 @@ export function registerGetSummary(server, apiKey) {
             .string()
             .optional()
             .describe("Historical date (YYYY-MM-DD). Requires Plus or Pro plan. Omit for latest."),
-    }, async ({ ticker, timeframe, date }) => {
+    }, { readOnlyHint: true, openWorldHint: true }, async ({ ticker, timeframe, date }) => {
         const params = {
             timeframe,
             date,

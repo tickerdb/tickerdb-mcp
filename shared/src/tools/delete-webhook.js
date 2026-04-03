@@ -6,7 +6,7 @@ export function registerDeleteWebhook(server, apiKey) {
         id: z
             .string()
             .describe("Webhook ID to remove"),
-    }, async ({ id }) => {
+    }, { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: true }, async ({ id }) => {
         const { status, data } = await callTickerApi(apiKey, "/webhooks", undefined, { method: "DELETE", body: { id } });
         if (status !== 200)
             return formatApiError(status, data);

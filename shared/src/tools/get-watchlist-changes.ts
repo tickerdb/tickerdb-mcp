@@ -13,6 +13,7 @@ export function registerGetWatchlistChanges(server: McpServer, apiKey: string) {
         .optional()
         .describe("Change comparison period. daily = day-over-day, weekly = week-over-week. Default: daily"),
     },
+    { readOnlyHint: true, openWorldHint: true },
     async ({ timeframe }) => {
       const params: Record<string, string | undefined> = {};
       if (timeframe) params.timeframe = timeframe;

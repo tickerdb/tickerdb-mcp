@@ -6,7 +6,7 @@ export function registerRemoveFromWatchlist(server, apiKey) {
         tickers: z
             .array(z.string())
             .describe('Array of ticker symbols to remove, e.g. ["MSFT"]'),
-    }, async ({ tickers }) => {
+    }, { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: true }, async ({ tickers }) => {
         const body = {
             tickers: tickers.map((t) => t.toUpperCase()),
         };

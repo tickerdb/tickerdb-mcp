@@ -11,7 +11,7 @@ export function registerCreateWebhook(server, apiKey) {
             .passthrough()
             .optional()
             .describe("Optional event subscriptions"),
-    }, async ({ url, events }) => {
+    }, { readOnlyHint: false, destructiveHint: false, openWorldHint: true }, async ({ url, events }) => {
         const body = { url };
         if (events)
             body.events = events;

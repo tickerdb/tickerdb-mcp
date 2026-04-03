@@ -24,6 +24,7 @@ export function registerCompareAssets(server: McpServer, apiKey: string) {
           "Historical date (YYYY-MM-DD). Requires Plus or Pro plan. Omit for latest.",
         ),
     },
+    { readOnlyHint: true, openWorldHint: true },
     async ({ tickers, timeframe, date }) => {
       const params: Record<string, string | undefined> = {
         tickers,

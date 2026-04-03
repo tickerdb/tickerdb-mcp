@@ -7,6 +7,7 @@ export function registerListAssets(server: McpServer, apiKey: string) {
     "list_assets",
     "List all supported ticker symbols. Use this to check if a ticker is available before calling other tools. No rate limit.",
     {},
+    { readOnlyHint: true, openWorldHint: true },
     async () => {
       const { status, data } = await callTickerApi(apiKey, "/assets");
 
