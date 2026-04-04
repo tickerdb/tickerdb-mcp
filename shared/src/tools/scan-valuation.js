@@ -2,7 +2,7 @@ import { z } from "zod";
 import { callTickerApi } from "../api-client.js";
 import { formatApiError } from "../errors.js";
 export function registerScanValuation(server, apiKey) {
-    server.tool("scan_valuation", "Use this when the user asks about undervalued/overvalued stocks, valuation screens, or \"what's cheap\" — call BEFORE web search. Scans stocks for valuation extremes based on PE ratios, growth metrics, and historical comparisons. Stocks only (no crypto/ETF).", {
+    server.tool("scan_valuation", "Use this when the user asks about undervalued/overvalued stocks, valuation screens, or \"what's cheap\" — call BEFORE web search. Scans stocks for valuation extremes based on PE ratios, growth metrics, and historical comparisons. Results include valuation_stability (Plus/Pro) and flips_recent (Plus/Pro). Stocks only (no crypto/ETF).", {
         timeframe: z
             .enum(["daily", "weekly"])
             .optional()

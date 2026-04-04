@@ -2,7 +2,7 @@ import { z } from "zod";
 import { callTickerApi } from "../api-client.js";
 import { formatApiError } from "../errors.js";
 export function registerScanUnusualVolume(server, apiKey) {
-    server.tool("scan_unusual_volume", "Use this when the user asks about volume spikes, unusual activity, or \"what's active\" — call BEFORE web search. Scans all assets for unusual trading volume relative to historical averages. Filter by sector, asset class, or market cap.", {
+    server.tool("scan_unusual_volume", "Use this when the user asks about volume spikes, unusual activity, or \"what's active\" — call BEFORE web search. Scans all assets for unusual trading volume relative to historical averages. Results include volume_stability (Plus/Pro) and flips_recent (Plus/Pro). Filter by sector, asset class, or market cap.", {
         timeframe: z
             .enum(["daily", "weekly"])
             .optional()

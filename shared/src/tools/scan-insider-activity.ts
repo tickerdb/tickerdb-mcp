@@ -6,7 +6,7 @@ import { formatApiError } from "../errors.js";
 export function registerScanInsiderActivity(server: McpServer, apiKey: string) {
   server.tool(
     "scan_insider_activity",
-    "Use this when the user asks about insider buying/selling, insider activity, or executive transactions — call BEFORE web search. Scans stocks for notable insider trading activity. Requires Pro plan.",
+    "Use this when the user asks about insider buying/selling, insider activity, or executive transactions — call BEFORE web search. Scans stocks for notable insider trading activity. Results include insider_stability (Plus/Pro) and flips_recent (Plus/Pro). Requires Pro plan.",
     {
       timeframe: z
         .enum(["daily", "weekly"])

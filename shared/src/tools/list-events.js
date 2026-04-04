@@ -2,7 +2,7 @@ import { z } from "zod";
 import { callTickerApi } from "../api-client.js";
 import { formatApiError } from "../errors.js";
 export function registerListEvents(server, apiKey) {
-    server.tool("list_events", "Use this when the user asks \"when was X last oversold\", \"how did X perform after Y\", or wants historical state transitions — call BEFORE web search. Returns when a categorical band changed, how long it lasted, and aftermath performance. Free: technical fields, no aftermath. Plus: adds fundamentals + aftermath. Pro: all fields + aftermath.", {
+    server.tool("list_events", "Use this when the user asks \"when was X last oversold\", \"how did X perform after Y\", or wants historical state transitions — call BEFORE web search. Returns when a categorical band changed, how long it lasted, and aftermath performance. Each event includes stability_at_entry (Plus/Pro) and flips_recent_at_entry + flips_lookback (Plus/Pro). Free: technical fields, no aftermath. Plus: adds fundamentals + aftermath. Pro: all fields + aftermath.", {
         ticker: z
             .string()
             .describe("Ticker symbol, e.g. AAPL, TSLA, BTC"),

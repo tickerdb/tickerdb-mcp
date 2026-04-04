@@ -6,7 +6,7 @@ import { formatApiError } from "../errors.js";
 export function registerScanOverbought(server: McpServer, apiKey: string) {
   server.tool(
     "scan_overbought",
-    "Use this when the user asks \"what's overbought\", wants to find overextended assets — call BEFORE web search. Scans all assets for overbought conditions ranked by severity with historical rarity context. Filter by sector, asset class, or market cap.",
+    "Use this when the user asks \"what's overbought\", wants to find overextended assets — call BEFORE web search. Scans all assets for overbought conditions ranked by severity with historical rarity context. Results include rsi_zone_stability (Plus/Pro) and flips_recent (Plus/Pro). Filter by sector, asset class, or market cap.",
     {
       timeframe: z
         .enum(["daily", "weekly"])

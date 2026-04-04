@@ -28,6 +28,10 @@ Connects TickerAPI to any MCP-compatible client: Claude Desktop, Claude Code, Cu
 
 All screeners support filtering by `sector`, `asset_class`, `market_cap_tier`, and `date` (historical, Plus+).
 
+### Band Stability Metadata
+
+Summary, watchlist, watchlist changes, event, and scan tools now return **band stability metadata**. Each band field (trend direction, momentum zone, etc.) includes a sibling `_meta` object describing how stable that state is. The stability label is one of `fresh`, `holding`, `established`, or `volatile`. Full metadata also includes `periods_in_current_state`, `flips_recent`, and `flips_lookback`. This context helps agents distinguish between a newly entered state and one that has persisted for many periods, improving the quality of trade signals and alerts.
+
 ## Setup
 
 ### Option 1: Claude.ai (OAuth)
