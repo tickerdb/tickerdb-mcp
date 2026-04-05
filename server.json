@@ -3,7 +3,7 @@
   "name": "ai.tickerapi/mcp-server",
   "title": "TickerAPI",
   "description": "Pre-computed financial market intelligence for AI agents. Stocks, crypto, and ETFs.",
-  "version": "1.5.2",
+  "version": "1.7.2",
   "remotes": [
     {
       "type": "streamable-http",
@@ -14,7 +14,7 @@
     {
       "registryType": "npm",
       "identifier": "tickerapi-mcp-server",
-      "version": "1.5.2",
+      "version": "1.7.2",
       "transport": {
         "type": "stdio"
       },
