@@ -3,7 +3,7 @@ import { registerAllTools } from "./tools/index.js";
 export function createTickerApiServer(apiKey) {
     const server = new McpServer({
         name: "TickerAPI",
-        version: "1.5.2",
+        version: "1.7.2",
         description: "Pre-computed financial market intelligence for AI agents. Stocks, crypto, and ETFs.",
         websiteUrl: "https://tickerapi.ai",
     }, {

@@ -5,7 +5,7 @@ export function createTickerApiServer(apiKey: string): McpServer {
   const server = new McpServer(
     {
       name: "TickerAPI",
-      version: "1.5.2",
+      version: "1.7.2",
       description: "Pre-computed financial market intelligence for AI agents. Stocks, crypto, and ETFs.",
       websiteUrl: "https://tickerapi.ai",
     },
