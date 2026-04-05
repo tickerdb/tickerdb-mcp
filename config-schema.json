@@ -4,7 +4,7 @@
     "apiKey": {
       "type": "string",
       "title": "API Key",
-      "description": "Your TickerAPI API key (get one at tickerapi.ai/dashboard)",
+      "description": "Your TickerDB API key (get one at tickerdb.com/dashboard)",
       "x-from": {
         "header": "x-api-key"
       }

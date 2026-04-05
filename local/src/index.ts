@@ -1,20 +1,20 @@
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { createTickerApiServer } from "../../shared/src/server-factory.js";
+import { createTickerDbServer } from "../../shared/src/server-factory.js";
 
-const apiKey = process.env.TICKERAPI_KEY;
+const apiKey = process.env.TICKERDB_KEY;
 
 if (!apiKey) {
   console.error(
-    "Error: TICKERAPI_KEY environment variable is required.\n" +
+    "Error: TICKERDB_KEY environment variable is required.\n" +
       "Set it in your Claude Desktop config or export it in your shell.\n\n" +
       "Example Claude Desktop config:\n" +
       JSON.stringify(
         {
           mcpServers: {
-            tickerapi: {
+            tickerdb: {
               command: "npx",
-              args: ["@tickerapi/mcp-server"],
-              env: { TICKERAPI_KEY: "YOUR_API_KEY" },
+              args: ["@tickerdb/mcp-server"],
+              env: { TICKERDB_KEY: "YOUR_API_KEY" },
             },
           },
         },
@@ -28,11 +28,11 @@ if (!apiKey) {
 if (!apiKey.startsWith("tapi_")) {
   console.error(
     "Error: Invalid API key format. Keys start with tapi_.\n" +
-      "Get one at https://tickerapi.ai/dashboard",
+      "Get one at https://tickerdb.com/dashboard",
   );
   process.exit(1);
 }
 
-const server = createTickerApiServer(apiKey);
+const server = createTickerDbServer(apiKey);
 const transport = new StdioServerTransport();
 await server.connect(transport);

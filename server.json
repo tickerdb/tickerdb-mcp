@@ -1,27 +1,27 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "ai.tickerapi/mcp-server",
-  "title": "TickerAPI",
+  "name": "ai.tickerdb/mcp-server",
+  "title": "TickerDB",
   "description": "Pre-computed financial market intelligence for AI agents. Stocks, crypto, and ETFs.",
   "version": "1.7.2",
   "remotes": [
     {
       "type": "streamable-http",
-      "url": "https://mcp.tickerapi.ai/mcp"
+      "url": "https://mcp.tickerdb.com/mcp"
     }
   ],
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "tickerapi-mcp-server",
+      "identifier": "tickerdb-mcp-server",
       "version": "1.7.2",
       "transport": {
         "type": "stdio"
       },
       "environmentVariables": [
         {
-          "name": "TICKERAPI_KEY",
-          "description": "Your TickerAPI API key (get one at tickerapi.ai/dashboard)",
+          "name": "TICKERDB_KEY",
+          "description": "Your TickerDB API key (get one at tickerdb.com/dashboard)",
           "isRequired": true,
           "isSecret": true,
           "format": "string"
@@ -30,7 +30,7 @@
     }
   ],
   "repository": {
-    "url": "https://github.com/TickerAPI/tickerapi-mcp",
+    "url": "https://github.com/TickerDB/tickerdb-mcp",
     "source": "github"
   }
 }

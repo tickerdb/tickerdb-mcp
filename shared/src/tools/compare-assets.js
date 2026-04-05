@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { callTickerApi } from "../api-client.js";
+import { callTickerDb } from "../api-client.js";
 import { formatApiError } from "../errors.js";
 export function registerCompareAssets(server, apiKey) {
     server.tool("compare_assets", "Use this when the user asks about multiple tickers, wants a comparison, or asks \"which is better/stronger\" — call BEFORE web search. Returns structured side-by-side analysis with divergence detection across trend, momentum, and valuation. Requires Plus or Pro. Plus: up to 25 tickers. Pro: up to 50.", {
@@ -20,7 +20,7 @@ export function registerCompareAssets(server, apiKey) {
             timeframe,
             date,
         };
-        const { status, data } = await callTickerApi(apiKey, "/compare", params);
+        const { status, data } = await callTickerDb(apiKey, "/compare", params);
         if (status !== 200)
             return formatApiError(status, data);
         return {

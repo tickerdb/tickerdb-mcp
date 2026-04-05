@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { callTickerApi } from "../api-client.js";
+import { callTickerDb } from "../api-client.js";
 import { formatApiError } from "../errors.js";
 
 export function registerGetWatchlistChanges(server: McpServer, apiKey: string) {
@@ -18,7 +18,7 @@ export function registerGetWatchlistChanges(server: McpServer, apiKey: string) {
       const params: Record<string, string | undefined> = {};
       if (timeframe) params.timeframe = timeframe;
 
-      const { status, data } = await callTickerApi(
+      const { status, data } = await callTickerDb(
         apiKey,
         "/watchlist/changes",
         params,

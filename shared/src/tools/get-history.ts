@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { callTickerApi } from "../api-client.js";
+import { callTickerDb } from "../api-client.js";
 import { formatApiError } from "../errors.js";
 
 export function registerGetHistory(server: McpServer, apiKey: string) {
@@ -29,7 +29,7 @@ export function registerGetHistory(server: McpServer, apiKey: string) {
         start,
         end,
       };
-      const { status, data } = await callTickerApi(
+      const { status, data } = await callTickerDb(
         apiKey,
         `/history/${encodeURIComponent(ticker.toUpperCase())}`,
         params,

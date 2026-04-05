@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { callTickerApi } from "../api-client.js";
+import { callTickerDb } from "../api-client.js";
 import { formatApiError } from "../errors.js";
 export function registerGetHistory(server, apiKey) {
     server.tool("get_history", "Use this when the user needs a historical series for one ticker across a date range instead of one point-in-time snapshot. Returns summary rows plus levels when the plan allows it.", {
@@ -22,7 +22,7 @@ export function registerGetHistory(server, apiKey) {
             start,
             end,
         };
-        const { status, data } = await callTickerApi(apiKey, `/history/${encodeURIComponent(ticker.toUpperCase())}`, params);
+        const { status, data } = await callTickerDb(apiKey, `/history/${encodeURIComponent(ticker.toUpperCase())}`, params);
         if (status !== 200)
             return formatApiError(status, data);
         return {

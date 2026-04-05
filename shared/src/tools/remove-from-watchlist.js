@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { callTickerApi } from "../api-client.js";
+import { callTickerDb } from "../api-client.js";
 import { formatApiError } from "../errors.js";
 export function registerRemoveFromWatchlist(server, apiKey) {
     server.tool("remove_from_watchlist", "Remove tickers from your saved watchlist.", {
@@ -10,7 +10,7 @@ export function registerRemoveFromWatchlist(server, apiKey) {
         const body = {
             tickers: tickers.map((t) => t.toUpperCase()),
         };
-        const { status, data } = await callTickerApi(apiKey, "/watchlist", undefined, { method: "DELETE", body });
+        const { status, data } = await callTickerDb(apiKey, "/watchlist", undefined, { method: "DELETE", body });
         if (status !== 200)
             return formatApiError(status, data);
         return {

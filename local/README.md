@@ -1,6 +1,6 @@
-# tickerapi-mcp-server
+# tickerdb-mcp-server
 
-MCP server for [TickerAPI](https://tickerapi.ai) — pre-computed market intelligence for AI agents.
+MCP server for [TickerDB](https://tickerdb.com) — pre-computed market intelligence for AI agents.
 
 Works with Claude Desktop, Claude Code, Cursor, Windsurf, OpenClaw, LangChain, LlamaIndex, AutoGen, CrewAI, and any MCP-compatible client.
 
@@ -11,18 +11,18 @@ Add to your Claude Desktop config (`claude_desktop_config.json`):
 ```json
 {
   "mcpServers": {
-    "tickerapi": {
+    "tickerdb": {
       "command": "npx",
-      "args": ["tickerapi-mcp-server"],
+      "args": ["tickerdb-mcp-server"],
       "env": {
-        "TICKERAPI_KEY": "tapi_your_api_key_here"
+        "TICKERDB_KEY": "tapi_your_api_key_here"
       }
     }
   }
 }
 ```
 
-Get an API key at [tickerapi.ai/dashboard](https://tickerapi.ai/dashboard).
+Get an API key at [tickerdb.com/dashboard](https://tickerdb.com/dashboard).
 
 ## Available Tools
 
@@ -42,8 +42,8 @@ All tools return categorical, pre-computed data designed for LLM context windows
 
 ## Remote Server
 
-You can also connect directly to the hosted MCP server at `https://mcp.tickerapi.ai` with your API key as a Bearer token, without installing this package.
+You can also connect directly to the hosted MCP server at `https://mcp.tickerdb.com` with your API key as a Bearer token, without installing this package.
 
 ## Documentation
 
-Full API docs and endpoint details at [tickerapi.ai/docs](https://tickerapi.ai/docs).
+Full API docs and endpoint details at [tickerdb.com/docs](https://tickerdb.com/docs).

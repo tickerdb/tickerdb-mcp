@@ -25,8 +25,8 @@ const REFRESH_TOKEN_LIFETIME = 30 * 24 * 3600; // 30 days
 
 export interface Env {
   DATABASE_URL: string;
-  SITE_URL: string; // https://tickerapi.ai
-  MCP_URL: string; // https://mcp.tickerapi.ai
+  SITE_URL: string; // https://tickerdb.com
+  MCP_URL: string; // https://mcp.tickerdb.com
   MCP_ENCRYPTION_KEY: string; // Base64-encoded AES-256 key for oauth_mcp_keys
 }
 
@@ -43,7 +43,7 @@ export function handleAuthorizationServerMetadata(env: Env): Response {
     grant_types_supported: ['authorization_code', 'refresh_token'],
     code_challenge_methods_supported: ['S256'],
     token_endpoint_auth_methods_supported: ['client_secret_post', 'none'],
-    scopes_supported: ['tickerapi'],
+    scopes_supported: ['tickerdb'],
     service_documentation: `${env.SITE_URL}/docs`,
   });
 }
@@ -52,7 +52,7 @@ export function handleProtectedResourceMetadata(env: Env): Response {
   return jsonResponse({
     resource: `${env.MCP_URL}/mcp`,
     authorization_servers: [env.MCP_URL],
-    resource_name: 'TickerAPI MCP',
+    resource_name: 'TickerDB MCP',
     resource_documentation: `${env.SITE_URL}/docs`,
   });
 }
@@ -101,7 +101,7 @@ export async function handleRegister(request: Request, env: Env): Promise<Respon
   const clientName = typeof body.client_name === 'string' ? body.client_name : null;
   const clientUri = typeof body.client_uri === 'string' ? body.client_uri : null;
   const logoUri = typeof body.logo_uri === 'string' ? body.logo_uri : null;
-  const scope = typeof body.scope === 'string' ? body.scope : 'tickerapi';
+  const scope = typeof body.scope === 'string' ? body.scope : 'tickerdb';
   const tokenEndpointAuthMethod =
     typeof body.token_endpoint_auth_method === 'string' ? body.token_endpoint_auth_method : 'none';
 
@@ -363,7 +363,7 @@ async function issueTokens(
     token_type: 'bearer',
     expires_in: ACCESS_TOKEN_LIFETIME,
     refresh_token: refreshTokenRaw,
-    scope: scope ?? 'tickerapi',
+    scope: scope ?? 'tickerdb',
   });
 }
 

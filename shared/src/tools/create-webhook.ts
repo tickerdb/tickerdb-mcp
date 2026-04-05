@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { callTickerApi } from "../api-client.js";
+import { callTickerDb } from "../api-client.js";
 import { formatApiError } from "../errors.js";
 
 export function registerCreateWebhook(server: McpServer, apiKey: string) {
@@ -22,7 +22,7 @@ export function registerCreateWebhook(server: McpServer, apiKey: string) {
       const body: Record<string, unknown> = { url };
       if (events) body.events = events;
 
-      const { status, data } = await callTickerApi(
+      const { status, data } = await callTickerDb(
         apiKey,
         "/webhooks",
         undefined,

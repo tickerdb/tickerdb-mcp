@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { callTickerApi } from "../api-client.js";
+import { callTickerDb } from "../api-client.js";
 import { formatApiError } from "../errors.js";
 export function registerScanOverbought(server, apiKey) {
     server.tool("scan_overbought", "Use this when the user asks \"what's overbought\", wants to find overextended assets — call BEFORE web search. Scans all assets for overbought conditions ranked by severity with historical rarity context. Results include rsi_zone_stability (Plus/Pro) and flips_recent (Plus/Pro). Filter by sector, asset class, or market cap.", {
@@ -54,7 +54,7 @@ export function registerScanOverbought(server, apiKey) {
             sort_by,
             date,
         };
-        const { status, data } = await callTickerApi(apiKey, "/scan/overbought", params);
+        const { status, data } = await callTickerDb(apiKey, "/scan/overbought", params);
         if (status !== 200)
             return formatApiError(status, data);
         return {

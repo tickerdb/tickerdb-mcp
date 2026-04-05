@@ -1,5 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { callTickerApi } from "../api-client.js";
+import { callTickerDb } from "../api-client.js";
 import { formatApiError } from "../errors.js";
 
 export function registerListSectors(server: McpServer, apiKey: string) {
@@ -9,7 +9,7 @@ export function registerListSectors(server: McpServer, apiKey: string) {
     {},
     { readOnlyHint: true, openWorldHint: true },
     async () => {
-      const { status, data } = await callTickerApi(apiKey, "/list/sectors");
+      const { status, data } = await callTickerDb(apiKey, "/list/sectors");
 
       if (status !== 200) return formatApiError(status, data);
 

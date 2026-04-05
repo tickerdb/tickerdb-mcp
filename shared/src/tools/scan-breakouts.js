@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { callTickerApi } from "../api-client.js";
+import { callTickerDb } from "../api-client.js";
 import { formatApiError } from "../errors.js";
 export function registerScanBreakouts(server, apiKey) {
     server.tool("scan_breakouts", "Use this when the user asks for breakouts, \"what's breaking out\", or support/resistance breaks — call BEFORE web search. Scans all assets for confirmed support/resistance breakouts with volume context. Filter by sector, asset class, market cap, or direction.", {
@@ -54,7 +54,7 @@ export function registerScanBreakouts(server, apiKey) {
             sort_by,
             date,
         };
-        const { status, data } = await callTickerApi(apiKey, "/scan/breakouts", params);
+        const { status, data } = await callTickerDb(apiKey, "/scan/breakouts", params);
         if (status !== 200)
             return formatApiError(status, data);
         return {

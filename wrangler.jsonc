@@ -1,11 +1,11 @@
 {
-  "name": "tickerapi-mcp",
+  "name": "tickerdb-mcp",
   "main": "remote/src/index.ts",
   "compatibility_date": "2026-03-10",
   "compatibility_flags": ["nodejs_compat"]
   // Secrets (set via `wrangler secret put`):
   //   DATABASE_URL       — PlanetScale connection string
-  //   SITE_URL           — https://tickerapi.ai
-  //   MCP_URL            — https://mcp.tickerapi.ai
+  //   SITE_URL           — https://tickerdb.com
+  //   MCP_URL            — https://mcp.tickerdb.com
   //   MCP_ENCRYPTION_KEY — Base64-encoded 256-bit AES key for oauth_mcp_keys
 }

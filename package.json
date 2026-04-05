@@ -1,5 +1,5 @@
 {
-  "name": "tickerapi-mcp",
+  "name": "tickerdb-mcp",
   "version": "1.7.2",
   "private": true,
   "type": "module",

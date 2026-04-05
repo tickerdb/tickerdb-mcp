@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { callTickerApi } from "../api-client.js";
+import { callTickerDb } from "../api-client.js";
 import { formatApiError } from "../errors.js";
 
 export function registerGetSummary(server: McpServer, apiKey: string) {
@@ -28,7 +28,7 @@ export function registerGetSummary(server: McpServer, apiKey: string) {
         timeframe,
         date,
       };
-      const { status, data } = await callTickerApi(
+      const { status, data } = await callTickerDb(
         apiKey,
         `/summary/${encodeURIComponent(ticker.toUpperCase())}`,
         params,

@@ -1,4 +1,4 @@
 {
   "$schema": "https://glama.ai/schemas/glama.json",
-  "maintainers": ["TickerAPI"]
+  "maintainers": ["TickerDB"]
 }

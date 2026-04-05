@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { callTickerApi } from "../api-client.js";
+import { callTickerDb } from "../api-client.js";
 import { formatApiError } from "../errors.js";
 export function registerScanValuation(server, apiKey) {
     server.tool("scan_valuation", "Use this when the user asks about undervalued/overvalued stocks, valuation screens, or \"what's cheap\" — call BEFORE web search. Scans stocks for valuation extremes based on PE ratios, growth metrics, and historical comparisons. Results include valuation_stability (Plus/Pro) and flips_recent (Plus/Pro). Stocks only (no crypto/ETF).", {
@@ -54,7 +54,7 @@ export function registerScanValuation(server, apiKey) {
             sort_by,
             date,
         };
-        const { status, data } = await callTickerApi(apiKey, "/scan/valuation", params);
+        const { status, data } = await callTickerDb(apiKey, "/scan/valuation", params);
         if (status !== 200)
             return formatApiError(status, data);
         return {

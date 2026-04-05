@@ -1,5 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { callTickerApi } from "../api-client.js";
+import { callTickerDb } from "../api-client.js";
 import { formatApiError } from "../errors.js";
 
 export function registerListWebhooks(server: McpServer, apiKey: string) {
@@ -9,7 +9,7 @@ export function registerListWebhooks(server: McpServer, apiKey: string) {
     {},
     { readOnlyHint: true, openWorldHint: true },
     async () => {
-      const { status, data } = await callTickerApi(
+      const { status, data } = await callTickerDb(
         apiKey,
         "/webhooks",
       );

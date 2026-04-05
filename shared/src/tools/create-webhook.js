@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { callTickerApi } from "../api-client.js";
+import { callTickerDb } from "../api-client.js";
 import { formatApiError } from "../errors.js";
 export function registerCreateWebhook(server, apiKey) {
     server.tool("create_webhook", "Register a webhook URL for push notifications on watchlist changes. The secret is only shown once.", {
@@ -15,7 +15,7 @@ export function registerCreateWebhook(server, apiKey) {
         const body = { url };
         if (events)
             body.events = events;
-        const { status, data } = await callTickerApi(apiKey, "/webhooks", undefined, { method: "POST", body });
+        const { status, data } = await callTickerDb(apiKey, "/webhooks", undefined, { method: "POST", body });
         if (status !== 200)
             return formatApiError(status, data);
         return {

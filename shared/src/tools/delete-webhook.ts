@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { callTickerApi } from "../api-client.js";
+import { callTickerDb } from "../api-client.js";
 import { formatApiError } from "../errors.js";
 
 export function registerDeleteWebhook(server: McpServer, apiKey: string) {
@@ -14,7 +14,7 @@ export function registerDeleteWebhook(server: McpServer, apiKey: string) {
     },
     { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: true },
     async ({ id }) => {
-      const { status, data } = await callTickerApi(
+      const { status, data } = await callTickerDb(
         apiKey,
         "/webhooks",
         undefined,

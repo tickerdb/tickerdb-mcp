@@ -1,8 +1,8 @@
-# TickerAPI MCP Server
+# TickerDB MCP Server
 
-MCP (Model Context Protocol) server for [TickerAPI](https://tickerapi.ai) — pre-computed market intelligence for AI agents.
+MCP (Model Context Protocol) server for [TickerDB](https://tickerdb.com) — pre-computed market intelligence for AI agents.
 
-Connects TickerAPI to any MCP-compatible client: Claude Desktop, Claude Code, Cursor, Windsurf, OpenClaw, LangChain, LlamaIndex, AutoGen, CrewAI, and more.
+Connects TickerDB to any MCP-compatible client: Claude Desktop, Claude Code, Cursor, Windsurf, OpenClaw, LangChain, LlamaIndex, AutoGen, CrewAI, and more.
 
 ## Available Tools
 
@@ -38,11 +38,11 @@ Summary, watchlist, watchlist changes, event, and scan tools now return **band s
 
 ### Option 1: Claude.ai (OAuth)
 
-The remote server at `mcp.tickerapi.ai` supports OAuth 2.1 for Claude.ai Connectors. No API key management required — sign in with your TickerAPI account and Claude.ai handles the rest.
+The remote server at `mcp.tickerdb.com` supports OAuth 2.1 for Claude.ai Connectors. No API key management required — sign in with your TickerDB account and Claude.ai handles the rest.
 
 ### Option 2: Remote server (Bearer token)
 
-Connect any MCP client to `https://mcp.tickerapi.ai/mcp` with your API key as a Bearer token.
+Connect any MCP client to `https://mcp.tickerdb.com/mcp` with your API key as a Bearer token.
 
 ### Option 3: npm package (Claude Desktop, Cursor, etc.)
 
@@ -51,35 +51,35 @@ Add to your Claude Desktop config (`claude_desktop_config.json`):
 ```json
 {
   "mcpServers": {
-    "tickerapi": {
+    "tickerdb": {
       "command": "npx",
-      "args": ["tickerapi-mcp-server"],
+      "args": ["tickerdb-mcp-server"],
       "env": {
-        "TICKERAPI_KEY": "tapi_your_api_key_here"
+        "TICKERDB_KEY": "tapi_your_api_key_here"
       }
     }
   }
 }
 ```
 
-Get an API key at [tickerapi.ai/dashboard](https://tickerapi.ai/dashboard).
+Get an API key at [tickerdb.com/dashboard](https://tickerdb.com/dashboard).
 
 ## Structure
 
 This is a three-package workspace:
 
 - **`shared/`** — Shared tool definitions, API client, and server factory (internal, not published)
-- **`remote/`** — Cloudflare Worker deployed at `mcp.tickerapi.ai` (Streamable HTTP transport + OAuth 2.1)
-- **`local/`** — Published npm package `tickerapi-mcp-server` (stdio transport)
+- **`remote/`** — Cloudflare Worker deployed at `mcp.tickerdb.com` (Streamable HTTP transport + OAuth 2.1)
+- **`local/`** — Published npm package `tickerdb-mcp-server` (stdio transport)
 
-Both the remote server and npm package use the same tool definitions from `shared/`. The MCP server is a thin proxy — all tier-based access control, rate limiting, and field filtering is handled by the TickerAPI HTTP API.
+Both the remote server and npm package use the same tool definitions from `shared/`. The MCP server is a thin proxy — all tier-based access control, rate limiting, and field filtering is handled by the TickerDB HTTP API.
 
 ### Authentication
 
 The remote server supports two authentication methods:
 
 - **Bearer token** — pass your `tapi_*` API key directly as `Authorization: Bearer tapi_...`
-- **OAuth 2.1** — used by Claude.ai Connectors. The server implements dynamic client registration, PKCE, token exchange, and revocation. The `/authorize` endpoint redirects to the main TickerAPI site for consent.
+- **OAuth 2.1** — used by Claude.ai Connectors. The server implements dynamic client registration, PKCE, token exchange, and revocation. The `/authorize` endpoint redirects to the main TickerDB site for consent.
 
 ## Development
 

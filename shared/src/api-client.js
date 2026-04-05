@@ -1,5 +1,5 @@
-const API_BASE = "https://api.tickerapi.ai/v1";
-export async function callTickerApi(apiKey, path, params, options) {
+const API_BASE = "https://api.tickerdb.com/v1";
+export async function callTickerDb(apiKey, path, params, options) {
     const url = new URL(`${API_BASE}${path}`);
     if (params) {
         for (const [k, v] of Object.entries(params)) {

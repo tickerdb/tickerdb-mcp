@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { callTickerApi } from "../api-client.js";
+import { callTickerDb } from "../api-client.js";
 import { formatApiError } from "../errors.js";
 
 export function registerListEvents(server: McpServer, apiKey: string) {
@@ -74,7 +74,7 @@ export function registerListEvents(server: McpServer, apiKey: string) {
         context_field,
         context_band,
       };
-      const { status, data } = await callTickerApi(
+      const { status, data } = await callTickerDb(
         apiKey,
         "/events",
         params,

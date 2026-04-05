@@ -1,5 +1,5 @@
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
-import { createTickerApiServer } from "../../shared/src/server-factory.js";
+import { createTickerDbServer } from "../../shared/src/server-factory.js";
 import {
   handleAuthorizationServerMetadata,
   handleProtectedResourceMetadata,
@@ -76,7 +76,7 @@ export default {
     }
 
     // Create a fresh MCP server per request with the user's API key
-    const server = createTickerApiServer(apiKey);
+    const server = createTickerDbServer(apiKey);
 
     // Create a stateless Web Standard Streamable HTTP transport
     const transport = new WebStandardStreamableHTTPServerTransport({

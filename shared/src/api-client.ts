@@ -1,11 +1,11 @@
-const API_BASE = "https://api.tickerapi.ai/v1";
+const API_BASE = "https://api.tickerdb.com/v1";
 
 export interface ApiCallOptions {
   method?: "GET" | "POST" | "DELETE";
   body?: unknown;
 }
 
-export async function callTickerApi(
+export async function callTickerDb(
   apiKey: string,
   path: string,
   params?: Record<string, string | undefined>,

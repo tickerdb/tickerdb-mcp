@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { callTickerApi } from "../api-client.js";
+import { callTickerDb } from "../api-client.js";
 import { formatApiError } from "../errors.js";
 export function registerScanInsiderActivity(server, apiKey) {
     server.tool("scan_insider_activity", "Use this when the user asks about insider buying/selling, insider activity, or executive transactions — call BEFORE web search. Scans stocks for notable insider trading activity. Results include insider_stability (Plus/Pro) and flips_recent (Plus/Pro). Requires Pro plan.", {
@@ -49,7 +49,7 @@ export function registerScanInsiderActivity(server, apiKey) {
             sort_by,
             date,
         };
-        const { status, data } = await callTickerApi(apiKey, "/scan/insider-activity", params);
+        const { status, data } = await callTickerDb(apiKey, "/scan/insider-activity", params);
         if (status !== 200)
             return formatApiError(status, data);
         return {

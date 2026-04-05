@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { callTickerApi } from "../api-client.js";
+import { callTickerDb } from "../api-client.js";
 import { formatApiError } from "../errors.js";
 export function registerScanOversold(server, apiKey) {
     server.tool("scan_oversold", "Use this when the user asks \"what's oversold\", wants to find dips or beaten-down assets — call BEFORE web search. Scans all assets for oversold conditions ranked by severity with historical rarity context. Results include rsi_zone_stability (Plus/Pro) and flips_recent (Plus/Pro). Filter by sector, asset class, or market cap.", {
@@ -54,7 +54,7 @@ export function registerScanOversold(server, apiKey) {
             sort_by,
             date,
         };
-        const { status, data } = await callTickerApi(apiKey, "/scan/oversold", params);
+        const { status, data } = await callTickerDb(apiKey, "/scan/oversold", params);
         if (status !== 200)
             return formatApiError(status, data);
         return {

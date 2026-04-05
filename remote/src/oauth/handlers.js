@@ -25,7 +25,7 @@ export function handleAuthorizationServerMetadata(env) {
         grant_types_supported: ['authorization_code', 'refresh_token'],
         code_challenge_methods_supported: ['S256'],
         token_endpoint_auth_methods_supported: ['client_secret_post', 'none'],
-        scopes_supported: ['tickerapi'],
+        scopes_supported: ['tickerdb'],
         service_documentation: `${env.SITE_URL}/docs`,
     });
 }
@@ -33,7 +33,7 @@ export function handleProtectedResourceMetadata(env) {
     return jsonResponse({
         resource: `${env.MCP_URL}/mcp`,
         authorization_servers: [env.MCP_URL],
-        resource_name: 'TickerAPI MCP',
+        resource_name: 'TickerDB MCP',
         resource_documentation: `${env.SITE_URL}/docs`,
     });
 }
@@ -69,7 +69,7 @@ export async function handleRegister(request, env) {
     const clientName = typeof body.client_name === 'string' ? body.client_name : null;
     const clientUri = typeof body.client_uri === 'string' ? body.client_uri : null;
     const logoUri = typeof body.logo_uri === 'string' ? body.logo_uri : null;
-    const scope = typeof body.scope === 'string' ? body.scope : 'tickerapi';
+    const scope = typeof body.scope === 'string' ? body.scope : 'tickerdb';
     const tokenEndpointAuthMethod = typeof body.token_endpoint_auth_method === 'string' ? body.token_endpoint_auth_method : 'none';
     // Generate client_secret for confidential clients
     let clientSecret = null;
@@ -272,7 +272,7 @@ async function issueTokens(db, clientId, userId, scope) {
         token_type: 'bearer',
         expires_in: ACCESS_TOKEN_LIFETIME,
         refresh_token: refreshTokenRaw,
-        scope: scope ?? 'tickerapi',
+        scope: scope ?? 'tickerdb',
     });
 }
 // ── Token Revocation (RFC 7009) ──────────────────────────────────────────────
