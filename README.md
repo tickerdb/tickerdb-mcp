@@ -6,9 +6,11 @@ Connects TickerAPI to any MCP-compatible client: Claude Desktop, Claude Code, Cu
 
 ## Available Tools
 
+
 | Tool | Description |
 |---|---|
 | `get_summary` | Technical + fundamental summary for a single ticker |
+| `get_history` | Historical summary series for one ticker across a date range |
 | `compare_assets` | Side-by-side comparison of multiple tickers (Plus+) |
 | `list_assets` | Browse all supported tickers |
 | `get_watchlist` | Live data for your saved watchlist tickers |
@@ -26,7 +28,7 @@ Connects TickerAPI to any MCP-compatible client: Claude Desktop, Claude Code, Cu
 | `list_webhooks` | List registered webhooks |
 | `delete_webhook` | Remove a webhook |
 
-All screeners support filtering by `sector`, `asset_class`, `market_cap_tier`, and `date` (historical, Plus+).
+All screeners support filtering by `sector`, `asset_class`, `market_cap_tier`, and `date` (historical, Plus+). Use `get_history` for bulk ticker syncs instead of looping `get_summary` across many dates.
 
 ### Band Stability Metadata
 

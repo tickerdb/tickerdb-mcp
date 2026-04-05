@@ -1,4 +1,5 @@
 import { registerGetSummary } from "./get-summary.js";
+import { registerGetHistory } from "./get-history.js";
 import { registerCompareAssets } from "./compare-assets.js";
 import { registerListAssets } from "./list-assets.js";
 import { registerListSectors } from "./list-sectors.js";
@@ -19,6 +20,7 @@ import { registerDeleteWebhook } from "./delete-webhook.js";
 import { registerListEvents } from "./list-events.js";
 export function registerAllTools(server, apiKey) {
     registerGetSummary(server, apiKey);
+    registerGetHistory(server, apiKey);
     registerCompareAssets(server, apiKey);
     registerListEvents(server, apiKey);
     registerListAssets(server, apiKey);
