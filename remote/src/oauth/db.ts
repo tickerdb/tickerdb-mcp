@@ -1,27 +1,27 @@
 /**
  * Database setup for the MCP Worker.
- * Connects to the same PlanetScale database as the main site.
+ * Connects to the same PostgreSQL database as the main site via Hyperdrive.
  */
-import { drizzle } from 'drizzle-orm/planetscale-serverless';
-import { Client } from '@planetscale/database';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
 import {
-  mysqlTable,
+  pgTable,
   varchar,
   text,
-  datetime,
+  timestamp,
   uniqueIndex,
   index,
-} from 'drizzle-orm/mysql-core';
+} from 'drizzle-orm/pg-core';
 
 // ── Re-define only the tables the MCP worker needs ───────────────────────────
 // (Avoids importing the full Astro site schema which has Astro-specific deps)
 
-export const tUsers = mysqlTable('users', {
+export const tUsers = pgTable('users', {
   id: varchar('id', { length: 36 }).primaryKey(),
   email: varchar('email', { length: 255 }).notNull(),
 });
 
-export const tApiKeys = mysqlTable(
+export const tApiKeys = pgTable(
   'api_keys',
   {
     id: varchar('id', { length: 36 }).primaryKey(),
@@ -29,9 +29,9 @@ export const tApiKeys = mysqlTable(
     keyHash: varchar('key_hash', { length: 64 }).notNull(),
     keyPrefix: varchar('key_prefix', { length: 12 }).notNull(),
     name: varchar('name', { length: 100 }).notNull(),
-    createdAt: datetime('created_at').notNull(),
-    lastUsedAt: datetime('last_used_at'),
-    revokedAt: datetime('revoked_at'),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull(),
+    lastUsedAt: timestamp('last_used_at', { withTimezone: true, mode: 'date' }),
+    revokedAt: timestamp('revoked_at', { withTimezone: true, mode: 'date' }),
   },
   (table) => ({
     keyHashIdx: uniqueIndex('uq_api_key_hash').on(table.keyHash),
@@ -39,7 +39,7 @@ export const tApiKeys = mysqlTable(
   }),
 );
 
-export const tOAuthClients = mysqlTable(
+export const tOAuthClients = pgTable(
   'oauth_clients',
   {
     id: varchar('id', { length: 36 }).primaryKey(),
@@ -53,14 +53,14 @@ export const tOAuthClients = mysqlTable(
     grantTypes: varchar('grant_types', { length: 500 }).notNull(),
     responseTypes: varchar('response_types', { length: 500 }).notNull(),
     tokenEndpointAuthMethod: varchar('token_endpoint_auth_method', { length: 50 }).notNull(),
-    createdAt: datetime('created_at').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull(),
   },
   (table) => ({
     clientIdIdx: uniqueIndex('uq_oauth_client_id').on(table.clientId),
   }),
 );
 
-export const tOAuthAuthorizationCodes = mysqlTable(
+export const tOAuthAuthorizationCodes = pgTable(
   'oauth_authorization_codes',
   {
     id: varchar('id', { length: 36 }).primaryKey(),
@@ -71,15 +71,15 @@ export const tOAuthAuthorizationCodes = mysqlTable(
     scope: varchar('scope', { length: 500 }),
     codeChallenge: varchar('code_challenge', { length: 128 }).notNull(),
     codeChallengeMethod: varchar('code_challenge_method', { length: 10 }).notNull(),
-    expiresAt: datetime('expires_at').notNull(),
-    createdAt: datetime('created_at').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true, mode: 'date' }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull(),
   },
   (table) => ({
     codeHashIdx: uniqueIndex('uq_oauth_code_hash').on(table.codeHash),
   }),
 );
 
-export const tOAuthAccessTokens = mysqlTable(
+export const tOAuthAccessTokens = pgTable(
   'oauth_access_tokens',
   {
     id: varchar('id', { length: 36 }).primaryKey(),
@@ -87,16 +87,16 @@ export const tOAuthAccessTokens = mysqlTable(
     clientId: varchar('client_id', { length: 64 }).notNull(),
     userId: varchar('user_id', { length: 36 }).notNull(),
     scope: varchar('scope', { length: 500 }),
-    expiresAt: datetime('expires_at').notNull(),
-    createdAt: datetime('created_at').notNull(),
-    revokedAt: datetime('revoked_at'),
+    expiresAt: timestamp('expires_at', { withTimezone: true, mode: 'date' }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull(),
+    revokedAt: timestamp('revoked_at', { withTimezone: true, mode: 'date' }),
   },
   (table) => ({
     tokenHashIdx: uniqueIndex('uq_oauth_access_token_hash').on(table.tokenHash),
   }),
 );
 
-export const tOAuthRefreshTokens = mysqlTable(
+export const tOAuthRefreshTokens = pgTable(
   'oauth_refresh_tokens',
   {
     id: varchar('id', { length: 36 }).primaryKey(),
@@ -105,26 +105,27 @@ export const tOAuthRefreshTokens = mysqlTable(
     userId: varchar('user_id', { length: 36 }).notNull(),
     accessTokenId: varchar('access_token_id', { length: 36 }),
     scope: varchar('scope', { length: 500 }),
-    expiresAt: datetime('expires_at').notNull(),
-    createdAt: datetime('created_at').notNull(),
-    revokedAt: datetime('revoked_at'),
+    expiresAt: timestamp('expires_at', { withTimezone: true, mode: 'date' }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull(),
+    revokedAt: timestamp('revoked_at', { withTimezone: true, mode: 'date' }),
   },
   (table) => ({
     tokenHashIdx: uniqueIndex('uq_oauth_refresh_token_hash').on(table.tokenHash),
   }),
 );
 
-export const tOAuthMcpKeys = mysqlTable('oauth_mcp_keys', {
+export const tOAuthMcpKeys = pgTable('oauth_mcp_keys', {
   userId: varchar('user_id', { length: 36 }).primaryKey(),
   apiKeyId: varchar('api_key_id', { length: 36 }).notNull(),
   encryptedApiKey: text('encrypted_api_key').notNull(),
-  createdAt: datetime('created_at').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull(),
 });
 
 // ── DB factory ───────────────────────────────────────────────────────────────
 
-export function createDb(url: string) {
-  const client = new Client({ url });
+export function createDb(connectionString: string) {
+  // prepare: false required for Hyperdrive connection pooling
+  const client = postgres(connectionString, { prepare: false });
   return drizzle(client, {
     schema: {
       tUsers,

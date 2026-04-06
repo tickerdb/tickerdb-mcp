@@ -1,11 +1,19 @@
 {
-  "name": "tickerdb-mcp",
-  "main": "remote/src/index.ts",
-  "compatibility_date": "2026-03-10",
-  "compatibility_flags": ["nodejs_compat"]
-  // Secrets (set via `wrangler secret put`):
-  //   DATABASE_URL       — PlanetScale connection string
-  //   SITE_URL           — https://tickerdb.com
-  //   MCP_URL            — https://mcp.tickerdb.com
-  //   MCP_ENCRYPTION_KEY — Base64-encoded 256-bit AES key for oauth_mcp_keys
+	"name": "tickerdb-mcp",
+	"main": "remote/src/index.ts",
+	"compatibility_date": "2026-03-10",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"hyperdrive": [
+		{
+			"binding": "HYPERDRIVE",
+			"id": "a4e11f1d24eb46f1ab6612262cd4449d"
+		}
+	]
+	// Secrets (set via `wrangler secret put`):
+	//   DATABASE_URL       — Direct PostgreSQL connection string (fallback for local dev)
+	//   SITE_URL           — https://tickerdb.com
+	//   MCP_URL            — https://mcp.tickerdb.com
+	//   MCP_ENCRYPTION_KEY — Base64-encoded 256-bit AES key for oauth_mcp_keys
 }

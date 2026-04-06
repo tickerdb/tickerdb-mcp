@@ -24,6 +24,7 @@ const ACCESS_TOKEN_LIFETIME = 3600; // 1 hour
 const REFRESH_TOKEN_LIFETIME = 30 * 24 * 3600; // 30 days
 
 export interface Env {
+  HYPERDRIVE?: { connectionString: string };
   DATABASE_URL: string;
   SITE_URL: string; // https://tickerdb.com
   MCP_URL: string; // https://mcp.tickerdb.com
@@ -116,7 +117,7 @@ export async function handleRegister(request: Request, env: Env): Promise<Respon
   const grantTypes = Array.isArray(body.grant_types) ? body.grant_types : ['authorization_code', 'refresh_token'];
   const responseTypes = Array.isArray(body.response_types) ? body.response_types : ['code'];
 
-  const db = createDb(env.DATABASE_URL);
+  const db = createDb(env.HYPERDRIVE?.connectionString ?? env.DATABASE_URL);
   const now = new Date();
 
   await db.insert(tOAuthClients).values({
@@ -171,7 +172,7 @@ export async function handleToken(request: Request, env: Env): Promise<Response>
   }
 
   const grantType = params.get('grant_type');
-  const db = createDb(env.DATABASE_URL);
+  const db = createDb(env.HYPERDRIVE?.connectionString ?? env.DATABASE_URL);
 
   if (grantType === 'authorization_code') {
     return handleAuthorizationCodeGrant(params, db);
@@ -388,7 +389,7 @@ export async function handleRevoke(request: Request, env: Env): Promise<Response
     return new Response(null, { status: 200 });
   }
 
-  const db = createDb(env.DATABASE_URL);
+  const db = createDb(env.HYPERDRIVE?.connectionString ?? env.DATABASE_URL);
   const tokenHash = await sha256(token);
   const now = new Date();
 
@@ -425,7 +426,7 @@ export async function resolveOAuthToken(
   token: string,
   env: Env,
 ): Promise<{ apiKey: string; userId: string } | null> {
-  const db = createDb(env.DATABASE_URL);
+  const db = createDb(env.HYPERDRIVE?.connectionString ?? env.DATABASE_URL);
   const tokenHash = await sha256(token);
   const now = new Date();
 

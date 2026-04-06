@@ -80,7 +80,7 @@ export async function handleRegister(request, env) {
     }
     const grantTypes = Array.isArray(body.grant_types) ? body.grant_types : ['authorization_code', 'refresh_token'];
     const responseTypes = Array.isArray(body.response_types) ? body.response_types : ['code'];
-    const db = createDb(env.DATABASE_URL);
+    const db = createDb(env.HYPERDRIVE?.connectionString ?? env.DATABASE_URL);
     const now = new Date();
     await db.insert(tOAuthClients).values({
         id: crypto.randomUUID(),
@@ -128,7 +128,7 @@ export async function handleToken(request, env) {
         return jsonResponse({ error: 'invalid_request' }, 400);
     }
     const grantType = params.get('grant_type');
-    const db = createDb(env.DATABASE_URL);
+    const db = createDb(env.HYPERDRIVE?.connectionString ?? env.DATABASE_URL);
     if (grantType === 'authorization_code') {
         return handleAuthorizationCodeGrant(params, db);
     }
@@ -293,7 +293,7 @@ export async function handleRevoke(request, env) {
         // RFC 7009: return 200 even if token is missing
         return new Response(null, { status: 200 });
     }
-    const db = createDb(env.DATABASE_URL);
+    const db = createDb(env.HYPERDRIVE?.connectionString ?? env.DATABASE_URL);
     const tokenHash = await sha256(token);
     const now = new Date();
     // Try access tokens first
@@ -320,7 +320,7 @@ export async function handleRevoke(request, env) {
 }
 // ── Resolve OAuth token to API key ───────────────────────────────────────────
 export async function resolveOAuthToken(token, env) {
-    const db = createDb(env.DATABASE_URL);
+    const db = createDb(env.HYPERDRIVE?.connectionString ?? env.DATABASE_URL);
     const tokenHash = await sha256(token);
     const now = new Date();
     // Look up valid, non-revoked, non-expired access token
