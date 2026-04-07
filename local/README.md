@@ -1,4 +1,4 @@
-# tickerdb-mcp-server
+# tickerdb-mcp
 
 MCP server for [TickerDB](https://tickerdb.com) — pre-computed market intelligence for AI agents.
 
@@ -13,7 +13,7 @@ Add to your Claude Desktop config (`claude_desktop_config.json`):
   "mcpServers": {
     "tickerdb": {
       "command": "npx",
-      "args": ["tickerdb-mcp-server"],
+      "args": ["tickerdb-mcp"],
       "env": {
         "TICKERDB_KEY": "tapi_your_api_key_here"
       }

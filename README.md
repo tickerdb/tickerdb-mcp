@@ -44,7 +44,7 @@ Add to your Claude Desktop config (`claude_desktop_config.json`):
   "mcpServers": {
     "tickerdb": {
       "command": "npx",
-      "args": ["tickerdb-mcp-server"],
+      "args": ["tickerdb-mcp"],
       "env": {
         "TICKERDB_KEY": "tapi_your_api_key_here"
       }
@@ -61,7 +61,7 @@ This is a three-package workspace:
 
 - **`shared/`** — Shared tool definitions, API client, and server factory (internal, not published)
 - **`remote/`** — Cloudflare Worker deployed at `mcp.tickerdb.com` (Streamable HTTP transport + OAuth 2.1)
-- **`local/`** — Published npm package `tickerdb-mcp-server` (stdio transport)
+- **`local/`** — Published npm package `tickerdb-mcp` (stdio transport)
 
 Both the remote server and npm package use the same tool definitions from `shared/`. The MCP server is a thin proxy — all tier-based access control, rate limiting, and field filtering is handled by the TickerDB HTTP API.
 

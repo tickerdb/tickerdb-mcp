@@ -1,12 +1,12 @@
 {
-  "name": "tickerdb-mcp-server",
+  "name": "tickerdb-mcp",
   "version": "1.7.2",
   "mcpName": "ai.tickerdb/mcp-server",
   "description": "TickerDB MCP server for Claude Desktop and other MCP clients",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "tickerdb-mcp-server": "bin/cli.js"
+    "tickerdb-mcp": "bin/cli.js"
   },
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --external @modelcontextprotocol/sdk --external zod"
@@ -36,11 +36,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/TickerDB/tickerdb-mcp.git"
+    "url": "https://github.com/tickerdb/tickerdb-mcp.git"
   },
   "homepage": "https://tickerdb.com",
   "author": "TickerDB",
   "bugs": {
-    "url": "https://github.com/TickerDB/tickerdb-mcp/issues"
+    "url": "https://github.com/tickerdb/tickerdb-mcp/issues"
   }
 }
