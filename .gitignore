@@ -1,6 +1,10 @@
 node_modules/
 dist/
 .wrangler/
+.dev.vars
+*.tgz
+.env
+.env.*
 key.pem
 gen-keys.sh
 mcp-publisher.exe
