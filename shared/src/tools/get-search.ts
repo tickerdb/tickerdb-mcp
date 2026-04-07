@@ -6,12 +6,18 @@ import { formatApiError } from "../errors.js";
 export function registerGetSearch(server: McpServer, apiKey: string) {
   server.tool(
     "get_search",
-    "Search for assets matching filter criteria. Use this when the user wants to find tickers by categorical state (e.g. 'which stocks are oversold?', 'find tech stocks in strong uptrend'). Pass filters as a JSON-encoded array of {field, op, value} objects. Call get_schema first to discover valid field names — fields use full expanded names (e.g. 'momentum_rsi_zone' not 'rsi_zone', 'volatility_regime' not 'vol_regime').",
+    "Search for assets matching filter criteria. Use this when the user wants to find tickers by categorical state (e.g. 'which stocks are oversold?', 'find tech stocks in strong uptrend'). Pass filters as a JSON-encoded array of {field, op, value} objects. Call get_schema first to discover valid field names — fields use full expanded names (e.g. 'momentum_rsi_zone' not 'rsi_zone', 'volatility_regime' not 'vol_regime'). Use the 'fields' param to control which columns are returned (reduces token usage).",
     {
       filters: z
         .string()
         .describe(
           'JSON-encoded filter array. Each filter: {"field": "column_name", "op": "eq|neq|in|gt|gte|lt|lte", "value": "..."}. Example: [{"field": "momentum_rsi_zone", "op": "in", "value": ["oversold", "deep_oversold"]}, {"field": "sector", "op": "eq", "value": "Technology"}]',
+        ),
+      fields: z
+        .string()
+        .optional()
+        .describe(
+          'JSON-encoded array of column names to return. Example: ["ticker", "sector", "momentum_rsi_zone", "trend_direction"]. Omit for a default core subset. Use ["*"] for all fields. Reduces token usage significantly.',
         ),
       timeframe: z
         .enum(["daily", "weekly"])
@@ -32,9 +38,10 @@ export function registerGetSearch(server: McpServer, apiKey: string) {
         .describe("Pagination offset. Default: 0"),
     },
     { readOnlyHint: true, openWorldHint: true },
-    async ({ filters, timeframe, limit, offset }) => {
+    async ({ filters, fields, timeframe, limit, offset }) => {
       const params: Record<string, string | undefined> = {
         filters,
+        fields,
         timeframe,
         limit: limit?.toString(),
         offset: offset?.toString(),
