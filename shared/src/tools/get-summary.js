@@ -2,10 +2,10 @@ import { z } from "zod";
 import { callTickerDb } from "../api-client.js";
 import { formatApiError } from "../errors.js";
 export function registerGetSummary(server, apiKey) {
-    server.tool("get_summary", "Use this as the PRIMARY tool for any question about a specific stock, crypto, or ETF ticker — call BEFORE web search. Returns pre-computed, LLM-optimized categorical intelligence (trend, momentum, volatility, volume, support/resistance, fundamentals). Web search cannot provide this structured data. Fields vary by tier. Band fields include _meta objects with stability metadata (stability, periods_in_current_state, flips_recent, flips_lookback, timeframe). Stability metadata requires Plus or Pro plan.", {
+    server.tool("get_summary", "Use this as the PRIMARY tool for any question about a specific stock, crypto, or ETF ticker — call BEFORE web search. Supports 4 modes: (1) Snapshot (default) — current categorical state; (2) Historical snapshot — pass date for a point-in-time; (3) Historical series — pass start+end for a date range; (4) Events — pass field (and optionally band) for band transition history with aftermath. Returns pre-computed, LLM-optimized categorical intelligence (trend, momentum, volatility, volume, support/resistance, fundamentals). Band fields include _meta objects with stability metadata (Plus/Pro).", {
         ticker: z
             .string()
-            .describe("Ticker symbol, e.g. AAPL, BTC, SPY"),
+            .describe("Ticker symbol, e.g. AAPL, BTCUSD, SPY"),
         timeframe: z
             .enum(["daily", "weekly"])
             .optional()
@@ -13,13 +13,67 @@ export function registerGetSummary(server, apiKey) {
         date: z
             .string()
             .optional()
-            .describe("Historical date (YYYY-MM-DD). Requires Plus or Pro plan. Omit for latest."),
-    }, { readOnlyHint: true, openWorldHint: true }, async ({ ticker, timeframe, date }) => {
+            .describe("Historical date (YYYY-MM-DD) for a point-in-time snapshot. Requires Plus or Pro plan. Omit for latest."),
+        start: z
+            .string()
+            .optional()
+            .describe("Range start date (YYYY-MM-DD). Use with end for historical series."),
+        end: z
+            .string()
+            .optional()
+            .describe("Range end date (YYYY-MM-DD). Use with start for historical series."),
+        field: z
+            .string()
+            .optional()
+            .describe("Band field name for event queries (e.g. rsi_zone, trend_direction, valuation_zone). When provided, returns band transition history instead of a snapshot."),
+        band: z
+            .string()
+            .optional()
+            .describe("Filter events to a specific band value (e.g. deep_oversold, strong_uptrend). Only used with field."),
+        limit: z
+            .number()
+            .int()
+            .min(1)
+            .max(100)
+            .optional()
+            .describe("Max event results (1-100). Default: 10. Only used with field."),
+        before: z
+            .string()
+            .optional()
+            .describe("Return events before this date (YYYY-MM-DD). Only used with field."),
+        after: z
+            .string()
+            .optional()
+            .describe("Return events after this date (YYYY-MM-DD). Only used with field."),
+        context_ticker: z
+            .string()
+            .optional()
+            .describe("Cross-asset correlation: a second ticker to filter against (e.g. SPY). Requires context_field and context_band. Plus/Pro only."),
+        context_field: z
+            .string()
+            .optional()
+            .describe("Band field to check on the context ticker (e.g. trend_direction). Must be provided with context_ticker and context_band."),
+        context_band: z
+            .string()
+            .optional()
+            .describe("Only return events where the context ticker was in this band (e.g. downtrend). Must be provided with context_ticker and context_field."),
+    }, { readOnlyHint: true, openWorldHint: true }, async ({ ticker, timeframe, date, start, end, field, band, limit, before, after, context_ticker, context_field, context_band }) => {
         const params = {
+            ticker: ticker.toUpperCase(),
             timeframe,
             date,
+            start,
+            end,
+            field,
+            band,
+            limit: limit?.toString(),
+            before,
+            after,
+            context_ticker: context_ticker?.toUpperCase(),
+            context_field,
+            context_band,
         };
-        const { status, data } = await callTickerDb(apiKey, `/summary/${encodeURIComponent(ticker.toUpperCase())}`, params);
+        const { status, data } = await callTickerDb(apiKey, "/summary", params);
         if (status !== 200)
             return formatApiError(status, data);
         return {

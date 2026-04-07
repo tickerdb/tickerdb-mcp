@@ -1,6 +1,6 @@
 {
   "name": "tickerdb-mcp",
-  "version": "1.7.2",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "scripts": {

@@ -28,15 +28,15 @@ Get an API key at [tickerdb.com/dashboard](https://tickerdb.com/dashboard).
 
 | Tool | Description | Tier |
 |---|---|---|
-| `get_summary` | Technical + fundamental summary for a single ticker | Free |
-| `list_assets` | Browse all supported tickers | Free |
-| `scan_oversold` | Assets in oversold RSI conditions | Free |
-| `scan_breakouts` | Support/resistance breakouts with volume confirmation | Free |
-| `scan_unusual_volume` | Volume anomalies relative to historical average | Free |
-| `scan_valuation` | Stocks at valuation extremes (PE, growth, historical) | Free |
-| `compare_assets` | Side-by-side comparison of multiple tickers | Plus |
-| `get_watchlist` | Condensed view for multiple tickers in one call | Plus |
-| `scan_insider_activity` | Notable insider buying/selling | Pro |
+| `get_summary` | Technical + fundamental summary for a single ticker (supports date range and events filtering) | Free |
+| `get_watchlist` | Live data for your saved watchlist tickers | Plus |
+| `get_watchlist_changes` | Field-level diffs since the last pipeline run | Plus |
+| `add_to_watchlist` | Add tickers to your watchlist | Plus |
+| `remove_from_watchlist` | Remove tickers from your watchlist | Plus |
+| `get_account` | Account details, plan tier, and usage | Free |
+| `create_webhook` | Register a webhook for watchlist changes | Plus |
+| `list_webhooks` | List registered webhooks | Plus |
+| `delete_webhook` | Remove a webhook | Plus |
 
 All tools return categorical, pre-computed data designed for LLM context windows — no raw OHLCV, no post-processing needed.
 

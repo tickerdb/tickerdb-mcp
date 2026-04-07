@@ -6,7 +6,7 @@ import { formatApiError } from "../errors.js";
 export function registerAddToWatchlist(server: McpServer, apiKey: string) {
   server.tool(
     "add_to_watchlist",
-    "Add tickers to the user's saved watchlist. Duplicates are skipped. Use list_assets to verify ticker support.",
+    "Add tickers to the user's saved watchlist. Duplicates are skipped.",
     {
       tickers: z
         .array(z.string())

@@ -9,30 +9,21 @@ Connects TickerDB to any MCP-compatible client: Claude Desktop, Claude Code, Cur
 
 | Tool | Description |
 |---|---|
-| `get_summary` | Technical + fundamental summary for a single ticker |
-| `get_history` | Historical summary series for one ticker across a date range |
-| `compare_assets` | Side-by-side comparison of multiple tickers (Plus+) |
-| `list_assets` | Browse all supported tickers |
+| `get_summary` | Technical + fundamental summary for a single ticker (supports date range and events filtering) |
 | `get_watchlist` | Live data for your saved watchlist tickers |
 | `get_watchlist_changes` | Field-level diffs since the last pipeline run |
 | `add_to_watchlist` | Add tickers to your watchlist |
 | `remove_from_watchlist` | Remove tickers from your watchlist |
-| `scan_oversold` | Assets in oversold RSI conditions |
-| `scan_overbought` | Assets in overbought RSI conditions |
-| `scan_breakouts` | Support/resistance breakouts with volume confirmation |
-| `scan_unusual_volume` | Volume anomalies relative to historical average |
-| `scan_valuation` | Stocks at valuation extremes (PE, growth, historical) |
-| `scan_insider_activity` | Notable insider buying/selling (Pro) |
 | `get_account` | Account details, plan tier, and usage |
 | `create_webhook` | Register a webhook for watchlist changes |
 | `list_webhooks` | List registered webhooks |
 | `delete_webhook` | Remove a webhook |
 
-All screeners support filtering by `sector`, `asset_class`, `market_cap_tier`, and `date` (historical, Plus+). Use `get_history` for bulk ticker syncs instead of looping `get_summary` across many dates.
+Use `get_summary` with `start`/`end` params for bulk ticker syncs across a date range, or with `field`/`band` params to query event occurrences.
 
 ### Band Stability Metadata
 
-Summary, watchlist, watchlist changes, event, and scan tools now return **band stability metadata**. Each band field (trend direction, momentum zone, etc.) includes a sibling `_meta` object describing how stable that state is. The stability label is one of `fresh`, `holding`, `established`, or `volatile`. Full metadata also includes `periods_in_current_state`, `flips_recent`, and `flips_lookback`. This context helps agents distinguish between a newly entered state and one that has persisted for many periods, improving the quality of trade signals and alerts.
+Summary, watchlist, and watchlist changes tools return **band stability metadata**. Each band field (trend direction, momentum zone, etc.) includes a sibling `_meta` object describing how stable that state is. The stability label is one of `fresh`, `holding`, `established`, or `volatile`. Full metadata also includes `periods_in_current_state`, `flips_recent`, and `flips_lookback`. This context helps agents distinguish between a newly entered state and one that has persisted for many periods, improving the quality of trade signals and alerts.
 
 ## Setup
 

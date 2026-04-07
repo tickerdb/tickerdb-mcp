@@ -2,7 +2,7 @@ import { z } from "zod";
 import { callTickerDb } from "../api-client.js";
 import { formatApiError } from "../errors.js";
 export function registerAddToWatchlist(server, apiKey) {
-    server.tool("add_to_watchlist", "Add tickers to the user's saved watchlist. Duplicates are skipped. Use list_assets to verify ticker support.", {
+    server.tool("add_to_watchlist", "Add tickers to the user's saved watchlist. Duplicates are skipped.", {
         tickers: z
             .array(z.string())
             .describe('Array of ticker symbols to add, e.g. ["AAPL", "MSFT", "BTCUSD"]'),
