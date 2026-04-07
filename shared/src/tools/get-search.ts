@@ -17,7 +17,7 @@ export function registerGetSearch(server: McpServer, apiKey: string) {
         .string()
         .optional()
         .describe(
-          'JSON-encoded array of column names to return. Example: ["ticker", "sector", "momentum_rsi_zone", "trend_direction"]. Omit for a default core subset. Use ["*"] for all fields. Reduces token usage significantly.',
+          'JSON-encoded array of column names to return. Example: ["ticker", "sector", "momentum_rsi_zone", "trend_direction"]. Omit to get a default core subset: ticker, asset_class, sector, performance, trend_direction, momentum_rsi_zone, extremes_condition, extremes_condition_rarity, volatility_regime, volume_ratio_band, fundamentals_valuation_zone, range_position. Use ["*"] for all 120+ fields. Specify fields to reduce token usage.',
         ),
       timeframe: z
         .enum(["daily", "weekly"])
