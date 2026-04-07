@@ -6,13 +6,12 @@ import { formatApiError } from "../errors.js";
 export function registerGetSearch(server: McpServer, apiKey: string) {
   server.tool(
     "get_search",
-    "Search for assets matching filter criteria. Use this when the user wants to find tickers by categorical state (e.g. 'which stocks are oversold?', 'find tech stocks in strong uptrend'). Pass filters as a JSON object describing the desired band values.",
+    "Search for assets matching filter criteria. Use this when the user wants to find tickers by categorical state (e.g. 'which stocks are oversold?', 'find tech stocks in strong uptrend'). Pass filters as a JSON-encoded array of {field, op, value} objects. Call get_schema first to discover valid field names — fields use full expanded names (e.g. 'momentum_rsi_zone' not 'rsi_zone', 'volatility_regime' not 'vol_regime').",
     {
       filters: z
         .string()
-        .optional()
         .describe(
-          "JSON-encoded filter object. Keys are field names, values are band values or arrays of band values. Example: {\"rsi_zone\": \"deep_oversold\", \"trend_direction\": [\"uptrend\", \"strong_uptrend\"]}",
+          'JSON-encoded filter array. Each filter: {"field": "column_name", "op": "eq|neq|in|gt|gte|lt|lte", "value": "..."}. Example: [{"field": "momentum_rsi_zone", "op": "in", "value": ["oversold", "deep_oversold"]}, {"field": "sector", "op": "eq", "value": "Technology"}]',
         ),
       timeframe: z
         .enum(["daily", "weekly"])
