@@ -59,7 +59,6 @@ export function registerGetSummary(server, apiKey) {
             .describe("Only return events where the context ticker was in this band (e.g. downtrend). Must be provided with context_ticker and context_field."),
     }, { readOnlyHint: true, openWorldHint: true }, async ({ ticker, timeframe, date, start, end, field, band, limit, before, after, context_ticker, context_field, context_band }) => {
         const params = {
-            ticker: ticker.toUpperCase(),
             timeframe,
             date,
             start,
@@ -73,7 +72,7 @@ export function registerGetSummary(server, apiKey) {
             context_field,
             context_band,
         };
-        const { status, data } = await callTickerDb(apiKey, "/summary", params);
+        const { status, data } = await callTickerDb(apiKey, `/summary/${encodeURIComponent(ticker.toUpperCase())}`, params);
         if (status !== 200)
             return formatApiError(status, data);
         return {
