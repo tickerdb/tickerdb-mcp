@@ -1,6 +1,6 @@
 # TickerDB MCP Server
 
-MCP (Model Context Protocol) server for [TickerDB](https://tickerdb.com) — pre-computed market intelligence for AI agents.
+MCP (Model Context Protocol) server for [TickerDB](https://tickerdb.com) — financial data for AI agents.
 
 Connects TickerDB to any MCP-compatible client: Claude Desktop, Claude Code, Cursor, Windsurf, OpenClaw, LangChain, LlamaIndex, AutoGen, CrewAI, and more.
 
@@ -10,6 +10,8 @@ Connects TickerDB to any MCP-compatible client: Claude Desktop, Claude Code, Cur
 | Tool | Description |
 |---|---|
 | `get_summary` | Technical + fundamental summary for a single ticker (supports date range and events filtering) |
+| `get_search` | Search assets by categorical state with filters |
+| `get_schema` | Discover available fields and filter options (always free, 0 credits) |
 | `get_watchlist` | Live data for your saved watchlist tickers |
 | `get_watchlist_changes` | Field-level diffs since the last pipeline run |
 | `add_to_watchlist` | Add tickers to your watchlist |
@@ -18,6 +20,8 @@ Connects TickerDB to any MCP-compatible client: Claude Desktop, Claude Code, Cur
 | `create_webhook` | Register a webhook for watchlist changes |
 | `list_webhooks` | List registered webhooks |
 | `delete_webhook` | Remove a webhook |
+
+All tools are available on every tier (Free, Plus, Pro) — tiers differ by rate limits, history depth, and watchlist size. See [tickerdb.com/pricing](https://tickerdb.com/pricing) for details.
 
 Use `get_summary` with `start`/`end` params for bulk ticker syncs across a date range, or with `field`/`band` params to query event occurrences.
 

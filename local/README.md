@@ -1,6 +1,6 @@
 # tickerdb-mcp
 
-MCP server for [TickerDB](https://tickerdb.com) — pre-computed market intelligence for AI agents.
+MCP server for [TickerDB](https://tickerdb.com) — financial data for AI agents.
 
 Works with Claude Desktop, Claude Code, Cursor, Windsurf, OpenClaw, LangChain, LlamaIndex, AutoGen, CrewAI, and any MCP-compatible client.
 
@@ -26,17 +26,21 @@ Get an API key at [tickerdb.com/dashboard](https://tickerdb.com/dashboard).
 
 ## Available Tools
 
-| Tool | Description | Tier |
-|---|---|---|
-| `get_summary` | Technical + fundamental summary for a single ticker (supports date range and events filtering) | Free |
-| `get_watchlist` | Live data for your saved watchlist tickers | Plus |
-| `get_watchlist_changes` | Field-level diffs since the last pipeline run | Plus |
-| `add_to_watchlist` | Add tickers to your watchlist | Plus |
-| `remove_from_watchlist` | Remove tickers from your watchlist | Plus |
-| `get_account` | Account details, plan tier, and usage | Free |
-| `create_webhook` | Register a webhook for watchlist changes | Plus |
-| `list_webhooks` | List registered webhooks | Plus |
-| `delete_webhook` | Remove a webhook | Plus |
+| Tool | Description |
+|---|---|
+| `get_summary` | Technical + fundamental summary for a single ticker (supports date range and events filtering) |
+| `get_search` | Search assets by categorical state with filters |
+| `get_schema` | Discover available fields and filter options (always free, 0 credits) |
+| `get_watchlist` | Live data for your saved watchlist tickers |
+| `get_watchlist_changes` | Field-level diffs since the last pipeline run |
+| `add_to_watchlist` | Add tickers to your watchlist |
+| `remove_from_watchlist` | Remove tickers from your watchlist |
+| `get_account` | Account details, plan tier, and usage |
+| `create_webhook` | Register a webhook for watchlist changes |
+| `list_webhooks` | List registered webhooks |
+| `delete_webhook` | Remove a webhook |
+
+All tools are available on every tier (Free, Plus, Pro) — tiers differ by rate limits, history depth, and watchlist size. See [tickerdb.com/pricing](https://tickerdb.com/pricing) for details.
 
 All tools return categorical, pre-computed data designed for LLM context windows — no raw OHLCV, no post-processing needed.
 
