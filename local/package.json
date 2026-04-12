@@ -1,6 +1,6 @@
 {
   "name": "tickerdb-mcp",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "mcpName": "ai.tickerdb/mcp-server",
   "description": "TickerDB MCP server for Claude Desktop and other MCP clients",
   "type": "module",

@@ -30,13 +30,17 @@ export function registerGetSummary(server, apiKey) {
             .string()
             .optional()
             .describe("Filter events to a specific band value (e.g. deep_oversold, strong_uptrend). Only used with field."),
+        sample: z
+            .enum(["even"])
+            .optional()
+            .describe("Date range mode only. Use 'even' to evenly distribute snapshots across the full start/end range."),
         limit: z
             .number()
             .int()
             .min(1)
             .max(100)
             .optional()
-            .describe("Max event results (1-100). Default: 10. Only used with field."),
+            .describe("For event mode: max results (1-100). For sample=even date ranges: requested sampled rows, capped by plan (Free 3, Plus 10, Pro 50)."),
         before: z
             .string()
             .optional()
@@ -57,12 +61,13 @@ export function registerGetSummary(server, apiKey) {
             .string()
             .optional()
             .describe("Only return events where the context ticker was in this band (e.g. downtrend). Must be provided with context_ticker and context_field."),
-    }, { readOnlyHint: true, openWorldHint: true }, async ({ ticker, timeframe, date, start, end, field, band, limit, before, after, context_ticker, context_field, context_band }) => {
+    }, { readOnlyHint: true, openWorldHint: true }, async ({ ticker, timeframe, date, start, end, field, band, sample, limit, before, after, context_ticker, context_field, context_band }) => {
         const params = {
             timeframe,
             date,
             start,
             end,
+            sample,
             field,
             band,
             limit: limit?.toString(),
