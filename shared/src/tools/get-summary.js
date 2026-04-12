@@ -22,6 +22,10 @@ export function registerGetSummary(server, apiKey) {
             .string()
             .optional()
             .describe("Range end date (YYYY-MM-DD). Use with start for historical series."),
+        fields: z
+            .array(z.string())
+            .optional()
+            .describe("Optional summary fields to return. Pass sections like trend or dotted paths like trend.direction, momentum.rsi_zone, fundamentals.valuation_zone, or levels."),
         field: z
             .string()
             .optional()
@@ -61,12 +65,13 @@ export function registerGetSummary(server, apiKey) {
             .string()
             .optional()
             .describe("Only return events where the context ticker was in this band (e.g. downtrend). Must be provided with context_ticker and context_field."),
-    }, { readOnlyHint: true, openWorldHint: true }, async ({ ticker, timeframe, date, start, end, field, band, sample, limit, before, after, context_ticker, context_field, context_band }) => {
+    }, { readOnlyHint: true, openWorldHint: true }, async ({ ticker, timeframe, date, start, end, fields, field, band, sample, limit, before, after, context_ticker, context_field, context_band }) => {
         const params = {
             timeframe,
             date,
             start,
             end,
+            fields: fields ? JSON.stringify(fields) : undefined,
             sample,
             field,
             band,
