@@ -24,6 +24,7 @@ Connects TickerDB to any MCP-compatible client: Claude Desktop, Claude Code, Cur
 All tools are available on every tier (Free, Plus, Pro) — tiers differ by rate limits, history depth, and watchlist size. See [tickerdb.com/pricing](https://tickerdb.com/pricing) for details.
 
 Use `get_summary` with `start`/`end` params for bulk ticker syncs across a date range, or with `field`/`band` params to query event occurrences.
+`get_watchlist` does not take a timeframe. Use `get_watchlist_changes` for daily or weekly diffs.
 
 ### Band Stability Metadata
 

@@ -43,6 +43,7 @@ Get an API key at [tickerdb.com/dashboard](https://tickerdb.com/dashboard).
 All tools are available on every tier (Free, Plus, Pro) — tiers differ by rate limits, history depth, and watchlist size. See [tickerdb.com/pricing](https://tickerdb.com/pricing) for details.
 
 All tools return categorical, pre-computed data designed for LLM context windows — no raw OHLCV, no post-processing needed.
+`get_watchlist` does not take a timeframe. Use `get_watchlist_changes` for daily or weekly diffs.
 
 ## Remote Server
 
