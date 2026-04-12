@@ -16,7 +16,7 @@ export function registerCreateWebhook(server, apiKey) {
         if (events)
             body.events = events;
         const { status, data } = await callTickerDb(apiKey, "/webhooks", undefined, { method: "POST", body });
-        if (status !== 200)
+        if (status < 200 || status >= 300)
             return formatApiError(status, data);
         return {
             content: [

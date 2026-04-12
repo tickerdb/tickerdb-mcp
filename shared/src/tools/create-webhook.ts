@@ -29,7 +29,7 @@ export function registerCreateWebhook(server: McpServer, apiKey: string) {
         { method: "POST", body },
       );
 
-      if (status !== 200) return formatApiError(status, data);
+      if (status < 200 || status >= 300) return formatApiError(status, data);
 
       return {
         content: [
