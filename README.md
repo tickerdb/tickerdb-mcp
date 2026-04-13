@@ -51,7 +51,7 @@ Add to your Claude Desktop config (`claude_desktop_config.json`):
       "command": "npx",
       "args": ["tickerdb-mcp"],
       "env": {
-        "TICKERDB_KEY": "tapi_your_api_key_here"
+        "TICKERDB_KEY": "ta_your_api_key_here"
       }
     }
   }
@@ -74,7 +74,7 @@ Both the remote server and npm package use the same tool definitions from `share
 
 The remote server supports two authentication methods:
 
-- **Bearer token** — pass your `tapi_*` API key directly as `Authorization: Bearer tapi_...`
+- **Bearer token** — pass your `ta_*` API key directly as `Authorization: Bearer ta_...`
 - **OAuth 2.1** — used by Claude.ai Connectors. The server implements dynamic client registration, PKCE, token exchange, and revocation. The `/authorize` endpoint redirects to the main TickerDB site for consent.
 
 ## Development

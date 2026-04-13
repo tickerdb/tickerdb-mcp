@@ -25,11 +25,11 @@ export function registerGetSummary(server, apiKey) {
         fields: z
             .array(z.string())
             .optional()
-            .describe("Optional summary fields to return. Pass sections like trend or dotted paths like trend.direction, momentum.rsi_zone, fundamentals.valuation_zone, or levels."),
+            .describe("Optional summary fields to return. Pass sections like trend or dotted paths like trend.direction, momentum.rsi_zone, fundamentals.valuation_zone, or levels. Event field names should prefer full schema names such as momentum_rsi_zone and fundamentals_valuation_zone."),
         field: z
             .string()
             .optional()
-            .describe("Band field name for event queries (e.g. rsi_zone, trend_direction, valuation_zone). When provided, returns band transition history instead of a snapshot."),
+            .describe("Band field name for event queries (e.g. momentum_rsi_zone, trend_direction, fundamentals_valuation_zone). When provided, returns band transition history instead of a snapshot."),
         band: z
             .string()
             .optional()

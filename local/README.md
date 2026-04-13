@@ -15,7 +15,7 @@ Add to your Claude Desktop config (`claude_desktop_config.json`):
       "command": "npx",
       "args": ["tickerdb-mcp"],
       "env": {
-        "TICKERDB_KEY": "tapi_your_api_key_here"
+        "TICKERDB_KEY": "ta_your_api_key_here"
       }
     }
   }
