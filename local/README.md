@@ -1,6 +1,6 @@
 # tickerdb-mcp
 
-MCP server for [TickerDB](https://tickerdb.com) — financial data for AI agents.
+MCP server for [TickerDB](https://tickerdb.com) — financial context for agents.
 
 Works with Claude Desktop, Claude Code, Cursor, Windsurf, OpenClaw, LangChain, LlamaIndex, AutoGen, CrewAI, and any MCP-compatible client.
 

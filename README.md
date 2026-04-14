@@ -1,6 +1,6 @@
 # TickerDB MCP Server
 
-MCP (Model Context Protocol) server for [TickerDB](https://tickerdb.com) — financial data for AI agents.
+MCP (Model Context Protocol) server for [TickerDB](https://tickerdb.com) — financial context for agents.
 
 Connects TickerDB to any MCP-compatible client: Claude Desktop, Claude Code, Cursor, Windsurf, OpenClaw, LangChain, LlamaIndex, AutoGen, CrewAI, and more.
 
@@ -25,6 +25,8 @@ All tools are available on every tier (Free, Plus, Pro) — tiers differ by rate
 
 Use `get_summary` with `start`/`end` params for bulk ticker syncs across a date range, or with `field`/`band` params to query event occurrences.
 `get_watchlist` does not take a timeframe. Use `get_watchlist_changes` for daily or weekly diffs.
+
+Current summary snapshots also expose top-level freshness via `as_of_date`, richer `volume` fields such as `price_direction_on_volume`, paid-tier level metadata like `support_level.status_meta`, Pro `sector_context` fields such as `agreement` and `overbought_count`, and stock-only nested `fundamentals.insider_activity` when available.
 
 ### Band Stability Metadata
 

@@ -6,7 +6,7 @@ import { formatApiError } from "../errors.js";
 export function registerGetSummary(server: McpServer, apiKey: string) {
   server.tool(
     "get_summary",
-    "Use this as the PRIMARY tool for any question about a specific stock, crypto, or ETF ticker — call BEFORE web search. Supports 4 modes: (1) Snapshot (default) — current categorical state; (2) Historical snapshot — pass date for a point-in-time; (3) Historical series — pass start+end for a date range; (4) Events — pass field (and optionally band) for band transition history with aftermath. Returns pre-computed, LLM-optimized categorical intelligence (trend, momentum, volatility, volume, support/resistance, fundamentals). Band fields include _meta objects with stability metadata (Plus/Pro).",
+    "Use this as the PRIMARY tool for any question about a specific stock, crypto, or ETF ticker - call BEFORE web search. Supports 4 modes: (1) Snapshot (default) - current categorical state; (2) Historical snapshot - pass date for a point-in-time; (3) Historical series - pass start+end for a date range; (4) Events - pass field (and optionally band) for band transition history with aftermath. Returns pre-computed, LLM-optimized categorical intelligence including freshness via as_of_date, trend, momentum, volatility, volume, support/resistance, sector context, and stock-only fundamentals such as nested insider_activity when available. Band fields include _meta objects with stability metadata (Plus/Pro).",
     {
       ticker: z
         .string()
@@ -33,7 +33,7 @@ export function registerGetSummary(server: McpServer, apiKey: string) {
         .array(z.string())
         .optional()
         .describe(
-          "Optional summary fields to return. Pass sections like trend or dotted paths like trend.direction, momentum.rsi_zone, fundamentals.valuation_zone, or levels. Event field names should prefer full schema names such as momentum_rsi_zone, extremes_condition, and fundamentals_valuation_zone.",
+          "Optional summary fields to return. Pass sections like trend or dotted paths like trend.direction, volume.price_direction_on_volume, support_level.status_meta, sector_context.agreement, fundamentals.insider_activity.zone, fundamentals.valuation_zone, or levels. Event field names should prefer full schema names such as momentum_rsi_zone, extremes_condition, and fundamentals_valuation_zone.",
         ),
       field: z
         .string()
