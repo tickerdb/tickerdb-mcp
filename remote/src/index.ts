@@ -1,4 +1,5 @@
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
+import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import { createTickerDbServer } from "../../shared/src/server-factory.js";
 import {
   handleAuthorizationServerMetadata,
@@ -10,16 +11,25 @@ import {
   type Env,
 } from "./oauth/handlers.js";
 
+const SESSION_TTL_MS = 60 * 60 * 1000;
+
+type SessionEntry = {
+  apiKey: string;
+  transport: WebStandardStreamableHTTPServerTransport;
+  lastUsedAt: number;
+};
+
+const sessions = new Map<string, SessionEntry>();
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+    pruneExpiredSessions();
 
-    // ── CORS preflight ─────────────────────────────────────────────────────
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: corsHeaders() });
     }
 
-    // ── OAuth discovery & endpoints (no auth required) ─────────────────────
     if (url.pathname === "/.well-known/oauth-authorization-server" && request.method === "GET") {
       return withCors(handleAuthorizationServerMetadata(env));
     }
@@ -28,8 +38,6 @@ export default {
       return withCors(handleProtectedResourceMetadata(env));
     }
 
-    // Claude.ai sends users to /authorize on the MCP origin — redirect to the
-    // main site's consent page which has session management and the sign-in UI.
     if (url.pathname === "/authorize") {
       const authorizeUrl = new URL(`${env.SITE_URL}/oauth/authorize`);
       url.searchParams.forEach((v, k) => authorizeUrl.searchParams.set(k, v));
@@ -48,9 +56,6 @@ export default {
       return withCors(await handleRevoke(request, env));
     }
 
-    // ── MCP protocol requests (auth required) ──────────────────────────────
-
-    // Extract Bearer token or x-api-key header (Smithery gateway)
     const authHeader = request.headers.get("Authorization");
     const xApiKey = request.headers.get("x-api-key");
     if (!authHeader?.startsWith("Bearer ") && !xApiKey) {
@@ -61,34 +66,32 @@ export default {
     }
 
     const bearerToken = xApiKey || authHeader!.slice(7);
-    let apiKey: string;
-
-    if (bearerToken.startsWith("ta_")) {
-      // Direct API key auth (local MCP clients)
-      apiKey = bearerToken;
-    } else {
-      // OAuth access token (Claude.ai Connectors)
-      const result = await resolveOAuthToken(bearerToken, env);
-      if (!result) {
-        return jsonError(401, "Invalid or expired OAuth token.");
-      }
-      apiKey = result.apiKey;
+    const apiKey = await resolveApiKey(bearerToken, env);
+    if (!apiKey) {
+      return jsonError(401, "Invalid or expired OAuth token.");
     }
 
-    // Create a fresh MCP server per request with the user's API key
-    const server = createTickerDbServer(apiKey);
+    const sessionId = request.headers.get("Mcp-Session-Id");
+    const parsedBody = await maybeParseJson(request);
+    const isInit = parsedBody !== undefined && isInitializeRequest(parsedBody);
 
-    // Create a stateless Web Standard Streamable HTTP transport
-    const transport = new WebStandardStreamableHTTPServerTransport({
-      sessionIdGenerator: undefined, // stateless — no session tracking
-    });
+    let transport: WebStandardStreamableHTTPServerTransport;
 
-    await server.connect(transport);
+    if (sessionId && sessions.has(sessionId)) {
+      const existing = sessions.get(sessionId)!;
+      if (existing.apiKey !== apiKey) {
+        return jsonError(401, "Session does not match the authenticated API key.");
+      }
+      existing.lastUsedAt = Date.now();
+      transport = existing.transport;
+    } else if (!sessionId && isInit) {
+      transport = await createStatefulTransport(apiKey);
+    } else {
+      transport = await createStatelessTransport(apiKey);
+    }
 
-    // Let the transport handle the request and return a Web Standard Response
     const response = await transport.handleRequest(request);
 
-    // Add CORS headers to the response
     const headers = new Headers(response.headers);
     for (const [k, v] of Object.entries(corsHeaders())) {
       headers.set(k, v);
@@ -100,6 +103,82 @@ export default {
     });
   },
 } satisfies ExportedHandler<Env>;
+
+async function resolveApiKey(bearerToken: string, env: Env): Promise<string | null> {
+  if (bearerToken.startsWith("ta_")) {
+    return bearerToken;
+  }
+
+  const result = await resolveOAuthToken(bearerToken, env);
+  return result?.apiKey ?? null;
+}
+
+async function createStatefulTransport(
+  apiKey: string,
+): Promise<WebStandardStreamableHTTPServerTransport> {
+  const server = createTickerDbServer(apiKey);
+  let transport!: WebStandardStreamableHTTPServerTransport;
+
+  transport = new WebStandardStreamableHTTPServerTransport({
+    sessionIdGenerator: () => crypto.randomUUID(),
+    onsessioninitialized: (sessionId) => {
+      sessions.set(sessionId, {
+        apiKey,
+        transport,
+        lastUsedAt: Date.now(),
+      });
+    },
+    onsessionclosed: (sessionId) => {
+      sessions.delete(sessionId);
+    },
+  });
+
+  transport.onclose = () => {
+    if (transport.sessionId) {
+      sessions.delete(transport.sessionId);
+    }
+  };
+
+  await server.connect(transport);
+  return transport;
+}
+
+async function createStatelessTransport(
+  apiKey: string,
+): Promise<WebStandardStreamableHTTPServerTransport> {
+  const server = createTickerDbServer(apiKey);
+  const transport = new WebStandardStreamableHTTPServerTransport({
+    sessionIdGenerator: undefined,
+  });
+  await server.connect(transport);
+  return transport;
+}
+
+async function maybeParseJson(request: Request): Promise<unknown | undefined> {
+  if (request.method !== "POST") {
+    return undefined;
+  }
+
+  const contentType = request.headers.get("Content-Type") ?? "";
+  if (!contentType.includes("application/json")) {
+    return undefined;
+  }
+
+  try {
+    return await request.clone().json();
+  } catch {
+    return undefined;
+  }
+}
+
+function pruneExpiredSessions(): void {
+  const cutoff = Date.now() - SESSION_TTL_MS;
+  for (const [sessionId, session] of sessions.entries()) {
+    if (session.lastUsedAt < cutoff) {
+      sessions.delete(sessionId);
+    }
+  }
+}
 
 function corsHeaders(): Record<string, string> {
   return {
