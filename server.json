@@ -2,8 +2,8 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "com.tickerdb/mcp-server",
   "title": "TickerDB",
-  "description": "Financial context for agents. Pre-computed market data that improves agent reasoning, reduces token usage, and replaces data pipelines.",
-  "version": "1.7.3",
+  "description": "Pre-computed market data that improves agent reasoning, reduces token usage, and replaces pipelines.",
+  "version": "0.1.17",
   "remotes": [
     {
       "type": "streamable-http",
