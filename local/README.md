@@ -1,6 +1,6 @@
-# tickerdb-mcp
+﻿# TickerDB - Financial context for agents.
 
-MCP server for [TickerDB](https://tickerdb.com) — financial context for agents.
+Pre-computed market data that improves agent reasoning, reduces token usage, and replaces custom data pipelines.
 
 Works with Claude Desktop, Claude Code, Cursor, Windsurf, OpenClaw, LangChain, LlamaIndex, AutoGen, CrewAI, and any MCP-compatible client.
 
@@ -40,9 +40,9 @@ Get an API key at [tickerdb.com/dashboard](https://tickerdb.com/dashboard).
 | `list_webhooks` | List registered webhooks |
 | `delete_webhook` | Remove a webhook |
 
-All tools are available on every tier (Free, Plus, Pro) — tiers differ by rate limits, history depth, and watchlist size. See [tickerdb.com/pricing](https://tickerdb.com/pricing) for details.
+All tools are available on every tier (Free, Plus, Pro) â€” tiers differ by rate limits, history depth, and watchlist size. See [tickerdb.com/pricing](https://tickerdb.com/pricing) for details.
 
-All tools return categorical, pre-computed data designed for LLM context windows — no raw OHLCV, no post-processing needed.
+All tools return categorical, pre-computed data designed for LLM context windows â€” no raw OHLCV, no post-processing needed.
 `get_watchlist` does not take a timeframe. Use `get_watchlist_changes` for daily or weekly diffs.
 
 ## Remote Server
@@ -52,3 +52,4 @@ You can also connect directly to the hosted MCP server at `https://mcp.tickerdb.
 ## Documentation
 
 Full API docs and endpoint details at [tickerdb.com/docs](https://tickerdb.com/docs).
+

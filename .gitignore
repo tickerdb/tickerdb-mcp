@@ -5,6 +5,7 @@ dist/
 *.tgz
 .env
 .env.*
+tmp/
 key.pem
 gen-keys.sh
 mcp-publisher.exe

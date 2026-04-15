@@ -1,8 +1,8 @@
 {
   "name": "tickerdb-mcp",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "mcpName": "ai.tickerdb/mcp-server",
-  "description": "TickerDB MCP server for Claude Desktop and other MCP clients",
+  "description": "Pre-computed market data that improves agent reasoning, reduces token usage, and replaces custom data pipelines.",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
