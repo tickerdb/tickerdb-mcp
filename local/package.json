@@ -1,7 +1,7 @@
 {
   "name": "tickerdb-mcp",
-  "version": "0.1.16",
-  "mcpName": "ai.tickerdb/mcp-server",
+  "version": "0.1.17",
+  "mcpName": "com.tickerdb/mcp-server",
   "description": "Pre-computed market data that improves agent reasoning, reduces token usage, and replaces custom data pipelines.",
   "type": "module",
   "main": "dist/index.js",
@@ -36,7 +36,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/tickerdb/tickerdb-mcp.git"
+    "url": "git+https://github.com/tickerdb/tickerdb-mcp.git"
   },
   "homepage": "https://tickerdb.com",
   "author": "TickerDB",

@@ -13,7 +13,7 @@ if (!apiKey) {
           mcpServers: {
             tickerdb: {
               command: "npx",
-              args: ["@tickerdb/mcp-server"],
+              args: ["tickerdb-mcp"],
               env: { TICKERDB_KEY: "YOUR_API_KEY" },
             },
           },

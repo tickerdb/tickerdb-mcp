@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "ai.tickerdb/mcp-server",
-  "title": "TickerDB - Financial context for agents.",
-  "description": "Pre-computed market data that improves agent reasoning, reduces token usage, and replaces custom data pipelines.",
-  "version": "1.7.2",
+  "name": "com.tickerdb/mcp-server",
+  "title": "TickerDB",
+  "description": "Financial context for agents. Pre-computed market data that improves agent reasoning, reduces token usage, and replaces data pipelines.",
+  "version": "1.7.3",
   "remotes": [
     {
       "type": "streamable-http",
@@ -14,7 +14,7 @@
     {
       "registryType": "npm",
       "identifier": "tickerdb-mcp",
-      "version": "1.7.2",
+      "version": "0.1.17",
       "transport": {
         "type": "stdio"
       },
