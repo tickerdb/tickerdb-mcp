@@ -16,4 +16,6 @@
 	//   SITE_URL           — https://tickerdb.com
 	//   MCP_URL            — https://mcp.tickerdb.com
 	//   MCP_ENCRYPTION_KEY — Base64-encoded 256-bit AES key for oauth_mcp_keys
+	// Optional:
+	//   MCP_SESSION_MODE   - "stateless" (default) or "stateful" for MCP session debugging
 }

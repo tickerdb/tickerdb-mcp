@@ -79,6 +79,12 @@ The remote server supports two authentication methods:
 - **Bearer token** — pass your `ta_*` API key directly as `Authorization: Bearer ta_...`
 - **OAuth 2.1** — used by Claude.ai Connectors. The server implements dynamic client registration, PKCE, token exchange, and revocation. The `/authorize` endpoint redirects to the main TickerDB site for consent.
 
+### Session Strategy
+
+The remote worker defaults to **stateless MCP transport**. That is intentional: all TickerDB MCP tools are request/response stateless, while Cloudflare Worker memory is isolate-local and can drift between requests. Defaulting to stateless transport avoids edge session loss that can invalidate connector-discovered `link_...` namespaces mid-chain.
+
+If you need to debug explicit MCP session behavior, set `MCP_SESSION_MODE=stateful`. In that mode, stale or missing `Mcp-Session-Id` headers return explicit errors instead of silently downgrading to a fresh transport.
+
 ## Development
 
 ```bash

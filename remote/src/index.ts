@@ -12,12 +12,25 @@ import {
 } from "./oauth/handlers.js";
 
 const SESSION_TTL_MS = 60 * 60 * 1000;
+const DEFAULT_SESSION_MODE = "stateless";
+
+type SessionMode = "stateless" | "stateful";
 
 type SessionEntry = {
   apiKey: string;
   transport: WebStandardStreamableHTTPServerTransport;
   lastUsedAt: number;
 };
+
+class TransportResolutionError extends Error {
+  constructor(
+    readonly status: number,
+    message: string,
+  ) {
+    super(message);
+    this.name = "TransportResolutionError";
+  }
+}
 
 const sessions = new Map<string, SessionEntry>();
 
@@ -74,35 +87,126 @@ export default {
     const sessionId = request.headers.get("Mcp-Session-Id");
     const parsedBody = await maybeParseJson(request);
     const isInit = parsedBody !== undefined && isInitializeRequest(parsedBody);
+    const sessionMode = getSessionMode(env);
+    const rpcInfo = getRpcInfo(parsedBody);
+    const requestId = crypto.randomUUID().slice(0, 8);
+    const authMode = getAuthMode(bearerToken, xApiKey);
 
-    let transport: WebStandardStreamableHTTPServerTransport;
-
-    if (sessionId && sessions.has(sessionId)) {
-      const existing = sessions.get(sessionId)!;
-      if (existing.apiKey !== apiKey) {
-        return jsonError(401, "Session does not match the authenticated API key.");
-      }
-      existing.lastUsedAt = Date.now();
-      transport = existing.transport;
-    } else if (!sessionId && isInit) {
-      transport = await createStatefulTransport(apiKey);
-    } else {
-      transport = await createStatelessTransport(apiKey);
-    }
-
-    const response = await transport.handleRequest(request);
-
-    const headers = new Headers(response.headers);
-    for (const [k, v] of Object.entries(corsHeaders())) {
-      headers.set(k, v);
-    }
-
-    return new Response(response.body, {
-      status: response.status,
-      headers,
+    logRequest("start", {
+      requestId,
+      path: url.pathname,
+      method: request.method,
+      authMode,
+      sessionMode,
+      sessionId,
+      isInit,
+      rpcMethod: rpcInfo.method,
+      toolName: rpcInfo.toolName,
+      knownSession: sessionId ? sessions.has(sessionId) : false,
     });
+
+    try {
+      const transport = await resolveTransport({
+        apiKey,
+        sessionId,
+        isInit,
+        sessionMode,
+        requestId,
+      });
+      const response = await transport.handleRequest(
+        request,
+        parsedBody === undefined ? undefined : { parsedBody },
+      );
+
+      const headers = new Headers(response.headers);
+      for (const [k, v] of Object.entries(corsHeaders())) {
+        headers.set(k, v);
+      }
+
+      logRequest("finish", {
+        requestId,
+        path: url.pathname,
+        method: request.method,
+        authMode,
+        sessionMode,
+        sessionId,
+        isInit,
+        rpcMethod: rpcInfo.method,
+        toolName: rpcInfo.toolName,
+        status: response.status,
+        responseSessionId: headers.get("mcp-session-id"),
+      });
+
+      return new Response(response.body, {
+        status: response.status,
+        headers,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      logRequest("error", {
+        requestId,
+        path: url.pathname,
+        method: request.method,
+        authMode,
+        sessionMode,
+        sessionId,
+        isInit,
+        rpcMethod: rpcInfo.method,
+        toolName: rpcInfo.toolName,
+        error: message,
+      });
+      if (error instanceof TransportResolutionError) {
+        return jsonError(error.status, error.message);
+      }
+      return jsonError(500, "Internal MCP transport error.");
+    }
   },
 } satisfies ExportedHandler<Env>;
+
+async function resolveTransport({
+  apiKey,
+  sessionId,
+  isInit,
+  sessionMode,
+  requestId,
+}: {
+  apiKey: string;
+  sessionId: string | null;
+  isInit: boolean;
+  sessionMode: SessionMode;
+  requestId: string;
+}): Promise<WebStandardStreamableHTTPServerTransport> {
+  if (sessionMode === "stateless") {
+    return createStatelessTransport(apiKey);
+  }
+
+  if (sessionId) {
+    const existing = sessions.get(sessionId);
+    if (!existing) {
+      throw new TransportResolutionError(
+        404,
+        `Session not found for Mcp-Session-Id ${shortId(sessionId)}.`,
+      );
+    }
+    if (existing.apiKey !== apiKey) {
+      throw new TransportResolutionError(
+        401,
+        `Session ${shortId(sessionId)} does not match the authenticated API key.`,
+      );
+    }
+    existing.lastUsedAt = Date.now();
+    return existing.transport;
+  }
+
+  if (isInit) {
+    return createStatefulTransport(apiKey);
+  }
+
+  throw new TransportResolutionError(
+    400,
+    "Mcp-Session-Id header is required for non-initialize requests in stateful mode.",
+  );
+}
 
 async function resolveApiKey(bearerToken: string, env: Env): Promise<string | null> {
   if (bearerToken.startsWith("ta_")) {
@@ -175,9 +279,67 @@ function pruneExpiredSessions(): void {
   const cutoff = Date.now() - SESSION_TTL_MS;
   for (const [sessionId, session] of sessions.entries()) {
     if (session.lastUsedAt < cutoff) {
+      logRequest("prune", {
+        sessionId,
+        reason: "ttl_expired",
+      });
       sessions.delete(sessionId);
     }
   }
+}
+
+function getSessionMode(env: Env): SessionMode {
+  return env.MCP_SESSION_MODE === "stateful" ? "stateful" : DEFAULT_SESSION_MODE;
+}
+
+function getAuthMode(bearerToken: string, xApiKey: string | null): "api_key" | "oauth" {
+  if (xApiKey || bearerToken.startsWith("ta_")) {
+    return "api_key";
+  }
+  return "oauth";
+}
+
+function getRpcInfo(parsedBody: unknown): { method: string | null; toolName: string | null } {
+  if (!parsedBody || typeof parsedBody !== "object" || Array.isArray(parsedBody)) {
+    return { method: null, toolName: null };
+  }
+
+  const maybeMethod =
+    "method" in parsedBody && typeof parsedBody.method === "string" ? parsedBody.method : null;
+
+  let toolName: string | null = null;
+  if (
+    maybeMethod === "tools/call" &&
+    "params" in parsedBody &&
+    parsedBody.params &&
+    typeof parsedBody.params === "object" &&
+    !Array.isArray(parsedBody.params) &&
+    "name" in parsedBody.params &&
+    typeof parsedBody.params.name === "string"
+  ) {
+    toolName = parsedBody.params.name;
+  }
+
+  return { method: maybeMethod, toolName };
+}
+
+function shortId(value: string | null | undefined): string | null {
+  if (!value) return null;
+  return value.length <= 12 ? value : `${value.slice(0, 6)}...${value.slice(-4)}`;
+}
+
+function logRequest(
+  event: "start" | "finish" | "error" | "prune",
+  fields: Record<string, unknown>,
+): void {
+  const safeFields = {
+    ...fields,
+    sessionId: shortId(typeof fields.sessionId === "string" ? fields.sessionId : null),
+    responseSessionId: shortId(
+      typeof fields.responseSessionId === "string" ? fields.responseSessionId : null,
+    ),
+  };
+  console.log(`[mcp] ${event} ${JSON.stringify(safeFields)}`);
 }
 
 function corsHeaders(): Record<string, string> {
