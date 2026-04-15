@@ -1,6 +1,6 @@
 {
   "name": "tickerdb-mcp",
-  "version": "0.1.17",
+  "version": "1.7.4",
   "mcpName": "com.tickerdb/mcp-server",
   "description": "Pre-computed market data that improves agent reasoning, reduces token usage, and replaces custom data pipelines.",
   "type": "module",

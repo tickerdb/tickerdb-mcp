@@ -3,7 +3,7 @@
   "name": "com.tickerdb/mcp-server",
   "title": "TickerDB",
   "description": "Pre-computed market data that improves agent reasoning, reduces token usage, and replaces pipelines.",
-  "version": "0.1.17",
+  "version": "1.7.4",
   "remotes": [
     {
       "type": "streamable-http",
@@ -14,7 +14,7 @@
     {
       "registryType": "npm",
       "identifier": "tickerdb-mcp",
-      "version": "0.1.17",
+      "version": "1.7.4",
       "transport": {
         "type": "stdio"
       },
