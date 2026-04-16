@@ -108,7 +108,16 @@ cd local && npm install && npm run build
 npx wrangler deploy
 ```
 
-**npm package:**
+**npm package + MCP Registry (recommended):**
+```bash
+# From the monorepo root
+export MCP_PUBLISHER_KEY="your_saved_tickerdb_registry_private_key_hex"
+./release.sh mcp patch
+```
+
+This bumps `local/package.json`, keeps `server.json` in sync, publishes `tickerdb-mcp` to npm, refreshes DNS auth for `tickerdb.com`, and publishes the MCP server metadata to the official MCP Registry.
+
+**npm package only (manual):**
 ```bash
 cd local
 npm version patch
