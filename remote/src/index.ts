@@ -14,8 +14,15 @@ import {
 const SESSION_TTL_MS = 60 * 60 * 1000;
 const DEFAULT_SESSION_MODE = "stateless";
 const STATELESS_ALLOW_HEADER = "POST, OPTIONS";
+const PUBLIC_DISCOVERY_API_KEY = "__public_discovery__";
 
 type SessionMode = "stateless" | "stateful";
+type AuthMode =
+  | "api_key"
+  | "oauth"
+  | "public_discovery"
+  | "missing_auth"
+  | "invalid_oauth";
 
 type SessionEntry = {
   apiKey: string;
@@ -53,6 +60,10 @@ export default {
       return withCors(handleProtectedResourceMetadata(env));
     }
 
+    if (url.pathname === "/.well-known/oauth-protected-resource/mcp" && request.method === "GET") {
+      return withCors(handleProtectedResourceMetadata(env));
+    }
+
     if (url.pathname === "/authorize") {
       const authorizeUrl = new URL(`${env.SITE_URL}/oauth/authorize`);
       url.searchParams.forEach((v, k) => authorizeUrl.searchParams.set(k, v));
@@ -77,40 +88,97 @@ export default {
       }
     }
 
-    const authHeader = request.headers.get("Authorization");
-    const xApiKey = request.headers.get("x-api-key");
-    if (!authHeader?.startsWith("Bearer ") && !xApiKey) {
-      return jsonError(
-        401,
-        "Missing Authorization header. Use: Authorization: Bearer <your_api_key>",
-      );
-    }
-
-    const bearerToken = xApiKey || authHeader!.slice(7);
-    const apiKey = await resolveApiKey(bearerToken, env);
-    if (!apiKey) {
-      return jsonError(401, "Invalid or expired OAuth token.");
-    }
-
     const sessionId = request.headers.get("Mcp-Session-Id");
     const parsedBody = await maybeParseJson(request);
     const isInit = parsedBody !== undefined && isInitializeRequest(parsedBody);
     const rpcInfo = getRpcInfo(parsedBody);
     const requestId = crypto.randomUUID().slice(0, 8);
-    const authMode = getAuthMode(bearerToken, xApiKey);
+    const allowPublicDiscovery = isPublicDiscoveryRequest(url.pathname, request.method, isInit, rpcInfo.method);
 
-    logRequest("start", {
-      requestId,
-      path: url.pathname,
-      method: request.method,
-      authMode,
-      sessionMode,
-      sessionId,
-      isInit,
-      rpcMethod: rpcInfo.method,
-      toolName: rpcInfo.toolName,
-      knownSession: sessionId ? sessions.has(sessionId) : false,
-    });
+    const authHeader = request.headers.get("Authorization");
+    const xApiKey = request.headers.get("x-api-key");
+    const authHeadersPresent = authHeader?.startsWith("Bearer ") || !!xApiKey;
+    let authMode: AuthMode;
+    let apiKey: string;
+
+    if (!authHeadersPresent) {
+      authMode = allowPublicDiscovery ? "public_discovery" : "missing_auth";
+      logRequest("start", {
+        requestId,
+        path: url.pathname,
+        method: request.method,
+        authMode,
+        sessionMode,
+        sessionId,
+        isInit,
+        rpcMethod: rpcInfo.method,
+        toolName: rpcInfo.toolName,
+        knownSession: sessionId ? sessions.has(sessionId) : false,
+      });
+
+      if (!allowPublicDiscovery) {
+        logRequest("finish", {
+          requestId,
+          path: url.pathname,
+          method: request.method,
+          authMode,
+          sessionMode,
+          sessionId,
+          isInit,
+          rpcMethod: rpcInfo.method,
+          toolName: rpcInfo.toolName,
+          status: 401,
+        });
+
+        return jsonError(
+          401,
+          "Missing Authorization header.",
+          oauthChallengeHeaders(env),
+        );
+      }
+
+      apiKey = PUBLIC_DISCOVERY_API_KEY;
+    } else {
+      const bearerToken = xApiKey || authHeader!.slice(7);
+      apiKey = (await resolveApiKey(bearerToken, env)) ?? "";
+      authMode = apiKey ? getAuthMode(bearerToken, xApiKey) : "invalid_oauth";
+
+      logRequest("start", {
+        requestId,
+        path: url.pathname,
+        method: request.method,
+        authMode,
+        sessionMode,
+        sessionId,
+        isInit,
+        rpcMethod: rpcInfo.method,
+        toolName: rpcInfo.toolName,
+        knownSession: sessionId ? sessions.has(sessionId) : false,
+      });
+
+      if (!apiKey) {
+        logRequest("finish", {
+          requestId,
+          path: url.pathname,
+          method: request.method,
+          authMode,
+          sessionMode,
+          sessionId,
+          isInit,
+          rpcMethod: rpcInfo.method,
+          toolName: rpcInfo.toolName,
+          status: 401,
+        });
+        return jsonError(
+          401,
+          "Invalid or expired OAuth token.",
+          oauthChallengeHeaders(env, {
+            error: "invalid_token",
+            errorDescription: "The access token is missing, expired, or invalid.",
+          }),
+        );
+      }
+    }
 
     try {
       const transport = await resolveTransport({
@@ -263,6 +331,7 @@ async function createStatelessTransport(
   const server = createTickerDbServer(apiKey);
   const transport = new WebStandardStreamableHTTPServerTransport({
     sessionIdGenerator: undefined,
+    enableJsonResponse: true,
   });
   await server.connect(transport);
   return transport;
@@ -307,6 +376,19 @@ function getAuthMode(bearerToken: string, xApiKey: string | null): "api_key" | "
     return "api_key";
   }
   return "oauth";
+}
+
+function isPublicDiscoveryRequest(
+  path: string,
+  method: string,
+  isInit: boolean,
+  rpcMethod: string | null,
+): boolean {
+  if (path !== "/mcp" || method !== "POST") {
+    return false;
+  }
+
+  return isInit || rpcMethod === "tools/list";
 }
 
 function getRpcInfo(parsedBody: unknown): { method: string | null; toolName: string | null } {
@@ -360,6 +442,8 @@ function corsHeaders(): Record<string, string> {
       "Content-Type, Authorization, Mcp-Session-Id, Mcp-Protocol-Version",
     "Access-Control-Expose-Headers": "Mcp-Session-Id",
     "Access-Control-Max-Age": "86400",
+    "Cache-Control": "no-store",
+    Vary: "Authorization, Mcp-Session-Id",
   };
 }
 
@@ -374,14 +458,44 @@ function withCors(response: Response): Response {
   });
 }
 
-function jsonError(status: number, message: string): Response {
+function jsonError(status: number, message: string, extraHeaders?: Record<string, string>): Response {
   return new Response(JSON.stringify({ error: { message } }), {
     status,
     headers: {
       "Content-Type": "application/json",
       ...corsHeaders(),
+      ...extraHeaders,
     },
   });
+}
+
+function oauthChallengeHeaders(
+  env: Env,
+  options?: { error?: string; errorDescription?: string },
+): Record<string, string> {
+  const challengeParts = [
+    `Bearer realm="TickerDB MCP"`,
+    `resource_metadata="${env.MCP_URL}/.well-known/oauth-protected-resource/mcp"`,
+    `scope="tickerdb"`,
+  ];
+
+  if (options?.error) {
+    challengeParts.push(`error="${escapeHeaderValue(options.error)}"`);
+  }
+
+  if (options?.errorDescription) {
+    challengeParts.push(
+      `error_description="${escapeHeaderValue(options.errorDescription)}"`,
+    );
+  }
+
+  return {
+    "WWW-Authenticate": challengeParts.join(", "),
+  };
+}
+
+function escapeHeaderValue(value: string): string {
+  return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 }
 
 function methodNotAllowed(allow: string): Response {

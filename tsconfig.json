@@ -6,6 +6,7 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
+    "noEmit": true,
     "types": ["@cloudflare/workers-types"]
   },
   "include": ["remote/src", "shared/src"]

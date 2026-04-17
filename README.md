@@ -79,9 +79,11 @@ The remote server supports two authentication methods:
 - **Bearer token** â€” pass your `tdb_*` API key directly as `Authorization: Bearer tdb_...`
 - **OAuth 2.1** â€” used by Claude.ai Connectors. The server implements dynamic client registration, PKCE, token exchange, and revocation. The `/authorize` endpoint redirects to the main TickerDB site for consent.
 
+For OAuth-backed MCP clients that use mixed authentication, the worker permits unauthenticated `initialize` and `tools/list` discovery on `POST /mcp`, but requires authentication for actual tool execution. Protected tool calls return a standard `401` Bearer challenge with `resource_metadata` pointing at `/.well-known/oauth-protected-resource/mcp` so clients can re-authorize or remount cleanly.
+
 ### Session Strategy
 
-The remote worker defaults to **stateless MCP transport**. That is intentional: all TickerDB MCP tools are request/response stateless, while Cloudflare Worker memory is isolate-local and can drift between requests. Defaulting to stateless transport avoids edge session loss that can invalidate connector-discovered `link_...` namespaces mid-chain. In stateless mode the worker only accepts `POST /mcp` tool calls and rejects `GET`/`DELETE` session lifecycle requests so connector runtimes do not accidentally tear down or rebind a namespace that was never meant to be stateful.
+The remote worker defaults to **stateless MCP transport**. That is intentional: all TickerDB MCP tools are request/response stateless, while Cloudflare Worker memory is isolate-local and can drift between requests. Defaulting to stateless transport avoids edge session loss that can invalidate connector-discovered `link_...` namespaces mid-chain. In stateless mode the worker only accepts `POST /mcp` requests, uses JSON request/response mode, and rejects `GET`/`DELETE` session lifecycle requests so connector runtimes do not accidentally tear down or rebind a namespace that was never meant to be stateful.
 
 If you need to debug explicit MCP session behavior, set `MCP_SESSION_MODE=stateful`. In that mode, stale or missing `Mcp-Session-Id` headers return explicit errors instead of silently downgrading to a fresh transport.
 
@@ -91,7 +93,7 @@ If you need to debug explicit MCP session behavior, set `MCP_SESSION_MODE=statef
 # Install dependencies
 npm install
 
-# Build the remote worker
+# Type-check the remote worker/shared sources
 npm run build
 
 # Dev server for remote worker

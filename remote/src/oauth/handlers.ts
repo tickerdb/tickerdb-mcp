@@ -54,6 +54,8 @@ export function handleProtectedResourceMetadata(env: Env): Response {
   return jsonResponse({
     resource: `${env.MCP_URL}/mcp`,
     authorization_servers: [env.MCP_URL],
+    scopes_supported: ['tickerdb'],
+    bearer_methods_supported: ['header'],
     resource_name: 'TickerDB MCP',
     resource_documentation: `${env.SITE_URL}/docs`,
   });

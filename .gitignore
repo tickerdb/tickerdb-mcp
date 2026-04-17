@@ -10,3 +10,5 @@ key.pem
 gen-keys.sh
 mcp-publisher.exe
 publish-smithery.sh
+remote/src/**/*.js
+shared/src/**/*.js
