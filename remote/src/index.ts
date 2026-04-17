@@ -24,6 +24,13 @@ type AuthMode =
   | "missing_auth"
   | "invalid_oauth";
 
+type RpcInfo = {
+  method: string | null;
+  toolName: string | null;
+  toolMode: string | null;
+  summaryField: string | null;
+};
+
 type SessionEntry = {
   apiKey: string;
   transport: WebStandardStreamableHTTPServerTransport;
@@ -62,6 +69,10 @@ export default {
 
     if (url.pathname === "/.well-known/oauth-protected-resource/mcp" && request.method === "GET") {
       return withCors(handleProtectedResourceMetadata(env));
+    }
+
+    if (url.pathname === "/.well-known/openid-configuration" && request.method === "GET") {
+      return jsonError(404, "OpenID configuration is not supported.");
     }
 
     if (url.pathname === "/authorize") {
@@ -113,6 +124,8 @@ export default {
         isInit,
         rpcMethod: rpcInfo.method,
         toolName: rpcInfo.toolName,
+        toolMode: rpcInfo.toolMode,
+        summaryField: rpcInfo.summaryField,
         knownSession: sessionId ? sessions.has(sessionId) : false,
       });
 
@@ -127,6 +140,8 @@ export default {
           isInit,
           rpcMethod: rpcInfo.method,
           toolName: rpcInfo.toolName,
+          toolMode: rpcInfo.toolMode,
+          summaryField: rpcInfo.summaryField,
           status: 401,
         });
 
@@ -153,6 +168,8 @@ export default {
         isInit,
         rpcMethod: rpcInfo.method,
         toolName: rpcInfo.toolName,
+        toolMode: rpcInfo.toolMode,
+        summaryField: rpcInfo.summaryField,
         knownSession: sessionId ? sessions.has(sessionId) : false,
       });
 
@@ -167,6 +184,8 @@ export default {
           isInit,
           rpcMethod: rpcInfo.method,
           toolName: rpcInfo.toolName,
+          toolMode: rpcInfo.toolMode,
+          summaryField: rpcInfo.summaryField,
           status: 401,
         });
         return jsonError(
@@ -211,6 +230,8 @@ export default {
         isInit,
         rpcMethod: rpcInfo.method,
         toolName: rpcInfo.toolName,
+        toolMode: rpcInfo.toolMode,
+        summaryField: rpcInfo.summaryField,
         status: response.status,
         responseSessionId: headers.get("mcp-session-id"),
       });
@@ -231,6 +252,8 @@ export default {
         isInit,
         rpcMethod: rpcInfo.method,
         toolName: rpcInfo.toolName,
+        toolMode: rpcInfo.toolMode,
+        summaryField: rpcInfo.summaryField,
         error: message,
       });
       if (error instanceof TransportResolutionError) {
@@ -391,15 +414,17 @@ function isPublicDiscoveryRequest(
   return isInit || rpcMethod === "tools/list";
 }
 
-function getRpcInfo(parsedBody: unknown): { method: string | null; toolName: string | null } {
+function getRpcInfo(parsedBody: unknown): RpcInfo {
   if (!parsedBody || typeof parsedBody !== "object" || Array.isArray(parsedBody)) {
-    return { method: null, toolName: null };
+    return { method: null, toolName: null, toolMode: null, summaryField: null };
   }
 
   const maybeMethod =
     "method" in parsedBody && typeof parsedBody.method === "string" ? parsedBody.method : null;
 
   let toolName: string | null = null;
+  let toolMode: string | null = null;
+  let summaryField: string | null = null;
   if (
     maybeMethod === "tools/call" &&
     "params" in parsedBody &&
@@ -410,9 +435,33 @@ function getRpcInfo(parsedBody: unknown): { method: string | null; toolName: str
     typeof parsedBody.params.name === "string"
   ) {
     toolName = parsedBody.params.name;
+
+    if (
+      toolName === "get_summary" &&
+      "arguments" in parsedBody.params &&
+      parsedBody.params.arguments &&
+      typeof parsedBody.params.arguments === "object" &&
+      !Array.isArray(parsedBody.params.arguments)
+    ) {
+      const args = parsedBody.params.arguments as Record<string, unknown>;
+      if (typeof args.field === "string" && args.field.length > 0) {
+        toolMode = "events";
+        summaryField = args.field;
+      } else if (
+        typeof args.start === "string" ||
+        typeof args.end === "string" ||
+        typeof args.sample === "string"
+      ) {
+        toolMode = "series";
+      } else if (typeof args.date === "string") {
+        toolMode = "historical_snapshot";
+      } else {
+        toolMode = "snapshot";
+      }
+    }
   }
 
-  return { method: maybeMethod, toolName };
+  return { method: maybeMethod, toolName, toolMode, summaryField };
 }
 
 function shortId(value: string | null | undefined): string | null {
