@@ -97,6 +97,9 @@ export default {
       if (request.method === "GET" || request.method === "DELETE") {
         return methodNotAllowed(STATELESS_ALLOW_HEADER);
       }
+      if (request.method === "HEAD") {
+        return headMethodNotAllowed(STATELESS_ALLOW_HEADER);
+      }
     }
 
     const sessionId = request.headers.get("Mcp-Session-Id");
@@ -553,6 +556,16 @@ function methodNotAllowed(allow: string): Response {
     headers: {
       Allow: allow,
       "Content-Type": "application/json",
+      ...corsHeaders(),
+    },
+  });
+}
+
+function headMethodNotAllowed(allow: string): Response {
+  return new Response(null, {
+    status: 405,
+    headers: {
+      Allow: allow,
       ...corsHeaders(),
     },
   });
