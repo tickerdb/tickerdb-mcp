@@ -142,7 +142,7 @@ async function resolveTransport({ apiKey, sessionId, isInit, sessionMode, reques
     throw new TransportResolutionError(400, "Mcp-Session-Id header is required for non-initialize requests in stateful mode.");
 }
 async function resolveApiKey(bearerToken, env) {
-    if (bearerToken.startsWith("ta_")) {
+    if (bearerToken.startsWith("tdb_")) {
         return bearerToken;
     }
     const result = await resolveOAuthToken(bearerToken, env);
@@ -211,7 +211,7 @@ function getSessionMode(env) {
     return env.MCP_SESSION_MODE === "stateful" ? "stateful" : DEFAULT_SESSION_MODE;
 }
 function getAuthMode(bearerToken, xApiKey) {
-    if (xApiKey || bearerToken.startsWith("ta_")) {
+    if (xApiKey || bearerToken.startsWith("tdb_")) {
         return "api_key";
     }
     return "oauth";

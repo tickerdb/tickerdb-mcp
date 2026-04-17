@@ -209,7 +209,7 @@ async function resolveTransport({
 }
 
 async function resolveApiKey(bearerToken: string, env: Env): Promise<string | null> {
-  if (bearerToken.startsWith("ta_")) {
+  if (bearerToken.startsWith("tdb_")) {
     return bearerToken;
   }
 
@@ -293,7 +293,7 @@ function getSessionMode(env: Env): SessionMode {
 }
 
 function getAuthMode(bearerToken: string, xApiKey: string | null): "api_key" | "oauth" {
-  if (xApiKey || bearerToken.startsWith("ta_")) {
+  if (xApiKey || bearerToken.startsWith("tdb_")) {
     return "api_key";
   }
   return "oauth";

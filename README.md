@@ -1,6 +1,6 @@
-﻿# TickerDB - Financial context for agents.
+﻿# TickerDB - Market context for agents.
 
-Pre-computed market data that improves agent reasoning, reduces token usage, and replaces custom data pipelines.
+Pre-computed EOD market contex that improves reasoning, reduces token usage, and replaces data pipelines.
 
 Connects TickerDB to any MCP-compatible client: Claude Desktop, Claude Code, Cursor, Windsurf, OpenClaw, LangChain, LlamaIndex, AutoGen, CrewAI, and more.
 
@@ -53,7 +53,7 @@ Add to your Claude Desktop config (`claude_desktop_config.json`):
       "command": "npx",
       "args": ["tickerdb-mcp"],
       "env": {
-        "TICKERDB_KEY": "ta_your_api_key_here"
+        "TICKERDB_KEY": "tdb_your_api_key_here"
       }
     }
   }
@@ -76,7 +76,7 @@ Both the remote server and npm package use the same tool definitions from `share
 
 The remote server supports two authentication methods:
 
-- **Bearer token** â€” pass your `ta_*` API key directly as `Authorization: Bearer ta_...`
+- **Bearer token** â€” pass your `tdb_*` API key directly as `Authorization: Bearer tdb_...`
 - **OAuth 2.1** â€” used by Claude.ai Connectors. The server implements dynamic client registration, PKCE, token exchange, and revocation. The `/authorize` endpoint redirects to the main TickerDB site for consent.
 
 ### Session Strategy

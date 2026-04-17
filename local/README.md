@@ -1,6 +1,6 @@
-﻿# TickerDB - Financial context for agents.
+﻿# TickerDB - Market context for agents.
 
-Pre-computed market data that improves agent reasoning, reduces token usage, and replaces custom data pipelines.
+Pre-computed EOD market context that improves reasoning, reduces token usage, and replaces data pipelines.
 
 Works with Claude Desktop, Claude Code, Cursor, Windsurf, OpenClaw, LangChain, LlamaIndex, AutoGen, CrewAI, and any MCP-compatible client.
 
@@ -15,7 +15,7 @@ Add to your Claude Desktop config (`claude_desktop_config.json`):
       "command": "npx",
       "args": ["tickerdb-mcp"],
       "env": {
-        "TICKERDB_KEY": "ta_your_api_key_here"
+        "TICKERDB_KEY": "tdb_your_api_key_here"
       }
     }
   }

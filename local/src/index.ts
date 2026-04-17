@@ -25,9 +25,9 @@ if (!apiKey) {
   process.exit(1);
 }
 
-if (!apiKey.startsWith("ta_")) {
+if (!apiKey.startsWith("tdb_")) {
   console.error(
-    "Error: Invalid API key format. Keys start with ta_.\n" +
+    "Error: Invalid API key format. Keys start with tdb_.\n" +
       "Get one at https://tickerdb.com/dashboard",
   );
   process.exit(1);
