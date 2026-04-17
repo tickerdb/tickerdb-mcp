@@ -4,6 +4,7 @@ import { createTickerDbServer } from "../../shared/src/server-factory.js";
 import { handleAuthorizationServerMetadata, handleProtectedResourceMetadata, handleRegister, handleToken, handleRevoke, resolveOAuthToken, } from "./oauth/handlers.js";
 const SESSION_TTL_MS = 60 * 60 * 1000;
 const DEFAULT_SESSION_MODE = "stateless";
+const STATELESS_ALLOW_HEADER = "POST, OPTIONS";
 class TransportResolutionError extends Error {
     status;
     constructor(status, message) {
@@ -16,6 +17,7 @@ const sessions = new Map();
 export default {
     async fetch(request, env) {
         const url = new URL(request.url);
+        const sessionMode = getSessionMode(env);
         pruneExpiredSessions();
         if (request.method === "OPTIONS") {
             return new Response(null, { status: 204, headers: corsHeaders() });
@@ -40,6 +42,11 @@ export default {
         if (url.pathname === "/revoke") {
             return withCors(await handleRevoke(request, env));
         }
+        if (url.pathname === "/mcp" && sessionMode === "stateless") {
+            if (request.method === "GET" || request.method === "DELETE") {
+                return methodNotAllowed(STATELESS_ALLOW_HEADER);
+            }
+        }
         const authHeader = request.headers.get("Authorization");
         const xApiKey = request.headers.get("x-api-key");
         if (!authHeader?.startsWith("Bearer ") && !xApiKey) {
@@ -53,7 +60,6 @@ export default {
         const sessionId = request.headers.get("Mcp-Session-Id");
         const parsedBody = await maybeParseJson(request);
         const isInit = parsedBody !== undefined && isInitializeRequest(parsedBody);
-        const sessionMode = getSessionMode(env);
         const rpcInfo = getRpcInfo(parsedBody);
         const requestId = crypto.randomUUID().slice(0, 8);
         const authMode = getAuthMode(bearerToken, xApiKey);
@@ -79,6 +85,9 @@ export default {
             });
             const response = await transport.handleRequest(request, parsedBody === undefined ? undefined : { parsedBody });
             const headers = new Headers(response.headers);
+            if (sessionMode === "stateless") {
+                headers.delete("mcp-session-id");
+            }
             for (const [k, v] of Object.entries(corsHeaders())) {
                 headers.set(k, v);
             }
@@ -269,6 +278,16 @@ function jsonError(status, message) {
     return new Response(JSON.stringify({ error: { message } }), {
         status,
         headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders(),
+        },
+    });
+}
+function methodNotAllowed(allow) {
+    return new Response(JSON.stringify({ error: { message: "Method not allowed." } }), {
+        status: 405,
+        headers: {
+            Allow: allow,
             "Content-Type": "application/json",
             ...corsHeaders(),
         },

@@ -81,7 +81,7 @@ The remote server supports two authentication methods:
 
 ### Session Strategy
 
-The remote worker defaults to **stateless MCP transport**. That is intentional: all TickerDB MCP tools are request/response stateless, while Cloudflare Worker memory is isolate-local and can drift between requests. Defaulting to stateless transport avoids edge session loss that can invalidate connector-discovered `link_...` namespaces mid-chain.
+The remote worker defaults to **stateless MCP transport**. That is intentional: all TickerDB MCP tools are request/response stateless, while Cloudflare Worker memory is isolate-local and can drift between requests. Defaulting to stateless transport avoids edge session loss that can invalidate connector-discovered `link_...` namespaces mid-chain. In stateless mode the worker only accepts `POST /mcp` tool calls and rejects `GET`/`DELETE` session lifecycle requests so connector runtimes do not accidentally tear down or rebind a namespace that was never meant to be stateful.
 
 If you need to debug explicit MCP session behavior, set `MCP_SESSION_MODE=stateful`. In that mode, stale or missing `Mcp-Session-Id` headers return explicit errors instead of silently downgrading to a fresh transport.
 

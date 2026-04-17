@@ -13,6 +13,7 @@ import {
 
 const SESSION_TTL_MS = 60 * 60 * 1000;
 const DEFAULT_SESSION_MODE = "stateless";
+const STATELESS_ALLOW_HEADER = "POST, OPTIONS";
 
 type SessionMode = "stateless" | "stateful";
 
@@ -37,6 +38,7 @@ const sessions = new Map<string, SessionEntry>();
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+    const sessionMode = getSessionMode(env);
     pruneExpiredSessions();
 
     if (request.method === "OPTIONS") {
@@ -69,6 +71,12 @@ export default {
       return withCors(await handleRevoke(request, env));
     }
 
+    if (url.pathname === "/mcp" && sessionMode === "stateless") {
+      if (request.method === "GET" || request.method === "DELETE") {
+        return methodNotAllowed(STATELESS_ALLOW_HEADER);
+      }
+    }
+
     const authHeader = request.headers.get("Authorization");
     const xApiKey = request.headers.get("x-api-key");
     if (!authHeader?.startsWith("Bearer ") && !xApiKey) {
@@ -87,7 +95,6 @@ export default {
     const sessionId = request.headers.get("Mcp-Session-Id");
     const parsedBody = await maybeParseJson(request);
     const isInit = parsedBody !== undefined && isInitializeRequest(parsedBody);
-    const sessionMode = getSessionMode(env);
     const rpcInfo = getRpcInfo(parsedBody);
     const requestId = crypto.randomUUID().slice(0, 8);
     const authMode = getAuthMode(bearerToken, xApiKey);
@@ -119,6 +126,9 @@ export default {
       );
 
       const headers = new Headers(response.headers);
+      if (sessionMode === "stateless") {
+        headers.delete("mcp-session-id");
+      }
       for (const [k, v] of Object.entries(corsHeaders())) {
         headers.set(k, v);
       }
@@ -368,6 +378,17 @@ function jsonError(status: number, message: string): Response {
   return new Response(JSON.stringify({ error: { message } }), {
     status,
     headers: {
+      "Content-Type": "application/json",
+      ...corsHeaders(),
+    },
+  });
+}
+
+function methodNotAllowed(allow: string): Response {
+  return new Response(JSON.stringify({ error: { message: "Method not allowed." } }), {
+    status: 405,
+    headers: {
+      Allow: allow,
       "Content-Type": "application/json",
       ...corsHeaders(),
     },

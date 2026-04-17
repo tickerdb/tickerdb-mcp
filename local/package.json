@@ -1,6 +1,6 @@
 {
   "name": "tickerdb-mcp",
-  "version": "1.7.5",
+  "version": "1.7.6",
   "mcpName": "com.tickerdb/mcp-server",
   "description": "Pre-computed EOD market context that improves reasoning, reduces token usage, and replaces custom data pipelines.",
   "type": "module",

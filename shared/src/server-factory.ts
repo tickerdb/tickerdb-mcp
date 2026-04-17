@@ -5,7 +5,9 @@ export function createTickerDbServer(apiKey: string): McpServer {
   const server = new McpServer(
     {
       name: "TickerDB",
-      version: "1.7.2",
+      // Keep this aligned with server.json and local/package.json so connector refreshes
+      // do not see conflicting server identities for the same installation.
+      version: "1.7.5",
       description: "Pre-computed financial market intelligence for AI agents. Stocks, crypto, and ETFs.",
       websiteUrl: "https://tickerdb.com",
     },
