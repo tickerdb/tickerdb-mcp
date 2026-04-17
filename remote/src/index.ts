@@ -112,6 +112,8 @@ export default {
     const authHeader = request.headers.get("Authorization");
     const xApiKey = request.headers.get("x-api-key");
     const authHeadersPresent = authHeader?.startsWith("Bearer ") || !!xApiKey;
+    const malformedAnonymousMcpPost =
+      !authHeadersPresent && isMalformedMcpPost(url.pathname, request.method, rpcInfo.method);
     let authMode: AuthMode;
     let apiKey: string;
 
@@ -133,6 +135,7 @@ export default {
       });
 
       if (!allowPublicDiscovery) {
+        const status = malformedAnonymousMcpPost ? 400 : 401;
         logRequest("finish", {
           requestId,
           path: url.pathname,
@@ -145,14 +148,14 @@ export default {
           toolName: rpcInfo.toolName,
           toolMode: rpcInfo.toolMode,
           summaryField: rpcInfo.summaryField,
-          status: 401,
+          status,
         });
 
-        return jsonError(
-          401,
-          "Missing Authorization header.",
-          oauthChallengeHeaders(env),
-        );
+        if (malformedAnonymousMcpPost) {
+          return jsonError(400, "Invalid MCP JSON-RPC request.");
+        }
+
+        return jsonError(401, "Missing Authorization header.", oauthChallengeHeaders(env));
       }
 
       apiKey = PUBLIC_DISCOVERY_API_KEY;
@@ -415,6 +418,14 @@ function isPublicDiscoveryRequest(
   }
 
   return isInit || rpcMethod === "tools/list";
+}
+
+function isMalformedMcpPost(path: string, method: string, rpcMethod: string | null): boolean {
+  if (path !== "/mcp" || method !== "POST") {
+    return false;
+  }
+
+  return rpcMethod === null;
 }
 
 function getRpcInfo(parsedBody: unknown): RpcInfo {

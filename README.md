@@ -26,11 +26,13 @@ All tools are available on every tier (Free, Plus, Pro) â€” tiers differ by
 Use `get_summary` with `start`/`end` params for bulk ticker syncs across a date range, or with `field`/`band` params to query event occurrences.
 `get_watchlist` does not take a timeframe. Use `get_watchlist_changes` for daily or weekly diffs.
 
-Current summary snapshots also expose top-level freshness via `as_of_date`, richer `volume` fields such as `price_direction_on_volume`, paid-tier level metadata like `support_level.status_meta`, Pro `sector_context` fields such as `agreement` and `overbought_count`, and stock-only nested `fundamentals.insider_activity` when available.
+Current summary snapshots also expose top-level freshness via `as_of_date`, richer `volume` fields such as `price_direction_on_volume`, opt-in paid-tier level metadata like `support_level.status_meta`, Pro `sector_context` fields such as `agreement` and `overbought_count`, and stock-only nested `fundamentals.insider_activity` when available.
 
 ### Band Stability Metadata
 
-Summary, watchlist, and watchlist changes tools return **band stability metadata**. Each band field (trend direction, momentum zone, etc.) includes a sibling `_meta` object describing how stable that state is. The stability label is one of `fresh`, `holding`, `established`, or `volatile`. Full metadata also includes `periods_in_current_state`, `flips_recent`, and `flips_lookback`. This context helps agents distinguish between a newly entered state and one that has persisted for many periods, improving the quality of trade signals and alerts.
+`get_summary` keeps sibling `_meta` objects off by default so the primary band label stays front-and-center. Pass `meta: true` to include full paid-tier stability metadata across the response, or request just the specific `*_meta` fields you want. `get_watchlist` still includes paid-tier `_meta` objects by default, and `get_watchlist_changes` returns stability fields inline on each change object.
+
+The stability label is one of `fresh`, `holding`, `established`, or `volatile`. Full metadata includes `periods_in_current_state`, `flips_recent`, and `flips_lookback`, which helps agents distinguish between a newly entered state and one that has persisted for many periods.
 
 ## Setup
 
