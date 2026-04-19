@@ -1,8 +1,8 @@
 {
   "name": "tickerdb-mcp",
-  "version": "1.7.10",
+  "version": "1.7.11",
   "private": true,
-  "description": "Pre-computed EOD market context that improves reasoning, reduces token usage, and replaces data pipelines.",
+  "description": "Connect your agent to pre-computed market context that improves reasoning and reduces token usage.",
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",

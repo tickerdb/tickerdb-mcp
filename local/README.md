@@ -1,6 +1,6 @@
 ﻿# TickerDB - Market context for agents.
 
-Pre-computed EOD market context that improves reasoning, reduces token usage, and replaces data pipelines.
+Connect your agent to pre-computed market context that improves reasoning and reduces token usage.
 
 Works with Claude Desktop, Claude Code, Cursor, Windsurf, OpenClaw, LangChain, LlamaIndex, AutoGen, CrewAI, and any MCP-compatible client.
 
