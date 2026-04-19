@@ -1,4 +1,6 @@
 {
+  "title": "TickerDB MCP Configuration",
+  "description": "Configuration for the local TickerDB MCP server.",
   "type": "object",
   "properties": {
     "apiKey": {

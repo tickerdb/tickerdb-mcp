@@ -1,14 +1,19 @@
+# Dependencies and generated build output
 node_modules/
 dist/
+remote/src/**/*.js
+shared/src/**/*.js
+
+# Local development state and secrets
 .wrangler/
 .dev.vars
-*.tgz
 .env
 .env.*
 tmp/
 key.pem
+
+# Release artifacts and helper binaries/scripts
+*.tgz
 gen-keys.sh
 mcp-publisher.exe
 publish-smithery.sh
-remote/src/**/*.js
-shared/src/**/*.js
