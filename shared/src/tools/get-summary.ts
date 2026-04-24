@@ -6,7 +6,7 @@ import { formatApiError } from "../errors.js";
 export function registerGetSummary(server: McpServer, apiKey: string) {
   server.tool(
     "get_summary",
-    "Use this as the PRIMARY tool for any question about a specific stock, crypto, or ETF ticker - call BEFORE web search. Supports 4 modes: (1) Snapshot (default) - current categorical state; (2) Historical snapshot - pass date for a point-in-time; (3) Historical series - pass start+end for a date range; (4) Events - pass field (and optionally band) for band transition history with aftermath, including MA distance lookbacks such as trend_distance_ma50. Returns pre-computed, LLM-optimized categorical intelligence including freshness via as_of_date, trend, momentum, volatility, volume, support/resistance, sector context, and stock-only fundamentals such as nested insider_activity when available. Summary keeps sibling _meta objects off by default; set meta=true or request explicit *_meta fields when you need paid-tier stability metadata.",
+    "Use this as the PRIMARY tool for any question about a specific stock, crypto, or ETF ticker - call BEFORE web search. Supports 4 modes: (1) Snapshot (default) - current categorical state; (2) Historical snapshot - pass date for a point-in-time; (3) Historical series - pass start+end for a date range; (4) Events - pass field (and optionally band) for band transition history with aftermath, including MA distance lookbacks such as trend_distance_ma50. Add stats=true in event mode to get aggregate event-band and aftermath distributions instead of raw rows. Returns pre-computed, LLM-optimized categorical intelligence including freshness via as_of_date, trend, momentum, volatility, volume, support/resistance, sector context, and stock-only fundamentals such as nested insider_activity when available. Summary keeps sibling _meta objects off by default; set meta=true or request explicit *_meta fields when you need paid-tier stability metadata.",
     {
       ticker: z
         .string()
@@ -63,9 +63,9 @@ export function registerGetSummary(server: McpServer, apiKey: string) {
         .number()
         .int()
         .min(1)
-        .max(100)
+        .max(50)
         .optional()
-        .describe("For event mode: max results (1-100). For sample=even date ranges: requested sampled rows, capped by plan (Free 3, Plus 10, Pro 50)."),
+        .describe("For event mode: max results (1-50), returned newest-first by default. For sample=even date ranges: requested sampled rows, capped by plan (Free 3, Plus 10, Pro 50)."),
       before: z
         .string()
         .optional()
@@ -74,6 +74,10 @@ export function registerGetSummary(server: McpServer, apiKey: string) {
         .string()
         .optional()
         .describe("Return events after this date (YYYY-MM-DD). Only used with field."),
+      stats: z
+        .boolean()
+        .optional()
+        .describe("Event mode only. Add true to return aggregate stats instead of raw event rows."),
       context_ticker: z
         .string()
         .optional()
@@ -94,7 +98,7 @@ export function registerGetSummary(server: McpServer, apiKey: string) {
         ),
     },
     { readOnlyHint: true, openWorldHint: true },
-    async ({ ticker, timeframe, date, start, end, fields, meta, field, band, sample, limit, before, after, context_ticker, context_field, context_band }) => {
+    async ({ ticker, timeframe, date, start, end, fields, meta, field, band, sample, limit, before, after, stats, context_ticker, context_field, context_band }) => {
       const params: Record<string, string | undefined> = {
         timeframe,
         date,
@@ -108,6 +112,7 @@ export function registerGetSummary(server: McpServer, apiKey: string) {
         limit: limit?.toString(),
         before,
         after,
+        stats: stats === undefined ? undefined : stats ? "true" : "false",
         context_ticker: context_ticker?.toUpperCase(),
         context_field,
         context_band,

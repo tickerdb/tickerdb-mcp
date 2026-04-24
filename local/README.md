@@ -44,6 +44,7 @@ All tools are available on every tier (Free, Plus, Pro) â€” tiers differ by
 
 All tools return categorical, pre-computed data designed for LLM context windows â€” no raw OHLCV, no post-processing needed.
 `get_watchlist` does not take a timeframe. Use `get_watchlist_changes` for daily or weekly diffs.
+Add `stats=true` in `get_summary` event mode when you want aggregate event-band and aftermath distributions instead of raw rows.
 `get_summary` keeps sibling `_meta` / `status_meta` objects off by default; pass `meta: true` when you want paid-tier stability metadata inline, or request explicit `*_meta` field paths. `get_watchlist` still includes paid-tier `_meta` objects by default.
 
 MA distance fields are available throughout the stack:
