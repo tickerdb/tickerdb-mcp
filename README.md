@@ -9,7 +9,7 @@ Connects TickerDB to any MCP-compatible client: Claude Desktop, Claude Code, Cur
 
 | Tool | Description |
 |---|---|
-| `get_summary` | Technical + fundamental summary for a single ticker (supports date range and events filtering) |
+| `get_summary` | Technical + fundamental summary for a single ticker (supports date range, events filtering, and MA distance lookbacks) |
 | `get_search` | Search assets by categorical state with filters |
 | `get_schema` | Discover available fields and filter options (always free, 0 credits) |
 | `get_watchlist` | Live data for your saved watchlist tickers |
@@ -27,6 +27,12 @@ Use `get_summary` with `start`/`end` params for bulk ticker syncs across a date 
 `get_watchlist` does not take a timeframe. Use `get_watchlist_changes` for daily or weekly diffs.
 
 Current summary snapshots also expose top-level freshness via `as_of_date`, richer `volume` fields such as `price_direction_on_volume`, opt-in paid-tier level metadata like `support_level.status_meta`, Pro `sector_context` fields such as `agreement` and `overbought_count`, and stock-only nested `fundamentals.insider_activity` when available.
+
+MA distance fields are available throughout the stack:
+
+- Use flat schema/search/event names like `trend_distance_ma8`, `trend_distance_ma20`, `trend_distance_ma50`, `trend_distance_ma100`, and `trend_distance_ma200`.
+- Summary snapshots expose nested MA distance bands under `trend.distance_from_ma_band.ma_8` through `ma_200`.
+- MA event queries support grouped `band=above` and `band=below` aliases in addition to granular values like `slightly_above`.
 
 ### Band Stability Metadata
 

@@ -28,7 +28,7 @@ Get an API key at [tickerdb.com/dashboard](https://tickerdb.com/dashboard).
 
 | Tool | Description |
 |---|---|
-| `get_summary` | Technical + fundamental summary for a single ticker (supports date range and events filtering) |
+| `get_summary` | Technical + fundamental summary for a single ticker (supports date range, events filtering, and MA distance lookbacks) |
 | `get_search` | Search assets by categorical state with filters |
 | `get_schema` | Discover available fields and filter options (always free, 0 credits) |
 | `get_watchlist` | Live data for your saved watchlist tickers |
@@ -45,6 +45,12 @@ All tools are available on every tier (Free, Plus, Pro) â€” tiers differ by
 All tools return categorical, pre-computed data designed for LLM context windows â€” no raw OHLCV, no post-processing needed.
 `get_watchlist` does not take a timeframe. Use `get_watchlist_changes` for daily or weekly diffs.
 `get_summary` keeps sibling `_meta` / `status_meta` objects off by default; pass `meta: true` when you want paid-tier stability metadata inline, or request explicit `*_meta` field paths. `get_watchlist` still includes paid-tier `_meta` objects by default.
+
+MA distance fields are available throughout the stack:
+
+- Use flat schema/search/event names like `trend_distance_ma8`, `trend_distance_ma20`, `trend_distance_ma50`, `trend_distance_ma100`, and `trend_distance_ma200`.
+- Summary snapshots expose nested MA distance bands under `trend.distance_from_ma_band.ma_8` through `ma_200`.
+- MA event queries support grouped `band=above` and `band=below` aliases in addition to granular values like `slightly_above`.
 
 ## Remote Server
 
