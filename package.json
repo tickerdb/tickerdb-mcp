@@ -1,6 +1,6 @@
 {
   "name": "tickerdb-mcp",
-  "version": "1.7.15",
+  "version": "1.7.16",
   "private": true,
   "description": "Connect your agent to pre-computed market context that improves reasoning and reduces token usage.",
   "type": "module",
