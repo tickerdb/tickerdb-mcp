@@ -37,9 +37,9 @@ export function registerGetSearch(server: McpServer, apiKey: string) {
         .number()
         .int()
         .min(1)
-        .max(50)
+        .max(500)
         .optional()
-        .describe("Max results to return (1-50). Default: 20"),
+        .describe("Max results to return. Tier-gated: Starter 25, Plus 100, Pro 500. Default: 20"),
       offset: z
         .number()
         .int()
