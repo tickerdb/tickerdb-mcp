@@ -29,6 +29,7 @@ Get an API key at [tickerdb.com/dashboard](https://tickerdb.com/dashboard).
 | Tool | Description |
 |---|---|
 | `get_summary` | Technical + fundamental summary for a single ticker (supports date range, events filtering, and MA distance lookbacks) |
+| `get_ohlcv` | Paginated daily EOD candles for exact returns, charts, and backtests |
 | `get_search` | Search assets by categorical state with filters |
 | `get_schema` | Discover available fields and filter options (always free, 0 credits) |
 | `get_watchlist` | Live data for your saved watchlist tickers |
@@ -42,7 +43,7 @@ Get an API key at [tickerdb.com/dashboard](https://tickerdb.com/dashboard).
 
 All tools are available on every tier (Free, Plus, Pro) â€” tiers differ by rate limits, history depth, and watchlist size. See [tickerdb.com/pricing](https://tickerdb.com/pricing) for details.
 
-All tools return categorical, pre-computed data designed for LLM context windows â€” no raw OHLCV, no post-processing needed.
+Tools remain categorical-first for efficient LLM context. Use `get_ohlcv` when exact daily prices are needed, and follow `next_cursor` while `has_more` is true.
 `get_watchlist` does not take a timeframe. Use `get_watchlist_changes` for daily or weekly diffs.
 Add `stats=true` in `get_summary` event mode when you want aggregate event-band and aftermath distributions instead of raw rows.
 `get_summary` keeps sibling `_meta` / `status_meta` objects off by default; pass `meta: true` when you want paid-tier stability metadata inline, or request explicit `*_meta` field paths. `get_watchlist` still includes paid-tier `_meta` objects by default.

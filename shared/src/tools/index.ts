@@ -1,5 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { registerGetSummary } from "./get-summary.js";
+import { registerGetOhlcv } from "./get-ohlcv.js";
 import { registerGetSearch } from "./get-search.js";
 import { registerGetSchema } from "./get-schema.js";
 import { registerGetWatchlist } from "./get-watchlist.js";
@@ -13,6 +14,7 @@ import { registerDeleteWebhook } from "./delete-webhook.js";
 
 export function registerAllTools(server: McpServer, apiKey: string) {
   registerGetSummary(server, apiKey);
+  registerGetOhlcv(server, apiKey);
   registerGetSearch(server, apiKey);
   registerGetSchema(server, apiKey);
   registerGetWatchlist(server, apiKey);
