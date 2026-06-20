@@ -46,6 +46,7 @@ All tools are available on every tier (Free, Plus, Pro) â€” tiers differ by
 Tools remain categorical-first for efficient LLM context. Use `get_ohlcv` when exact daily prices are needed, and follow `next_cursor` while `has_more` is true.
 `get_watchlist` does not take a timeframe. Use `get_watchlist_changes` for daily or weekly diffs.
 Add `stats=true` in `get_summary` event mode when you want aggregate event-band and aftermath distributions instead of raw rows.
+Paid event aftermaths include exact close-to-close fields such as `return_5d_pct`, `return_20d_pct`, and `return_100d_pct` alongside the categorical performance bands. Incomplete horizons return `null`.
 `get_summary` keeps sibling `_meta` / `status_meta` objects off by default; pass `meta: true` when you want paid-tier stability metadata inline, or request explicit `*_meta` field paths. `get_watchlist` still includes paid-tier `_meta` objects by default.
 
 MA distance fields are available throughout the stack:
