@@ -5,7 +5,7 @@ import { formatApiError } from "../errors.js";
 export function registerGetAccount(server: McpServer, apiKey: string) {
   server.tool(
     "get_account",
-    "Get your account details including current plan tier, rate limits, and today's API usage.",
+    "Get your account details including current plan tier, credit limits, and today's API usage.",
     {},
     { readOnlyHint: true, openWorldHint: true },
     async () => {

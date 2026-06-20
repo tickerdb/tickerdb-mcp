@@ -22,11 +22,11 @@ Connects TickerDB to any MCP-compatible client: Claude Desktop, Claude Code, Cur
 | `list_webhooks` | List registered webhooks |
 | `delete_webhook` | Remove a webhook |
 
-All tools are available on every tier (Free, Plus, Pro) â€” tiers differ by rate limits, history depth, and watchlist size. See [tickerdb.com/pricing](https://tickerdb.com/pricing) for details.
+All tools are available on every tier (Free, Plus, Pro) â€” tiers differ by credit limits, history depth, and watchlist size. See [tickerdb.com/pricing](https://tickerdb.com/pricing) for details.
 
 Use `get_summary` with `start`/`end` params for bulk ticker syncs across a date range, or with `field`/`band` params to query event occurrences. Add `stats=true` in event mode when you want aggregate event-band and aftermath distributions instead of raw rows.
 Paid event aftermaths include exact close-to-close fields such as `return_5d_pct`, `return_20d_pct`, and `return_100d_pct` alongside the categorical performance bands. Incomplete horizons return `null`.
-Use `get_ohlcv` only when exact prices are required. Follow `next_cursor` while `has_more` is true to retrieve additional bars.
+Use `get_ohlcv` only when exact prices are required. Follow `next_cursor` while `has_more` is true to retrieve additional bars. OHLCV costs 1 credit per 100 bars returned, rounded up, with a 1 credit minimum.
 `get_watchlist` does not take a timeframe. Use `get_watchlist_changes` for daily or weekly diffs.
 
 Current summary snapshots also expose top-level freshness via `as_of_date`, richer `volume` fields such as `price_direction_on_volume`, opt-in paid-tier level metadata like `support_level.status_meta`, Pro `sector_context` fields such as `agreement` and `overbought_count`, and stock-only nested `fundamentals.insider_activity` when available.

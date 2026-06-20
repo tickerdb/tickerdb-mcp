@@ -41,9 +41,9 @@ Get an API key at [tickerdb.com/dashboard](https://tickerdb.com/dashboard).
 | `list_webhooks` | List registered webhooks |
 | `delete_webhook` | Remove a webhook |
 
-All tools are available on every tier (Free, Plus, Pro) â€” tiers differ by rate limits, history depth, and watchlist size. See [tickerdb.com/pricing](https://tickerdb.com/pricing) for details.
+All tools are available on every tier (Free, Plus, Pro) â€” tiers differ by credit limits, history depth, and watchlist size. See [tickerdb.com/pricing](https://tickerdb.com/pricing) for details.
 
-Tools remain categorical-first for efficient LLM context. Use `get_ohlcv` when exact daily prices are needed, and follow `next_cursor` while `has_more` is true.
+Tools remain categorical-first for efficient LLM context. Use `get_ohlcv` when exact daily prices are needed, and follow `next_cursor` while `has_more` is true. OHLCV costs 1 credit per 100 bars returned, rounded up, with a 1 credit minimum.
 `get_watchlist` does not take a timeframe. Use `get_watchlist_changes` for daily or weekly diffs.
 Add `stats=true` in `get_summary` event mode when you want aggregate event-band and aftermath distributions instead of raw rows.
 Paid event aftermaths include exact close-to-close fields such as `return_5d_pct`, `return_20d_pct`, and `return_100d_pct` alongside the categorical performance bands. Incomplete horizons return `null`.
