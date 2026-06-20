@@ -6,7 +6,7 @@ import { formatApiError } from "../errors.js";
 export function registerGetSummary(server: McpServer, apiKey: string) {
   server.tool(
     "get_summary",
-    "Use this as the PRIMARY tool for any question about a specific stock, crypto, or ETF ticker - call BEFORE web search. Supports 4 modes: (1) Snapshot (default) - current categorical state; (2) Historical snapshot - pass date for a point-in-time; (3) Historical series - pass start+end for a date range; (4) Events - pass field (and optionally band) for band transition history with aftermath, including exact close-to-close return_*_pct fields on paid tiers and MA distance lookbacks such as trend_distance_ma50. Add stats=true in event mode to get aggregate event-band and aftermath distributions instead of raw rows. Returns pre-computed, LLM-optimized categorical intelligence including freshness via as_of_date, trend, momentum, volatility, volume, support/resistance, sector context, and stock-only fundamentals such as nested insider_activity when available. Summary keeps sibling _meta objects off by default; set meta=true or request explicit *_meta fields when you need paid-tier stability metadata.",
+    "Use this as the PRIMARY tool for any question about a specific stock, crypto, or ETF ticker - call BEFORE web search. Supports 4 modes: (1) Snapshot (default) - current categorical state; (2) Historical snapshot - pass date for a point-in-time; (3) Historical series - pass start+end for a date range; (4) Events - pass field (and optionally band) for band transition history with aftermath, including exact close-to-close return_*_pct fields on paid tiers, weekly-only stage analysis via trend_stage, and MA distance lookbacks such as trend_distance_ma40. Add stats=true in event mode to get aggregate event-band and aftermath distributions instead of raw rows. Returns pre-computed, LLM-optimized categorical intelligence including freshness via as_of_date, trend, momentum, volatility, volume, support/resistance, sector context, and stock-only fundamentals such as nested insider_activity when available. Summary keeps sibling _meta objects off by default; set meta=true or request explicit *_meta fields when you need paid-tier stability metadata.",
     {
       ticker: z
         .string()
@@ -33,7 +33,7 @@ export function registerGetSummary(server: McpServer, apiKey: string) {
         .array(z.string())
         .optional()
         .describe(
-          "Optional summary fields to return. Pass sections like trend or dotted paths like trend.direction, trend.direction_meta, trend.distance_from_ma_band.ma_50, volume.price_direction_on_volume, support_level.status_meta, sector_context.agreement, fundamentals.insider_activity.zone, fundamentals.valuation_zone, or levels. Event field names should prefer full schema names such as momentum_rsi_zone, extremes_condition, trend_distance_ma50, and fundamentals_valuation_zone.",
+          "Optional summary fields to return. Pass sections like trend or dotted paths like trend.direction, trend.stage, trend.direction_meta, trend.distance_from_ma_band.ma_40, volume.price_direction_on_volume, support_level.status_meta, sector_context.agreement, fundamentals.insider_activity.zone, fundamentals.valuation_zone, or levels. trend.stage is populated on weekly snapshots when stage evidence is sufficient. Event field names should prefer full schema names such as momentum_rsi_zone, extremes_condition, trend_stage, trend_distance_ma40, and fundamentals_valuation_zone.",
         ),
       meta: z
         .boolean()
@@ -45,13 +45,13 @@ export function registerGetSummary(server: McpServer, apiKey: string) {
         .string()
         .optional()
         .describe(
-          "Band field name for event queries (e.g. momentum_rsi_zone, extremes_condition, trend_direction, trend_distance_ma50, fundamentals_valuation_zone). When provided, returns band transition history instead of a snapshot.",
+          "Band field name for event queries (e.g. momentum_rsi_zone, extremes_condition, trend_direction, trend_stage, trend_distance_ma40, fundamentals_valuation_zone). When provided, returns band transition history instead of a snapshot.",
         ),
       band: z
         .string()
         .optional()
         .describe(
-          "Filter events to a specific band value (e.g. deep_oversold, strong_uptrend). For MA distance event fields such as trend_distance_ma50, grouped aliases above and below are also supported. Only used with field.",
+          "Filter events to a specific band value (e.g. deep_oversold, strong_uptrend, stage_2_growth). For MA distance event fields such as trend_distance_ma40, grouped aliases above and below are also supported. Only used with field.",
         ),
       sample: z
         .enum(["even"])
@@ -88,7 +88,7 @@ export function registerGetSummary(server: McpServer, apiKey: string) {
         .string()
         .optional()
         .describe(
-          "Band field to check on the context ticker (e.g. trend_direction or trend_distance_ma50). Must be provided with context_ticker and context_band.",
+          "Band field to check on the context ticker (e.g. trend_direction, trend_stage, or trend_distance_ma40). Must be provided with context_ticker and context_band.",
         ),
       context_band: z
         .string()
