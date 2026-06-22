@@ -30,7 +30,7 @@ Get an API key at [tickerdb.com/dashboard](https://tickerdb.com/dashboard).
 |---|---|
 | `get_summary` | Technical + fundamental summary for a single ticker (supports date range, events filtering, and MA distance lookbacks) |
 | `get_ohlcv` | Paginated daily EOD candles for exact returns, charts, and backtests |
-| `get_search` | Search assets by categorical state with filters |
+| `get_search` | Search assets by categorical state or rank snapshots by fields such as `market_cap` |
 | `get_schema` | Discover available fields and filter options (always free, 0 credits) |
 | `get_watchlist` | Live data for your saved watchlist tickers |
 | `get_watchlist_changes` | Field-level diffs since the last pipeline run |

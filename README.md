@@ -11,7 +11,7 @@ Connects TickerDB to any MCP-compatible client: Claude Desktop, Claude Code, Cur
 |---|---|
 | `get_summary` | Technical + fundamental summary for a single ticker (supports date range, events filtering, and MA distance lookbacks) |
 | `get_ohlcv` | Paginated daily EOD candles for exact returns, charts, and backtests |
-| `get_search` | Search assets by categorical state with filters |
+| `get_search` | Search assets by categorical state or rank snapshots by fields such as `market_cap` |
 | `get_schema` | Discover available fields and filter options (always free, 0 credits) |
 | `get_watchlist` | Live data for your saved watchlist tickers |
 | `get_watchlist_changes` | Field-level diffs since the last pipeline run |
@@ -29,7 +29,7 @@ Paid event aftermaths include exact close-to-close fields such as `return_5d_pct
 Use `get_ohlcv` only when exact prices are required. Follow `next_cursor` while `has_more` is true to retrieve additional bars. OHLCV costs 1 credit per 100 bars returned, rounded up, with a 1 credit minimum.
 `get_watchlist` does not take a timeframe. Use `get_watchlist_changes` for daily or weekly diffs.
 
-Current summary snapshots also expose top-level freshness via `as_of_date`, richer `volume` fields such as `price_direction_on_volume`, opt-in paid-tier level metadata like `support_level.status_meta`, Pro `sector_context` fields such as `agreement` and `overbought_count`, and stock-only nested `fundamentals.insider_activity` when available.
+Current summary snapshots also expose top-level freshness via `as_of_date`, stock `market_cap` / `market_cap_tier` when available, richer `volume` fields such as `price_direction_on_volume`, opt-in paid-tier level metadata like `support_level.status_meta`, Pro `sector_context` fields such as `agreement` and `overbought_count`, and stock-only nested `fundamentals.insider_activity` when available.
 
 MA distance fields are available throughout the stack:
 
