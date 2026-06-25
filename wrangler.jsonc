@@ -1,4 +1,5 @@
 {
+	"account_id": "f3389251d9431d8573105ab66688271a",
 	"name": "tickerdb-mcp",
 	"main": "remote/src/index.ts",
 	"compatibility_date": "2026-03-10",
@@ -8,7 +9,7 @@
 	"hyperdrive": [
 		{
 			"binding": "HYPERDRIVE",
-			"id": "a4e11f1d24eb46f1ab6612262cd4449d"
+			"id": "3e4bc6ceb5274b64ac62fd10040dc38d"
 		}
 	]
 	// Secrets (set via `wrangler secret put`):
