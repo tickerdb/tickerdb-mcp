@@ -51,9 +51,9 @@ Paid event aftermaths include exact close-to-close fields such as `return_5d_pct
 
 MA distance fields are available throughout the stack:
 
-- Use flat schema/search/event names like `trend_distance_ma8`, `trend_distance_ma20`, `trend_distance_ma50`, `trend_distance_ma100`, and `trend_distance_ma200`.
-- Summary snapshots expose nested MA distance bands under `trend.distance_from_ma_band.ma_8` through `ma_200`.
-- MA event queries support grouped `band=above` and `band=below` aliases in addition to granular values like `slightly_above`.
+- Use flat schema/search/event names like `trend_ma_crossover_event`, `trend_ma_slope_band`, `trend_distance_ma8`, `trend_distance_ma20`, `trend_distance_ma40`, `trend_distance_ma50`, `trend_distance_ma100`, and `trend_distance_ma200`.
+- Summary snapshots expose nested MA distance bands under `trend.distance_from_ma_band.ma_8` through `ma_200`, plus `trend.ma_slope_band`, `trend.ma_compression_band`, and `trend.ma_crossover_event`.
+- MA distance event queries support grouped `band=above` and `band=below` aliases in addition to granular values like `proximity_above`.
 
 ## Remote Server
 
