@@ -6,7 +6,7 @@ import { formatApiError } from "../errors.js";
 export function registerGetSearch(server: McpServer, apiKey: string) {
   server.tool(
     "get_search",
-    "Search for assets matching filter criteria. Use this when the user wants to find tickers by categorical state (e.g. 'which stocks are oversold?', 'find tech stocks in strong uptrend', 'find recent golden crosses', 'find weekly stage 2 assets near the 40w MA with high volume') or rank assets by a field (e.g. top stocks by market_cap on a historical date). Pass filters as a JSON-encoded array of {field, op, value} objects. Call get_schema first to discover valid field names - fields use full expanded names (e.g. 'momentum_rsi_zone' not 'rsi_zone', 'volatility_regime' not 'vol_regime', 'trend_ma_crossover_event' for MA crossovers, 'trend_distance_ma40' not 'ma_40', 'trend_stage' for stage analysis). Use 'fields' to control returned columns and 'sort_by' to rank results server-side.",
+    "Search for assets matching filter criteria. Use this when the user wants to find tickers by categorical state (e.g. 'which stocks are oversold?', 'find tech stocks in strong uptrend', 'find recent golden crosses', 'find weekly stage 2 assets near the 40w MA with high volume') or rank assets by a field (e.g. top stocks by market_cap on a historical date). Pass filters as a JSON-encoded array of {field, op, value} objects. Call get_schema first to discover valid field names - fields use clean flat names for raw values such as 'ma8' and 'ma200', and full expanded names for semantic fields such as 'momentum_rsi_zone', 'trend_ma_crossover_event', 'trend_distance_ma40', and 'trend_stage'. Use 'fields' to control returned columns and 'sort_by' to rank results server-side.",
     {
       filters: z
         .string()
@@ -17,7 +17,7 @@ export function registerGetSearch(server: McpServer, apiKey: string) {
         .string()
         .optional()
         .describe(
-          'JSON-encoded array of column names to return. Example: ["ticker", "sector", "market_cap", "trend_stage", "trend_ma_crossover_event", "trend_distance_ma40", "volume_ratio_band"]. Omit to get a default core subset: ticker, asset_class, sector, market_cap, market_cap_tier, performance, trend_direction, trend_ma_slope_band, trend_ma_compression_band, trend_ma_crossover_event, momentum_rsi_zone, extremes_condition, extremes_condition_rarity, volatility_regime, volume_ratio_band, fundamentals_valuation_zone, range_position. Use ["*"] for all 120+ fields. Specify fields to reduce token usage. trend_stage is weekly-only and should be requested with timeframe=weekly.',
+          'JSON-encoded array of column names to return. Example: ["ticker", "sector", "market_cap", "trend_stage", "ma40", "trend_ma50_slope", "trend_ma_crossover_event", "trend_distance_ma40", "volume_ratio_band"]. Omit to get a default core subset: ticker, asset_class, sector, market_cap, market_cap_tier, performance, trend_direction, trend_ma20_slope, trend_ma_compression_band, trend_ma_crossover_event, momentum_rsi_zone, extremes_condition, extremes_condition_rarity, volatility_regime, volume_ratio_band, fundamentals_valuation_zone, range_position. Request ma8 through ma200 for raw MA values and trend_ma8_slope through trend_ma200_slope for the full MA slope set. Use ["*"] for all fields. Specify fields to reduce token usage. trend_stage is weekly-only and should be requested with timeframe=weekly.',
         ),
       sort_by: z
         .string()
