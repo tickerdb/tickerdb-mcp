@@ -2,9 +2,10 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { callTickerDb } from "../api-client.js";
 import { formatApiError } from "../errors.js";
+import { formatTickerDbResult, tickerDbOutputSchema } from "./result.js";
 
 export function registerDeleteWebhook(server: McpServer, apiKey: string) {
-  server.tool(
+  const tool = server.tool(
     "delete_webhook",
     "Remove a registered webhook.",
     {
@@ -23,9 +24,8 @@ export function registerDeleteWebhook(server: McpServer, apiKey: string) {
 
       if (status !== 200) return formatApiError(status, data);
 
-      return {
-        content: [{ type: "text", text: JSON.stringify(data) }],
-      };
+      return formatTickerDbResult(data);
     },
   );
+  tool.update({ outputSchema: tickerDbOutputSchema });
 }

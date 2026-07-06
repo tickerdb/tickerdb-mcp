@@ -75,6 +75,13 @@ export default {
       return jsonError(404, "OpenID configuration is not supported.");
     }
 
+    if (
+      url.pathname === "/.well-known/openai-apps-challenge" &&
+      (request.method === "GET" || request.method === "HEAD")
+    ) {
+      return handleOpenAiAppsChallenge(request, env);
+    }
+
     if (url.pathname === "/authorize") {
       const authorizeUrl = new URL(`${env.SITE_URL}/oauth/authorize`);
       url.searchParams.forEach((v, k) => authorizeUrl.searchParams.set(k, v));
@@ -508,6 +515,21 @@ function corsHeaders(): Record<string, string> {
     "Cache-Control": "no-store",
     Vary: "Authorization, Mcp-Session-Id",
   };
+}
+
+function handleOpenAiAppsChallenge(request: Request, env: Env): Response {
+  const token = env.OPENAI_APPS_CHALLENGE_TOKEN?.trim();
+  if (!token) {
+    return jsonError(404, "OpenAI apps challenge token is not configured.");
+  }
+
+  return new Response(request.method === "HEAD" ? null : token, {
+    status: 200,
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      "Cache-Control": "no-store",
+    },
+  });
 }
 
 function withCors(response: Response): Response {

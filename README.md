@@ -53,7 +53,16 @@ The remote server at `mcp.tickerdb.com` supports OAuth 2.1 for Claude.ai Connect
 
 Connect any MCP client to `https://mcp.tickerdb.com/mcp` with your API key as a Bearer token.
 
-### Option 3: npm package (Claude Desktop, Cursor, etc.)
+### Option 3: ChatGPT app backend (OAuth)
+
+Use the hosted MCP endpoint `https://mcp.tickerdb.com/mcp` as the backend for
+the TickerDB ChatGPT app. The first ChatGPT submission is tool-only, with no
+Apps SDK iframe widget.
+
+For ChatGPT app domain verification, set `OPENAI_APPS_CHALLENGE_TOKEN` on the
+remote Worker and verify `https://mcp.tickerdb.com/.well-known/openai-apps-challenge`.
+
+### Option 4: npm package (Claude Desktop, Cursor, etc.)
 
 Add to your Claude Desktop config (`claude_desktop_config.json`):
 

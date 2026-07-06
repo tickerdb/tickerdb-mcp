@@ -2,9 +2,10 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { callTickerDb } from "../api-client.js";
 import { formatApiError } from "../errors.js";
+import { formatTickerDbResult, tickerDbOutputSchema } from "./result.js";
 
 export function registerGetOhlcv(server: McpServer, apiKey: string) {
-  server.tool(
+  const tool = server.tool(
     "get_ohlcv",
     "Get stored daily end-of-day OHLCV candles for a stock, ETF, or crypto ticker. Use this for exact-return calculations, charts, and backtests after get_summary identifies a setup. Results are paginated; pass next_cursor back as cursor to continue. Equity and ETF bars are split-and-dividend adjusted; crypto bars are unadjusted. Credit cost is 1 credit per 100 bars returned, rounded up, with a 1 credit minimum.",
     {
@@ -15,7 +16,7 @@ export function registerGetOhlcv(server: McpServer, apiKey: string) {
       order: z.enum(["asc", "desc"]).optional().describe("Sort by candle date. Default: desc."),
       cursor: z.string().optional().describe("Exclusive date cursor from next_cursor for pagination (YYYY-MM-DD)."),
     },
-    { readOnlyHint: true, openWorldHint: true },
+    { readOnlyHint: true, destructiveHint: false, openWorldHint: true },
     async ({ ticker, start, end, limit, order, cursor }) => {
       const { status, data } = await callTickerDb(
         apiKey,
@@ -31,9 +32,8 @@ export function registerGetOhlcv(server: McpServer, apiKey: string) {
 
       if (status !== 200) return formatApiError(status, data);
 
-      return {
-        content: [{ type: "text", text: JSON.stringify(data) }],
-      };
+      return formatTickerDbResult(data);
     },
   );
+  tool.update({ outputSchema: tickerDbOutputSchema });
 }

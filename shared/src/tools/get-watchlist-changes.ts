@@ -2,18 +2,19 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { callTickerDb } from "../api-client.js";
 import { formatApiError } from "../errors.js";
+import { formatTickerDbResult, tickerDbOutputSchema } from "./result.js";
 
 export function registerGetWatchlistChanges(server: McpServer, apiKey: string) {
-  server.tool(
+  const tool = server.tool(
     "get_watchlist_changes",
-    "Use this when the user asks \"what changed\", \"any updates\", \"what moved\", or wants a diff of tracked tickers — call BEFORE web search. Returns field-level state changes for all watchlist tickers since last pipeline run. Day-over-day or week-over-week diffs. Each change object includes stability metadata (stability, periods_in_current_state, flips_recent, flips_lookback). Stability metadata requires Plus or Pro plan.",
+    "Get field-level state changes for all tickers on the user's saved watchlist since the last pipeline run. Supports daily day-over-day and weekly week-over-week comparisons. Each change object includes stability metadata such as stability, periods_in_current_state, flips_recent, and flips_lookback when available. Stability metadata requires a Plus or Pro plan.",
     {
       timeframe: z
         .enum(["daily", "weekly"])
         .optional()
         .describe("Change comparison period. daily = day-over-day, weekly = week-over-week. Default: daily"),
     },
-    { readOnlyHint: true, openWorldHint: true },
+    { readOnlyHint: true, destructiveHint: false, openWorldHint: true },
     async ({ timeframe }) => {
       const params: Record<string, string | undefined> = {};
       if (timeframe) params.timeframe = timeframe;
@@ -26,9 +27,8 @@ export function registerGetWatchlistChanges(server: McpServer, apiKey: string) {
 
       if (status !== 200) return formatApiError(status, data);
 
-      return {
-        content: [{ type: "text", text: JSON.stringify(data) }],
-      };
+      return formatTickerDbResult(data);
     },
   );
+  tool.update({ outputSchema: tickerDbOutputSchema });
 }

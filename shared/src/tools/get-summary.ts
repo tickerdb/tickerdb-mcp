@@ -2,11 +2,12 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { callTickerDb } from "../api-client.js";
 import { formatApiError } from "../errors.js";
+import { formatTickerDbResult, tickerDbOutputSchema } from "./result.js";
 
 export function registerGetSummary(server: McpServer, apiKey: string) {
-  server.tool(
+  const tool = server.tool(
     "get_summary",
-    "Use this as the PRIMARY tool for any question about a specific stock, crypto, or ETF ticker - call BEFORE web search. Supports 4 modes: (1) Snapshot (default) - current categorical state; (2) Historical snapshot - pass date for a point-in-time; (3) Historical series - pass start+end for a date range; (4) Events - pass field (and optionally band) for band transition history with aftermath, including exact close-to-close return_*_pct fields on paid tiers, weekly-only stage analysis via trend_stage, MA signal fields trend_ma8_slope through trend_ma200_slope, trend_ma_crossover_event, and MA distance lookbacks such as trend_distance_ma40. Add stats=true in event mode to get aggregate event-band and aftermath distributions instead of raw rows. Returns pre-computed, LLM-optimized categorical intelligence including freshness via as_of_date, exact same-candle ohlcv, market_cap, market_cap_tier, trend, momentum, volatility, volume, support/resistance, sector context, and stock-only fundamentals such as nested insider_activity when available. Summary keeps sibling _meta objects off by default; set meta=true or request explicit *_meta fields when you need paid-tier stability metadata.",
+    "Get pre-computed market intelligence for a specific stock, crypto, or ETF ticker. Supports 4 modes: (1) Snapshot (default) for the latest categorical state; (2) Historical snapshot by date; (3) Historical series with start and end dates; (4) Events by field and optional band, including aftermath fields on paid tiers, weekly trend_stage analysis, MA signal fields, trend_ma_crossover_event, and MA distance lookbacks such as trend_distance_ma40. Add stats=true in event mode to return aggregate event-band and aftermath distributions instead of raw rows. Results can include freshness via as_of_date, same-candle OHLCV, market_cap, market_cap_tier, trend, momentum, volatility, volume, support/resistance, sector context, and stock-only fundamentals such as nested insider_activity when available. Summary keeps sibling _meta objects off by default; set meta=true or request explicit *_meta fields when paid-tier stability metadata is needed.",
     {
       ticker: z
         .string()
@@ -97,7 +98,7 @@ export function registerGetSummary(server: McpServer, apiKey: string) {
           "Only return events where the context ticker was in this band (e.g. downtrend). For MA distance context fields, grouped aliases above and below are also supported. Must be provided with context_ticker and context_field.",
         ),
     },
-    { readOnlyHint: true, openWorldHint: true },
+    { readOnlyHint: true, destructiveHint: false, openWorldHint: true },
     async ({ ticker, timeframe, date, start, end, fields, meta, field, band, sample, limit, before, after, stats, context_ticker, context_field, context_band }) => {
       const params: Record<string, string | undefined> = {
         timeframe,
@@ -125,9 +126,8 @@ export function registerGetSummary(server: McpServer, apiKey: string) {
 
       if (status !== 200) return formatApiError(status, data);
 
-      return {
-        content: [{ type: "text", text: JSON.stringify(data) }],
-      };
+      return formatTickerDbResult(data);
     },
   );
+  tool.update({ outputSchema: tickerDbOutputSchema });
 }

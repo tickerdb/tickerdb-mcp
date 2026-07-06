@@ -12,7 +12,7 @@ export function formatApiError(
     case 403:
       message =
         errorObj?.message ??
-        "This endpoint requires a higher-tier plan. Upgrade at https://tickerdb.com/pricing";
+        "This endpoint requires a higher-tier plan.";
       break;
     case 404:
       message = errorObj?.message ?? "Resource not found.";

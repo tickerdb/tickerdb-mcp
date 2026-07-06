@@ -1,13 +1,14 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { callTickerDb } from "../api-client.js";
 import { formatApiError } from "../errors.js";
+import { formatTickerDbResult, tickerDbOutputSchema } from "./result.js";
 
 export function registerGetSchema(server: McpServer, apiKey: string) {
-  server.tool(
+  const tool = server.tool(
     "get_schema",
     "Get the schema of all available fields and their valid band values. Use this when the user asks 'what fields are available?', 'what bands does momentum_rsi_zone have?', 'what sectors exist?', or when you need to validate field/band names before calling get_summary with event parameters or get_search with filters.",
     {},
-    { readOnlyHint: true, openWorldHint: true },
+    { readOnlyHint: true, destructiveHint: false, openWorldHint: true },
     async () => {
       const { status, data } = await callTickerDb(
         apiKey,
@@ -16,9 +17,8 @@ export function registerGetSchema(server: McpServer, apiKey: string) {
 
       if (status !== 200) return formatApiError(status, data);
 
-      return {
-        content: [{ type: "text", text: JSON.stringify(data) }],
-      };
+      return formatTickerDbResult(data);
     },
   );
+  tool.update({ outputSchema: tickerDbOutputSchema });
 }

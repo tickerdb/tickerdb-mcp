@@ -2,11 +2,12 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { callTickerDb } from "../api-client.js";
 import { formatApiError } from "../errors.js";
+import { formatTickerDbResult, tickerDbOutputSchema } from "./result.js";
 
 export function registerGetSearch(server: McpServer, apiKey: string) {
-  server.tool(
+  const tool = server.tool(
     "get_search",
-    "Search for assets matching filter criteria. Use this when the user wants to find tickers by categorical state (e.g. 'which stocks are oversold?', 'find tech stocks in strong uptrend', 'find recent golden crosses', 'find weekly stage 2 assets near the 40w MA with high volume') or rank assets by a field (e.g. top stocks by market_cap on a historical date). Pass filters as a JSON-encoded array of {field, op, value} objects. Call get_schema first to discover valid field names - fields use clean flat names for raw values such as 'ma8' and 'ma200', and full expanded names for semantic fields such as 'momentum_rsi_zone', 'trend_ma_crossover_event', 'trend_distance_ma40', and 'trend_stage'. Use 'fields' to control returned columns and 'sort_by' to rank results server-side.",
+    "Search for assets matching filter criteria, including categorical states (e.g. oversold assets, strong uptrends, recent golden crosses, weekly stage 2 assets near the 40w MA with high volume) or rankings by a field such as market_cap on a historical date. Pass filters as a JSON-encoded array of {field, op, value} objects. Use get_schema to discover valid field names; fields use clean flat names for raw values such as ma8 and ma200, and full expanded names for semantic fields such as momentum_rsi_zone, trend_ma_crossover_event, trend_distance_ma40, and trend_stage. Use fields to control returned columns and sort_by to rank results server-side.",
     {
       filters: z
         .string()
@@ -51,7 +52,7 @@ export function registerGetSearch(server: McpServer, apiKey: string) {
         .optional()
         .describe("Pagination offset. Default: 0"),
     },
-    { readOnlyHint: true, openWorldHint: true },
+    { readOnlyHint: true, destructiveHint: false, openWorldHint: true },
     async ({ filters, fields, sort_by, sort_direction, timeframe, date, limit, offset }) => {
       const params: Record<string, string | undefined> = {
         filters,
@@ -71,9 +72,8 @@ export function registerGetSearch(server: McpServer, apiKey: string) {
 
       if (status !== 200) return formatApiError(status, data);
 
-      return {
-        content: [{ type: "text", text: JSON.stringify(data) }],
-      };
+      return formatTickerDbResult(data);
     },
   );
+  tool.update({ outputSchema: tickerDbOutputSchema });
 }
