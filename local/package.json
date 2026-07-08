@@ -1,6 +1,6 @@
 {
   "name": "tickerdb-mcp",
-  "version": "1.8.4",
+  "version": "1.8.5",
   "mcpName": "com.tickerdb/mcp-server",
   "description": "Connect your agent to pre-computed market context that improves reasoning and reduces token usage.",
   "type": "module",

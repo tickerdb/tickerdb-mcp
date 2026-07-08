@@ -7,7 +7,7 @@ import { formatTickerDbResult, tickerDbOutputSchema } from "./result.js";
 export function registerGetSummary(server: McpServer, apiKey: string) {
   const tool = server.tool(
     "get_summary",
-    "Get pre-computed market intelligence for a specific stock, crypto, or ETF ticker. Supports 4 modes: (1) Snapshot (default) for the latest categorical state; (2) Historical snapshot by date; (3) Historical series with start and end dates; (4) Events by field and optional band, including aftermath fields on paid tiers, weekly trend_stage analysis, MA signal fields, trend_ma_crossover_event, and MA distance lookbacks such as trend_distance_ma40. Add stats=true in event mode to return aggregate event-band and aftermath distributions instead of raw rows. Results can include freshness via as_of_date, same-candle OHLCV, market_cap, market_cap_tier, trend, momentum, volatility, volume, support/resistance, sector context, and stock-only fundamentals such as nested insider_activity when available. Summary keeps sibling _meta objects off by default; set meta=true or request explicit *_meta fields when paid-tier stability metadata is needed.",
+    "Get pre-computed market intelligence for a specific stock, crypto, or ETF ticker. Supports 4 modes: (1) Snapshot (default) for the latest categorical state; (2) Historical snapshot by date; (3) Historical series with start and end dates; (4) Events by field and optional band, including aftermath fields on paid tiers, weekly trend_stage analysis, pattern_bull_flag/pattern_bear_flag setup states, MA signal fields, trend_ma_crossover_event, and MA distance lookbacks such as trend_distance_ma40. Add stats=true in event mode to return aggregate event-band and aftermath distributions instead of raw rows. Results can include freshness via as_of_date, same-candle OHLCV, market_cap, market_cap_tier, trend, momentum, volatility, volume, patterns, support/resistance, sector context, and stock-only fundamentals such as nested insider_activity when available. Summary keeps sibling _meta objects off by default; set meta=true or request explicit *_meta fields when paid-tier stability metadata is needed.",
     {
       ticker: z
         .string()
@@ -34,7 +34,7 @@ export function registerGetSummary(server: McpServer, apiKey: string) {
         .array(z.string())
         .optional()
         .describe(
-          "Optional summary fields to return. Identity fields such as market_cap and market_cap_tier are always kept. Pass sections like ohlcv, trend or dotted paths like ohlcv.close, trend.direction, trend.stage, trend.ma_slopes.ma_8, trend.ma_slopes.ma_20, trend.ma_slopes.ma_40, trend.ma_slopes.ma_50, trend.ma_slopes.ma_100, trend.ma_slopes.ma_200, trend.ma_crossover_event, trend.direction_meta, trend.distance_from_ma_band.ma_40, volume.price_direction_on_volume, support_level.level_price, support_level.status_meta, sector_context.agreement, fundamentals.insider_activity.zone, fundamentals.valuation_zone, or levels. trend.stage is populated on weekly snapshots when stage evidence is sufficient. Event field names should prefer full schema names such as momentum_rsi_zone, extremes_condition, trend_stage, trend_ma8_slope through trend_ma200_slope, trend_ma_crossover_event, trend_distance_ma40, and fundamentals_valuation_zone.",
+          "Optional summary fields to return. Identity fields such as market_cap and market_cap_tier are always kept. Pass sections like ohlcv, trend, patterns or dotted paths like ohlcv.close, trend.direction, trend.stage, trend.ma_slopes.ma_8, trend.ma_slopes.ma_20, trend.ma_slopes.ma_40, trend.ma_slopes.ma_50, trend.ma_slopes.ma_100, trend.ma_slopes.ma_200, trend.ma_crossover_event, trend.direction_meta, trend.distance_from_ma_band.ma_40, patterns.bull_flag, patterns.bear_flag, volume.price_direction_on_volume, support_level.level_price, support_level.status_meta, sector_context.agreement, fundamentals.insider_activity.zone, fundamentals.valuation_zone, or levels. trend.stage is populated on weekly snapshots when stage evidence is sufficient. Event field names should prefer full schema names such as momentum_rsi_zone, extremes_condition, trend_stage, pattern_bull_flag, pattern_bear_flag, trend_ma8_slope through trend_ma200_slope, trend_ma_crossover_event, trend_distance_ma40, and fundamentals_valuation_zone.",
         ),
       meta: z
         .boolean()
@@ -46,7 +46,7 @@ export function registerGetSummary(server: McpServer, apiKey: string) {
         .string()
         .optional()
         .describe(
-          "Band field name for event queries (e.g. momentum_rsi_zone, extremes_condition, trend_direction, trend_stage, trend_ma8_slope through trend_ma200_slope, trend_ma_crossover_event, trend_distance_ma40, fundamentals_valuation_zone). When provided, returns band transition history instead of a snapshot.",
+          "Band field name for event queries (e.g. momentum_rsi_zone, extremes_condition, trend_direction, trend_stage, pattern_bull_flag, pattern_bear_flag, trend_ma8_slope through trend_ma200_slope, trend_ma_crossover_event, trend_distance_ma40, fundamentals_valuation_zone). When provided, returns band transition history instead of a snapshot.",
         ),
       band: z
         .string()
