@@ -29,13 +29,15 @@ Paid event aftermaths include exact close-to-close fields such as `return_5d_pct
 Use `get_ohlcv` when exact multi-bar daily history is required. `get_summary` includes the same-candle `ohlcv` object for the requested snapshot; follow `next_cursor` in `get_ohlcv` while `has_more` is true to retrieve additional bars. OHLCV costs 1 credit per 100 bars returned, rounded up, with a 1 credit minimum.
 `get_watchlist` does not take a timeframe. Use `get_watchlist_changes` for daily or weekly diffs.
 
-Current summary snapshots also expose top-level freshness via `as_of_date`, same-candle `ohlcv.open/high/low/close/volume`, stock `market_cap` / `market_cap_tier` when available, pattern setup states under `patterns.bull_flag` / `patterns.bear_flag`, richer `volume` fields such as `price_direction_on_volume`, opt-in paid-tier level metadata like `support_level.status_meta`, Pro `sector_context` fields such as `agreement` and `overbought_count`, and stock-only nested `fundamentals.insider_activity` when available.
+Current summary snapshots also expose top-level freshness via `as_of_date`, same-candle `ohlcv.open/high/low/close/volume`, stock `market_cap` / `market_cap_tier` when available, pattern setup states under `patterns.bull_flag`, `patterns.bear_flag`, `patterns.ascending_triangle`, `patterns.descending_triangle`, `patterns.symmetrical_triangle`, `patterns.rising_wedge`, and `patterns.falling_wedge`, richer `volume` fields such as `price_direction_on_volume`, opt-in paid-tier level metadata like `support_level.status_meta`, Pro `sector_context` fields such as `agreement` and `overbought_count`, and stock-only fundamentals such as `fundamentals.free_cash_flow` and nested `fundamentals.insider_activity` when available.
 
 MA distance fields are available throughout the stack:
 
-- Use flat schema/search/event names like `ma8`, `ma20`, `ma40`, `ma50`, `ma100`, `ma200`, `pattern_bull_flag`, `pattern_bear_flag`, `trend_ma50_slope`, `trend_ma_crossover_event`, `trend_distance_ma8`, `trend_distance_ma20`, `trend_distance_ma40`, `trend_distance_ma50`, `trend_distance_ma100`, and `trend_distance_ma200`.
+- Use flat schema/search/event names like `ma8`, `ma20`, `ma40`, `ma50`, `ma100`, `ma200`, `pattern_bull_flag`, `pattern_bear_flag`, `pattern_ascending_triangle`, `pattern_descending_triangle`, `pattern_symmetrical_triangle`, `pattern_rising_wedge`, `pattern_falling_wedge`, `trend_ma50_slope`, `trend_ma_crossover_event`, `trend_distance_ma8`, `trend_distance_ma20`, `trend_distance_ma40`, `trend_distance_ma50`, `trend_distance_ma100`, and `trend_distance_ma200`.
 - Summary snapshots expose nested MA slopes under `trend.ma_slopes.ma_8` through `ma_200`, nested MA distance bands under `trend.distance_from_ma_band.ma_8` through `ma_200`, plus `trend.ma_compression_band` and `trend.ma_crossover_event`.
 - MA distance event queries support grouped `band=above` and `band=below` aliases in addition to granular values like `proximity_above`.
+
+Fundamental bands follow the same naming pattern: use `fundamentals.free_cash_flow` in summary field selection and `fundamentals_free_cash_flow` in schema, search, watchlist change, and event queries.
 
 ### Band Stability Metadata
 
