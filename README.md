@@ -1,8 +1,8 @@
-﻿# TickerDB - Market context for agents.
+﻿# TickerDB - Pre-computed market data for agents.
 
 Connect your agent to pre-computed market context that improves reasoning and reduces token usage.
 
-Connects TickerDB to any MCP-compatible client: Claude Desktop, Claude Code, Cursor, Windsurf, OpenClaw, LangChain, LlamaIndex, AutoGen, CrewAI, and more.
+Connect your agent to hundreds of indicators like trend_direction, support_level, and analyst_consensus to improve reasoning and reduce token usage.
 
 ## Available Tools
 
