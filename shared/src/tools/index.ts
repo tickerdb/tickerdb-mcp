@@ -11,9 +11,6 @@ import { registerGetAccount } from "./get-account.js";
 import { registerCreateWebhook } from "./create-webhook.js";
 import { registerListWebhooks } from "./list-webhooks.js";
 import { registerDeleteWebhook } from "./delete-webhook.js";
-import { registerUpdateWebhook } from "./update-webhook.js";
-import { registerListWebhookDeliveries } from "./list-webhook-deliveries.js";
-
 export function registerAllTools(server: McpServer, apiKey: string) {
   registerGetSummary(server, apiKey);
   registerGetOhlcv(server, apiKey);
@@ -27,6 +24,4 @@ export function registerAllTools(server: McpServer, apiKey: string) {
   registerCreateWebhook(server, apiKey);
   registerListWebhooks(server, apiKey);
   registerDeleteWebhook(server, apiKey);
-  registerUpdateWebhook(server, apiKey);
-  registerListWebhookDeliveries(server, apiKey);
 }
