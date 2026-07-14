@@ -1,6 +1,6 @@
 {
 	"account_id": "f3389251d9431d8573105ab66688271a",
-	"name": "tickerdb-mcp",
+	"name": "tickerdb-mcp-staging",
 	"main": "remote/src/index.ts",
 	"compatibility_date": "2026-03-10",
 	"compatibility_flags": [
@@ -11,7 +11,13 @@
 			"binding": "HYPERDRIVE",
 			"id": "3e4bc6ceb5274b64ac62fd10040dc38d"
 		}
-	]
+	],
+	"services": [
+		{
+			"binding": "TICKERDB",
+			"service": "tickerdb"
+		}
+	],
 	// Secrets (set via `wrangler secret put`):
 	//   DATABASE_URL       — Direct PostgreSQL connection string (fallback for local dev)
 	//   SITE_URL           — https://tickerdb.com
@@ -20,4 +26,30 @@
 	// Optional:
 	//   MCP_SESSION_MODE   - "stateless" (default) or "stateful" for MCP session debugging
 	//   OPENAI_APPS_CHALLENGE_TOKEN - token served from /.well-known/openai-apps-challenge
+	"env": {
+		"staging": {
+			// Deploy: wrangler deploy --env staging
+			// Custom domain: staging.mcp.tickerdb.com (set in Cloudflare dashboard)
+			// Secrets (set via `wrangler secret put <NAME> --env staging`):
+			//   SITE_URL           — https://tickerdb.com
+			//   MCP_URL            — https://staging.mcp.tickerdb.com
+			//   MCP_ENCRYPTION_KEY — can share production key or use a separate one
+			// Optional:
+			//   MCP_SESSION_MODE
+			//   OPENAI_APPS_CHALLENGE_TOKEN
+			"name": "tickerdb-mcp-staging",
+			"services": [
+				{
+					"binding": "TICKERDB",
+					"service": "tickerdb"
+				}
+			],
+			"hyperdrive": [
+				{
+					"binding": "HYPERDRIVE",
+					"id": "3e4bc6ceb5274b64ac62fd10040dc38d"
+				}
+			]
+		}
+	}
 }

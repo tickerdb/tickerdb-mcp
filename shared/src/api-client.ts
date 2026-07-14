@@ -1,8 +1,17 @@
 const API_BASE = "https://api.tickerdb.com/v1";
 
 export interface ApiCallOptions {
-  method?: "GET" | "POST" | "DELETE";
+  method?: "GET" | "POST" | "PUT" | "DELETE";
   body?: unknown;
+}
+
+// When running as a Cloudflare Worker, set this to env.TICKERDB so outbound API calls
+// go through a service binding instead of HTTP fetch (which bypasses Worker routes on
+// same-zone subrequests and hits the asset layer instead).
+let _serviceBinding: { fetch: typeof fetch } | undefined;
+
+export function initApiClient(binding: { fetch: typeof fetch } | undefined) {
+  _serviceBinding = binding;
 }
 
 export async function callTickerDb(
@@ -19,8 +28,10 @@ export async function callTickerDb(
     }
   }
 
+  const fetchFn = (_serviceBinding?.fetch.bind(_serviceBinding) ?? fetch) as typeof fetch;
+
   try {
-    const resp = await fetch(url.toString(), {
+    const resp = await fetchFn(url.toString(), {
       method: options?.method ?? "GET",
       headers: {
         Authorization: `Bearer ${apiKey}`,
