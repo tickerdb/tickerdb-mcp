@@ -12,7 +12,7 @@ export function createTickerDbServer(apiKey: string): McpServer {
       websiteUrl: "https://tickerdb.com",
     },
     {
-      instructions: "TickerDB provides pre-computed financial market intelligence and stored EOD market data for AI agents. Use get_summary as the primary tool for ticker intelligence; use get_ohlcv when exact prices, returns, charts, or backtests are needed. Use get_search to find assets by categorical state or rank snapshots by fields such as market_cap. Use get_schema to discover available fields and band values. Use watchlist tools to track and monitor tickers over time.",
+      instructions: "TickerDB provides pre-computed financial market intelligence and stored EOD market data for AI agents. Use get_summary as the primary tool for ticker intelligence; use get_ohlcv when exact prices, returns, charts, or backtests are needed. Use get_search to find assets by categorical state or rank snapshots by fields such as market_cap. Use get_schema to discover available fields and band values.",
     },
   );
 
