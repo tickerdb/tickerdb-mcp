@@ -143,9 +143,9 @@ export async function handleRegister(request: Request, env: Env): Promise<Respon
   const responseBody: Record<string, unknown> = {
     client_id: clientId,
     redirect_uris: redirectUris,
-    client_name: clientName,
-    client_uri: clientUri,
-    logo_uri: logoUri,
+    ...(clientName !== null && { client_name: clientName }),
+    ...(clientUri !== null && { client_uri: clientUri }),
+    ...(logoUri !== null && { logo_uri: logoUri }),
     scope,
     grant_types: grantTypes,
     response_types: responseTypes,
