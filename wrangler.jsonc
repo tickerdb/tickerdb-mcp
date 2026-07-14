@@ -41,7 +41,7 @@
 			"services": [
 				{
 					"binding": "TICKERDB",
-					"service": "tickerdb-staging"
+					"service": "tickerdb"
 				}
 			],
 			"hyperdrive": [
