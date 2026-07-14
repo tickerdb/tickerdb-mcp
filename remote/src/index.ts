@@ -5,6 +5,7 @@ import { initApiClient } from "../../shared/src/api-client.js";
 import {
   handleAuthorizationServerMetadata,
   handleProtectedResourceMetadata,
+  handleAuthorize,
   handleRegister,
   handleToken,
   handleRevoke,
@@ -85,9 +86,7 @@ export default {
     }
 
     if (url.pathname === "/authorize") {
-      const authorizeUrl = new URL(`${env.SITE_URL}/oauth/authorize`);
-      url.searchParams.forEach((v, k) => authorizeUrl.searchParams.set(k, v));
-      return new Response(null, { status: 302, headers: { Location: authorizeUrl.toString() } });
+      return handleAuthorize(request, env);
     }
 
     if (url.pathname === "/register") {
