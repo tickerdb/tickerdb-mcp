@@ -1,7 +1,7 @@
 const API_BASE = "https://api.tickerdb.com/v1";
 
 export interface ApiCallOptions {
-  method?: "GET" | "POST" | "DELETE";
+  method?: "GET" | "POST" | "PUT" | "DELETE";
   body?: unknown;
 }
 
