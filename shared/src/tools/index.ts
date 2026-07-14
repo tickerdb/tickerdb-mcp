@@ -13,10 +13,6 @@ import { registerListWebhooks } from "./list-webhooks.js";
 import { registerDeleteWebhook } from "./delete-webhook.js";
 import { registerUpdateWebhook } from "./update-webhook.js";
 import { registerListWebhookDeliveries } from "./list-webhook-deliveries.js";
-import { registerListScreeners } from "./list-screeners.js";
-import { registerCreateScreener } from "./create-screener.js";
-import { registerUpdateScreener } from "./update-screener.js";
-import { registerDeleteScreener } from "./delete-screener.js";
 
 export function registerAllTools(server: McpServer, apiKey: string) {
   registerGetSummary(server, apiKey);
@@ -33,8 +29,4 @@ export function registerAllTools(server: McpServer, apiKey: string) {
   registerDeleteWebhook(server, apiKey);
   registerUpdateWebhook(server, apiKey);
   registerListWebhookDeliveries(server, apiKey);
-  registerListScreeners(server, apiKey);
-  registerCreateScreener(server, apiKey);
-  registerUpdateScreener(server, apiKey);
-  registerDeleteScreener(server, apiKey);
 }
