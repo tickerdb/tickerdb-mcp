@@ -1,4 +1,4 @@
-const API_BASE = "https://tickerdb.com/api/v1";
+const API_BASE = "https://api.tickerdb.com/v1";
 
 export interface ApiCallOptions {
   method?: "GET" | "POST" | "PUT" | "DELETE";
