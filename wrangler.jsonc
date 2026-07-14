@@ -12,6 +12,12 @@
 			"id": "3e4bc6ceb5274b64ac62fd10040dc38d"
 		}
 	],
+	"services": [
+		{
+			"binding": "TICKERDB",
+			"service": "tickerdb"
+		}
+	],
 	// Secrets (set via `wrangler secret put`):
 	//   DATABASE_URL       — Direct PostgreSQL connection string (fallback for local dev)
 	//   SITE_URL           — https://tickerdb.com
@@ -32,6 +38,12 @@
 			//   MCP_SESSION_MODE
 			//   OPENAI_APPS_CHALLENGE_TOKEN
 			"name": "tickerdb-mcp-staging",
+			"services": [
+				{
+					"binding": "TICKERDB",
+					"service": "tickerdb-staging"
+				}
+			],
 			"hyperdrive": [
 				{
 					"binding": "HYPERDRIVE",

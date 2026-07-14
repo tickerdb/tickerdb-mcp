@@ -1,6 +1,7 @@
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import { createTickerDbServer } from "../../shared/src/server-factory.js";
+import { initApiClient } from "../../shared/src/api-client.js";
 import {
   handleAuthorizationServerMetadata,
   handleProtectedResourceMetadata,
@@ -51,6 +52,7 @@ const sessions = new Map<string, SessionEntry>();
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
+    initApiClient(env.TICKERDB);
     const url = new URL(request.url);
     const sessionMode = getSessionMode(env);
     pruneExpiredSessions();
