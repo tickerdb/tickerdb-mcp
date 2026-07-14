@@ -1,6 +1,6 @@
 {
 	"account_id": "f3389251d9431d8573105ab66688271a",
-	"name": "tickerdb-mcp",
+	"name": "tickerdb-mcp-staging",
 	"main": "remote/src/index.ts",
 	"compatibility_date": "2026-03-10",
 	"compatibility_flags": [
