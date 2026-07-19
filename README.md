@@ -22,7 +22,7 @@ Connect your agent to hundreds of indicators like trend_direction, support_level
 | `list_webhooks` | List registered webhooks |
 | `delete_webhook` | Remove a webhook |
 
-All tools are available on every tier (Free, Plus, Pro) â€” tiers differ by credit limits, history depth, and watchlist size. See [tickerdb.com/pricing](https://tickerdb.com/pricing) for details.
+All tools are available on every tier (Free, Plus, Pro) — tiers differ by credit limits, history depth, and watchlist size. See [tickerdb.com/pricing](https://tickerdb.com/pricing) for details.
 
 Use `get_summary` with `start`/`end` params for bulk ticker syncs across a date range, or with `field`/`band` params to query event occurrences. Add `stats=true` in event mode when you want aggregate event-band and aftermath distributions instead of raw rows.
 Paid event aftermaths include exact close-to-close fields such as `return_5d_pct`, `return_20d_pct`, and `return_100d_pct` alongside the categorical performance bands. Incomplete horizons return `null`.
@@ -49,7 +49,7 @@ The stability label is one of `fresh`, `holding`, `established`, or `volatile`. 
 
 ### Option 1: Claude.ai (OAuth)
 
-The remote server at `mcp.tickerdb.com` supports OAuth 2.1 for Claude.ai Connectors. No API key management required â€” sign in with your TickerDB account and Claude.ai handles the rest.
+The remote server at `mcp.tickerdb.com` supports OAuth 2.1 for Claude.ai Connectors. No API key management required — sign in with your TickerDB account and Claude.ai handles the rest.
 
 ### Option 2: Remote server (Bearer token)
 
@@ -88,18 +88,18 @@ Get an API key at [tickerdb.com/dashboard](https://tickerdb.com/dashboard).
 
 This is a three-package workspace:
 
-- **`shared/`** â€” Shared tool definitions, API client, and server factory (internal, not published)
-- **`remote/`** â€” Cloudflare Worker deployed at `mcp.tickerdb.com` (Streamable HTTP transport + OAuth 2.1)
-- **`local/`** â€” Published npm package `tickerdb-mcp` (stdio transport)
+- **`shared/`** — Shared tool definitions, API client, and server factory (internal, not published)
+- **`remote/`** — Cloudflare Worker deployed at `mcp.tickerdb.com` (Streamable HTTP transport + OAuth 2.1)
+- **`local/`** — Published npm package `tickerdb-mcp` (stdio transport)
 
-Both the remote server and npm package use the same tool definitions from `shared/`. The MCP server is a thin proxy â€” all tier-based access control, rate limiting, and field filtering is handled by the TickerDB HTTP API.
+Both the remote server and npm package use the same tool definitions from `shared/`. The MCP server is a thin proxy — all tier-based access control, rate limiting, and field filtering is handled by the TickerDB HTTP API.
 
 ### Authentication
 
 The remote server supports two authentication methods:
 
-- **Bearer token** â€” pass your `tdb_*` API key directly as `Authorization: Bearer tdb_...`
-- **OAuth 2.1** â€” used by Claude.ai Connectors. The server implements dynamic client registration, PKCE, token exchange, and revocation. The `/authorize` endpoint redirects to the main TickerDB site for consent.
+- **Bearer token** — pass your `tdb_*` API key directly as `Authorization: Bearer tdb_...`
+- **OAuth 2.1** — used by Claude.ai Connectors. The server implements dynamic client registration, PKCE, token exchange, and revocation. The `/authorize` endpoint redirects to the main TickerDB site for consent.
 
 For OAuth-backed MCP clients that use mixed authentication, the worker permits unauthenticated `initialize` and `tools/list` discovery on `POST /mcp`, but requires authentication for actual tool execution. Protected tool calls return a standard `401` Bearer challenge with `resource_metadata` pointing at `/.well-known/oauth-protected-resource/mcp` so clients can re-authorize or remount cleanly.
 
