@@ -38,6 +38,8 @@ MA distance fields are available throughout the stack:
 - MA distance event queries support grouped `band=above` and `band=below` aliases in addition to granular values like `proximity_above`.
 
 Fundamental bands follow the same naming pattern: use `fundamentals.free_cash_flow` in summary field selection and `fundamentals_free_cash_flow` in schema, search, watchlist change, and event queries.
+The Pro-only Value Divergence Model is available on verified weekly stock snapshots. Use `value_divergence_eligible`, `value_divergence_score`, `value_divergence_band`, and `value_divergence_exclusion_reason` with `get_search`, or request the same top-level fields from `get_summary`. Daily, ETF, crypto, and unverified historical rows return `null` model fields.
+
 
 ### Band Stability Metadata
 
