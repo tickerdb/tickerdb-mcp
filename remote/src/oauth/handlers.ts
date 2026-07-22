@@ -185,49 +185,401 @@ function consentHtml(params: {
   codeChallenge: string; codeChallengeMethod: string; scope: string; error?: string;
 }): Response {
   const { clientName, clientId, redirectUri, state, codeChallenge, codeChallengeMethod, scope, error } = params;
-  const html = `<!DOCTYPE html>
+  const html = `<!doctype html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Authorize — TickerDB</title>
+  <meta name="viewport" content="width=device-width">
+  <meta name="robots" content="noindex, follow">
+  <title>Authorize - TickerDB</title>
+  <link rel="icon" type="image/svg+xml" href="https://tickerdb.com/tickerdb-icon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&amp;family=Orbitron:wght@700&amp;family=Space+Grotesk:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <link rel="preload" href="https://tickerdb.com/signin.avif" as="image" type="image/avif">
   <style>
-    *, *::before, *::after { box-sizing: border-box; }
-    body { font-family: system-ui, -apple-system, sans-serif; background: #0a0a0a; color: #e8e8e8; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 1rem; }
-    .card { background: #141414; border: 1px solid #252525; border-radius: 12px; padding: 2rem; width: 100%; max-width: 400px; }
-    .logo { font-weight: 700; font-size: 1rem; color: #4f9cf9; margin-bottom: 1.5rem; letter-spacing: -0.01em; }
-    h1 { font-size: 1.125rem; margin: 0 0 0.375rem; font-weight: 600; }
-    .subtitle { color: #888; font-size: 0.875rem; margin: 0 0 1.5rem; line-height: 1.5; }
-    .subtitle strong { color: #ccc; }
-    label { display: block; font-size: 0.8125rem; color: #aaa; margin-bottom: 0.375rem; }
-    input[type="text"] { display: block; width: 100%; padding: 0.5rem 0.75rem; background: #1e1e1e; border: 1px solid #2e2e2e; border-radius: 8px; color: #e8e8e8; font-size: 0.875rem; font-family: monospace; }
-    input[type="text"]:focus { outline: none; border-color: #4f9cf9; }
-    button { display: block; width: 100%; padding: 0.5625rem; background: #4f9cf9; color: #fff; border: none; border-radius: 8px; font-size: 0.875rem; font-weight: 500; cursor: pointer; margin-top: 1rem; }
-    button:hover { background: #3b87e8; }
-    .error { color: #f87171; font-size: 0.8125rem; margin-top: 0.625rem; }
-    .hint { color: #555; font-size: 0.75rem; margin-top: 0.375rem; }
+    :root {
+      --bg-color: #0c0522;
+      --text-color: #e8e4f0;
+      --text-secondary: #c2bbd6;
+      --text-tertiary: #8a8499;
+      --accent: #483df8;
+      --accent-hover: #5a4fff;
+      --danger: #f87171;
+      --font-main: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+      --font-heading: 'Orbitron', 'Space Grotesk', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+      --radius-sm: 2px;
+      --clip-corner-btn: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body { min-height: 100%; }
+
+    body {
+      background: var(--bg-color);
+      color: var(--text-color);
+      font-family: var(--font-main);
+      font-size: 0.925rem;
+      line-height: 1.65;
+      letter-spacing: -0.01em;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      opacity: 0.035;
+      pointer-events: none;
+      z-index: 9999;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-repeat: repeat;
+      background-size: 256px 256px;
+    }
+
+    .auth-page {
+      height: 100vh;
+      height: 100dvh;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .auth-bg {
+      position: absolute;
+      inset: 0;
+      background: url('https://tickerdb.com/signin.png') top center / cover no-repeat;
+      background: image-set(url('https://tickerdb.com/signin.avif') type('image/avif'), url('https://tickerdb.com/signin.png') type('image/png')) top center / cover no-repeat;
+      filter: brightness(0.48) saturate(0.95);
+      z-index: 0;
+      animation: hero-breathe 10s ease-in-out infinite;
+    }
+
+    @keyframes hero-breathe {
+      0%, 100% { filter: brightness(0.46) saturate(0.86); }
+      50% { filter: brightness(0.64) saturate(1.08); }
+    }
+
+    .shooting-stars {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .auth-overlay {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, rgba(12, 5, 34, 0.32) 0%, rgba(12, 5, 34, 0.58) 100%);
+      z-index: 2;
+    }
+
+    .auth-center {
+      position: relative;
+      z-index: 3;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+
+    .auth-container {
+      width: 100%;
+      max-width: 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .auth-header {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .auth-tag {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: #c084fc;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
+    }
+
+    .auth-title {
+      font-family: var(--font-heading);
+      font-size: 1.6rem;
+      color: var(--text-color);
+      line-height: 1.15;
+      font-weight: 700;
+    }
+
+    .auth-subtitle {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      line-height: 1.55;
+      margin-top: 2px;
+    }
+
+    .client-name { color: #c084fc; font-weight: 500; }
+
+    form { width: 100%; }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--text-tertiary);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .field input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.09);
+      color: var(--text-color);
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      outline: none;
+      transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .field input:focus {
+      background: rgba(255, 255, 255, 0.11);
+      border-color: rgba(192, 132, 252, 0.35);
+      box-shadow: 0 0 0 3px rgba(192, 132, 252, 0.07);
+    }
+
+    .field input::placeholder { color: var(--text-tertiary); opacity: 0.65; }
+
+    .hint {
+      color: var(--text-tertiary);
+      font-size: 0.7rem;
+      line-height: 1.5;
+      margin-top: 2px;
+      opacity: 0.7;
+    }
+
+    .hint a { color: inherit; text-underline-offset: 2px; }
+    .hint a:hover { color: var(--text-color); }
+
+    .error {
+      padding: 10px 14px;
+      background: rgba(248, 113, 113, 0.07);
+      color: var(--danger);
+      font-size: 0.82rem;
+      line-height: 1.4;
+      border-left: 2px solid var(--danger);
+      margin-bottom: 16px;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 10px 16px;
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      font-family: var(--font-main);
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      clip-path: var(--clip-corner-btn);
+      transition: background 0.15s, filter 0.15s;
+      letter-spacing: -0.01em;
+    }
+
+    .btn-submit:hover:not(:disabled) {
+      background: var(--accent-hover);
+      filter: drop-shadow(0 0 12px rgba(104, 35, 148, 0.5));
+    }
+
+    .btn-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .auth-branding {
+      position: absolute;
+      top: 2rem;
+      left: 2rem;
+      z-index: 3;
+    }
+
+    .panel-brand { display: inline-block; text-decoration: none; }
+    .panel-logo { height: 29px; width: auto; display: block; }
+
+    @media (max-width: 480px) {
+      .auth-center { padding: 5rem 1.25rem 2rem; }
+      .auth-branding { top: 1.25rem; left: 1.25rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .auth-bg { animation: none; }
+      .shooting-stars { display: none; }
+    }
   </style>
 </head>
 <body>
-  <div class="card">
-    <div class="logo">TickerDB</div>
-    <h1>Authorize Access</h1>
-    <p class="subtitle"><strong>${esc(clientName)}</strong> is requesting access to your TickerDB account.</p>
-    <form method="POST" action="/authorize">
-      <input type="hidden" name="client_id" value="${esc(clientId)}">
-      <input type="hidden" name="client_name" value="${esc(clientName)}">
-      <input type="hidden" name="redirect_uri" value="${esc(redirectUri)}">
-      <input type="hidden" name="state" value="${esc(state)}">
-      <input type="hidden" name="code_challenge" value="${esc(codeChallenge)}">
-      <input type="hidden" name="code_challenge_method" value="${esc(codeChallengeMethod)}">
-      <input type="hidden" name="scope" value="${esc(scope)}">
-      <label for="api_key">Your TickerDB API Key</label>
-      <input type="text" id="api_key" name="api_key" placeholder="tdb_..." autocomplete="off" spellcheck="false">
-      <p class="hint">Find your API key at tickerdb.com → Settings → API Keys</p>
-      ${error ? `<p class="error">${esc(error)}</p>` : ''}
-      <button type="submit">Authorize</button>
-    </form>
+  <div class="auth-page">
+    <div class="auth-bg" aria-hidden="true"></div>
+    <canvas class="shooting-stars" aria-hidden="true"></canvas>
+    <div class="auth-overlay" aria-hidden="true"></div>
+
+    <div class="auth-center">
+      <main class="auth-container">
+        <header class="auth-header">
+          <div class="auth-tag">// authorize</div>
+          <h1 class="auth-title">Authorize access</h1>
+          <p class="auth-subtitle"><strong class="client-name">${esc(clientName)}</strong> is requesting access to your TickerDB account.</p>
+        </header>
+
+        <form id="authorize-form" method="POST" action="/authorize">
+          <input type="hidden" name="client_id" value="${esc(clientId)}">
+          <input type="hidden" name="client_name" value="${esc(clientName)}">
+          <input type="hidden" name="redirect_uri" value="${esc(redirectUri)}">
+          <input type="hidden" name="state" value="${esc(state)}">
+          <input type="hidden" name="code_challenge" value="${esc(codeChallenge)}">
+          <input type="hidden" name="code_challenge_method" value="${esc(codeChallengeMethod)}">
+          <input type="hidden" name="scope" value="${esc(scope)}">
+
+          ${error ? `<p class="error">${esc(error)}</p>` : ''}
+
+          <div class="field">
+            <label for="api_key">TickerDB API key</label>
+            <input type="text" id="api_key" name="api_key" placeholder="tdb_..." autocomplete="off" spellcheck="false" required autofocus>
+            <p class="hint">Find your API key in <a href="https://tickerdb.com/dashboard/keys" target="_blank" rel="noreferrer">TickerDB settings &rarr; API Keys</a>.</p>
+          </div>
+
+          <button type="submit" class="btn-submit" id="authorize-btn">Authorize</button>
+        </form>
+      </main>
+    </div>
+
+    <div class="auth-branding">
+      <a href="https://tickerdb.com" class="panel-brand" aria-label="TickerDB home">
+        <img src="https://tickerdb.com/tickerdb-logo.svg" alt="TickerDB" class="panel-logo">
+      </a>
+    </div>
   </div>
+
+  <script>
+    (() => {
+      const form = document.getElementById('authorize-form');
+      const button = document.getElementById('authorize-btn');
+      form.addEventListener('submit', () => {
+        button.disabled = true;
+        button.textContent = 'Authorizing...';
+      });
+
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      const canvas = document.querySelector('.shooting-stars');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      let width = 0;
+      let height = 0;
+      const stars = [];
+      const maxStars = 8;
+      let lastSpawn = performance.now();
+
+      const resize = () => {
+        const rect = canvas.getBoundingClientRect();
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        width = rect.width;
+        height = rect.height;
+        canvas.width = Math.round(width * dpr);
+        canvas.height = Math.round(height * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      };
+
+      const spawnStar = () => {
+        const goRight = Math.random() > 0.5;
+        const speed = 0.3 + Math.random() * 0.5;
+        return {
+          x: goRight ? -20 : width + 20,
+          y: 40 + Math.random() * Math.max(40, height * 0.38 - 40),
+          vx: goRight ? speed : -speed,
+          vy: (Math.random() - 0.4) * 0.15,
+          size: 1 + Math.random() * 1.2,
+          opacity: 0.1 + Math.random() * 0.18,
+          maxY: height * 0.38,
+          tail: 30 + Math.random() * 40
+        };
+      };
+
+      resize();
+      window.addEventListener('resize', resize, { passive: true });
+
+      for (let i = 0; i < 4; i += 1) {
+        const star = spawnStar();
+        const progress = 0.2 + Math.random() * 0.4;
+        star.x = star.vx > 0 ? width * progress : width * (1 - progress);
+        stars.push(star);
+      }
+
+      const animate = (now) => {
+        ctx.clearRect(0, 0, width, height);
+
+        if (now - lastSpawn > 1250 + Math.random() * 2000 && stars.length < maxStars) {
+          stars.push(spawnStar());
+          lastSpawn = now;
+        }
+
+        for (let index = stars.length - 1; index >= 0; index -= 1) {
+          const star = stars[index];
+          star.x += star.vx;
+          star.y += star.vy;
+
+          if (star.x < -60 || star.x > width + 60 || star.y < -20 || star.y > star.maxY + 40) {
+            stars.splice(index, 1);
+            continue;
+          }
+
+          const gradient = ctx.createLinearGradient(
+            star.x - star.vx * star.tail,
+            star.y - star.vy * star.tail,
+            star.x,
+            star.y
+          );
+          gradient.addColorStop(0, 'rgba(200, 190, 230, 0)');
+          gradient.addColorStop(1, 'rgba(200, 190, 230, ' + star.opacity + ')');
+
+          ctx.beginPath();
+          ctx.moveTo(star.x - star.vx * star.tail, star.y - star.vy * star.tail);
+          ctx.lineTo(star.x, star.y);
+          ctx.strokeStyle = gradient;
+          ctx.lineWidth = star.size;
+          ctx.lineCap = 'round';
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, star.size * 0.8, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(210, 200, 240, ' + star.opacity * 0.8 + ')';
+          ctx.fill();
+        }
+
+        requestAnimationFrame(animate);
+      };
+
+      requestAnimationFrame(animate);
+    })();
+  </script>
 </body>
 </html>`;
   return new Response(html, { status: error ? 400 : 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
