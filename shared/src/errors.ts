@@ -7,7 +7,7 @@ export function formatApiError(
 
   switch (status) {
     case 401:
-      message = "Authentication failed. Check your API key.";
+      message = errorObj?.message ?? "Authentication failed. Check your API key.";
       break;
     case 403:
       message =

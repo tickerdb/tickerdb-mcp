@@ -9,7 +9,8 @@
     "tickerdb-mcp": "bin/cli.js"
   },
   "scripts": {
-    "build": "tsup src/index.ts --format esm --dts --external @modelcontextprotocol/sdk --external zod"
+    "build": "tsup src/index.ts --format esm --dts --external @modelcontextprotocol/sdk --external zod",
+    "test": "npm run build && node --test test/*.test.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",

@@ -20,6 +20,30 @@ export async function callTickerDb(
   params?: Record<string, string | undefined>,
   options?: ApiCallOptions,
 ): Promise<{ status: number; data: unknown }> {
+  if (!apiKey) {
+    return {
+      status: 401,
+      data: {
+        error: {
+          message:
+            "TICKERDB_KEY is required to call TickerDB tools. Get one at https://tickerdb.com/dashboard.",
+        },
+      },
+    };
+  }
+
+  if (!apiKey.startsWith("tdb_")) {
+    return {
+      status: 401,
+      data: {
+        error: {
+          message:
+            "Invalid TICKERDB_KEY format. Keys start with tdb_. Get one at https://tickerdb.com/dashboard.",
+        },
+      },
+    };
+  }
+
   const url = new URL(`${API_BASE}${path}`);
 
   if (params) {
