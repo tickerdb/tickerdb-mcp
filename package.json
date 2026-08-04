@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "wrangler dev",
     "build": "tsc -p tsconfig.json",
+    "test": "node --test remote/test/*.test.mjs",
     "deploy": "wrangler deploy"
   },
   "dependencies": {

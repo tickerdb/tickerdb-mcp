@@ -425,7 +425,11 @@ function isPublicDiscoveryRequest(
     return false;
   }
 
-  return isInit || rpcMethod === "tools/list";
+  return (
+    isInit ||
+    rpcMethod === "notifications/initialized" ||
+    rpcMethod === "tools/list"
+  );
 }
 
 function isMalformedMcpPost(path: string, method: string, rpcMethod: string | null): boolean {
