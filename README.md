@@ -1,6 +1,6 @@
-﻿# TickerDB - Pre-computed market data for agents.
+﻿# TickerDB - Stock market data for agents.
 
-Connect your agent to pre-computed market context that improves reasoning and reduces token usage.
+Connect your agent to pre-computed market data that improves reasoning and reduces token usage.
 
 Connect your agent to hundreds of indicators like trend_direction, support_level, and analyst_consensus to improve reasoning and reduce token usage.
 
