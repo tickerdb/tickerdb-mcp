@@ -1,72 +1,66 @@
-﻿# TickerDB - Stock market data for agents.
+# TickerDB — Stock market data for agents.
 
-Connect your agent to pre-computed market data that improves reasoning and reduces token usage.
+Pre-computed stock market data for AI agents. TickerDB returns indicators like `trend_direction`, `support_level`, and `analyst_consensus` as named states — plus what *changed* and what *usually happens next*.
 
-Connect your agent to hundreds of indicators like trend_direction, support_level, and analyst_consensus to improve reasoning and reduce token usage.
+10,000+ US stocks, ETFs, and crypto pairs · 182 indicators across trend, momentum, volatility, volume, patterns, support/resistance, fundamentals, and sector context · 7 years of history · [tickerdb.com](https://tickerdb.com)
 
-## Available Tools
-
+## Tools
 
 | Tool | Description |
 |---|---|
-| `get_summary` | Technical + fundamental summary for a single ticker (supports date range, events filtering, and MA distance lookbacks) |
-| `get_ohlcv` | Paginated daily EOD candles for exact returns, charts, and backtests |
-| `get_search` | Search assets by categorical state or rank snapshots by fields such as `market_cap` |
-| `get_schema` | Discover available fields and filter options (always free, 0 credits) |
-| `get_watchlist` | Live data for your saved watchlist tickers |
-| `get_watchlist_changes` | Field-level diffs since the last pipeline run |
+| `get_summary` | Technical + fundamental snapshot for a ticker. Supports historical dates, date ranges, and event queries with aftermath stats |
+| `get_ohlcv` | Paginated daily or weekly EOD candles for exact returns, charts, and backtests |
+| `get_search` | Screen assets by categorical state or rank by fields like `market_cap` or `pe_ratio` |
+| `get_schema` | Discover all 182 fields and their valid band values (always free, 0 credits) |
+| `get_watchlist` | Full analytical summary for every ticker on your saved watchlist |
+| `get_watchlist_changes` | Field-level diffs since last pipeline run — daily or weekly |
 | `add_to_watchlist` | Add tickers to your watchlist |
 | `remove_from_watchlist` | Remove tickers from your watchlist |
 | `get_account` | Account details, plan tier, and usage |
 
-All tools are available on every tier (Free, Plus, Pro) — tiers differ by credit limits, history depth, and watchlist size. See [tickerdb.com/pricing](https://tickerdb.com/pricing) for details.
+All tools are available on every tier (Free, Plus, Pro). Tiers differ by credit limits, history depth, number of filters, and watchlist size. See [tickerdb.com/pricing](https://tickerdb.com/pricing).
 
-Use `get_summary` with `start`/`end` params for bulk ticker syncs across a date range, or with `field`/`band` params to query event occurrences. Add `stats=true` in event mode when you want aggregate event-band and aftermath distributions instead of raw rows.
-Paid event aftermaths include exact close-to-close fields such as `return_5d_pct`, `return_20d_pct`, and `return_100d_pct` alongside the categorical performance bands. Incomplete horizons return `null`.
-Use `get_ohlcv` when exact multi-bar daily history is required. `get_summary` includes the same-candle `ohlcv` object for the requested snapshot; follow `next_cursor` in `get_ohlcv` while `has_more` is true to retrieve additional bars. OHLCV costs 1 credit per 100 bars returned, rounded up, with a 1 credit minimum.
-`get_watchlist` does not take a timeframe; each item carries a `notable_changes` array of day-over-day change alerts. Use `get_watchlist_changes` for daily or weekly diffs — it returns only what changed, so prefer it over `get_watchlist` for monitoring a large watchlist.
+## Quick start
 
-Current summary snapshots also expose top-level freshness via `as_of_date`, same-candle `ohlcv.open/high/low/close/volume`, stock `market_cap` / `market_cap_tier` when available, pattern setup states under `patterns.bull_flag`, `patterns.bull_flag_breakout`, `patterns.bear_flag`, `patterns.bear_flag_breakdown`, `patterns.ascending_triangle`, `patterns.descending_triangle`, `patterns.symmetrical_triangle`, `patterns.rising_wedge`, and `patterns.falling_wedge`, richer `volume` fields such as `price_direction_on_volume`, opt-in paid-tier level metadata like `support_level.status_meta`, Pro `sector_context` fields such as `agreement` and `overbought_count`, and stock-only fundamentals such as raw `fundamentals.pe_ratio`, `fundamentals.free_cash_flow`, and nested `fundamentals.insider_activity` when available.
+Connect TickerDB to Claude, ChatGPT, or another MCP client (see [Setup](#setup) below), then try:
 
-MA distance fields are available throughout the stack:
+> **"Show me oversold large-cap stocks near support"**
 
-- Use flat schema/search names like `ma8`, `ma20`, `ma40`, `ma50`, `ma100`, `ma200`, `pattern_bull_flag`, `pattern_bull_flag_breakout`, `pattern_bear_flag`, `pattern_bear_flag_breakdown`, `pattern_ascending_triangle`, `pattern_descending_triangle`, `pattern_symmetrical_triangle`, `pattern_rising_wedge`, `pattern_falling_wedge`, `trend_ma50_slope`, `trend_ma_crossover_event`, `trend_distance_ma8`, `trend_distance_ma20`, `trend_distance_ma40`, `trend_distance_ma50`, `trend_distance_ma100`, and `trend_distance_ma200`.
-- Summary snapshots expose nested MA slopes under `trend.ma_slopes.ma_8` through `ma_200`, nested MA distance bands under `trend.distance_from_ma_band.ma_8` through `ma_200`, plus `trend.ma_compression_band` and `trend.ma_crossover_event`.
-- MA distance event queries support grouped `band=above` and `band=below` aliases in addition to granular values like `proximity_above`.
+The agent calls `get_search` with filters for `momentum_rsi_zone = oversold` and `market_cap_tier in [large, mega]`, then follows up with `get_summary` on individual results. No raw number crunching — the agent reads categorical states and reasons over them directly.
 
-Raw P/E is exposed as `fundamentals.pe_ratio` in Summary and canonical `pe_ratio` in Schema/Search. It is the latest ratio on or before the snapshot date (including a weekly snapshot's week-ending date); negative values are preserved and unavailable values are `null`.
-Fundamental bands follow the same naming pattern: use `fundamentals.free_cash_flow` in summary field selection and `fundamentals_free_cash_flow` in schema, search, watchlist change, and event queries.
-The Pro-only Value Divergence Model is available on verified weekly stock snapshots. Use `value_divergence_eligible`, `value_divergence_score`, `value_divergence_band`, and `value_divergence_exclusion_reason` with `get_search`, or request the same top-level fields from `get_summary`. Daily, ETF, crypto, and unverified historical rows return `null` model fields.
+> **"What usually happens when AAPL goes oversold?"**
 
+`get_summary` with `field=momentum_rsi_zone`, `band=oversold`, `stats=true` returns aggregate aftermath distributions: how the stock performed 5, 10, 20, 50, and 100 days after each oversold entry over 7 years of history.
 
-### Band Stability Metadata
+> **"What changed on my watchlist?"**
 
-`get_summary` keeps sibling `_meta` objects off by default so the primary band label stays front-and-center. Pass `meta: true` to include full paid-tier stability metadata across the response, or request just the specific `*_meta` fields you want. `get_watchlist` still includes paid-tier `_meta` objects by default, and `get_watchlist_changes` returns stability fields inline on each change object.
+`get_watchlist_changes` returns only the field-level state transitions since the last pipeline run — band entries, exits, and shifts — so the agent reports what moved without pulling full summaries for every ticker.
 
-The stability label is one of `fresh`, `holding`, `established`, or `volatile`. Full metadata includes `periods_in_current_state`, `flips_recent`, and `flips_lookback`, which helps agents distinguish between a newly entered state and one that has persisted for many periods.
+## Why not just pass raw OHLCV?
+
+A model can compute RSI from raw bars. But ask "Does AAPL look bullish?" with raw OHLCV and it burns its context on arithmetic — computing indicators one by one — instead of doing what you actually asked: noticing that RSI just hit oversold while institutions are accumulating, that the pullback is sharp but the 200-day uptrend is intact, that insiders have been selling all quarter. That's the analysis. Raw bars bury it under computation.
+
+With TickerDB, the model sees `"oversold"`, `"accumulation"`, `"strong_uptrend"` and connects them immediately.
+
+**State transitions** go further. "What happened the last time BTC was this oversold?" means computing RSI across 7 years of daily bars, finding every oversold entry, and calculating what happened after each one. With TickerDB it's one call: `get_summary` with `field=momentum_rsi_zone`, `band=oversold`, `stats=true`.
 
 ## Setup
 
-### Option 1: Claude.ai (OAuth)
+### Hosted server (recommended)
 
-The remote server at `mcp.tickerdb.com` supports OAuth 2.1 for Claude.ai Connectors. No API key management required — sign in with your TickerDB account and Claude.ai handles the rest.
+The remote server at `https://mcp.tickerdb.com/mcp` supports OAuth 2.1 and Bearer token auth. Use Streamable HTTP transport (not legacy SSE).
 
-### Option 2: Remote server (Bearer token)
+| Client | How |
+|---|---|
+| Claude.ai | Settings → Connectors → Add → `https://mcp.tickerdb.com/mcp` → Authorize with your TickerDB API key |
+| Claude Code | `claude mcp add --transport http --scope user tickerdb https://mcp.tickerdb.com/mcp` |
+| ChatGPT | Plugins → Add → `https://mcp.tickerdb.com/mcp` → Authorize with your TickerDB API key |
+| Cursor | `.cursor/mcp.json` → `{"tickerdb": {"url": "https://mcp.tickerdb.com/mcp"}}` |
+| Any MCP client | Streamable HTTP to `https://mcp.tickerdb.com/mcp` with `Authorization: Bearer tdb_...` |
 
-Connect any MCP client to `https://mcp.tickerdb.com/mcp` with your API key as a Bearer token.
+### npm package (local stdio)
 
-### Option 3: ChatGPT app backend (OAuth)
-
-Use the hosted MCP endpoint `https://mcp.tickerdb.com/mcp` as the backend for
-the TickerDB ChatGPT app. The first ChatGPT submission is tool-only, with no
-Apps SDK iframe widget.
-
-For ChatGPT app domain verification, set `OPENAI_APPS_CHALLENGE_TOKEN` on the
-remote Worker and verify `https://mcp.tickerdb.com/.well-known/openai-apps-challenge`.
-
-### Option 4: npm package (Claude Desktop, Cursor, etc.)
-
-Add to your Claude Desktop config (`claude_desktop_config.json`):
+For clients that prefer a local process (Claude Desktop, etc.):
 
 ```json
 {
@@ -86,66 +80,44 @@ Get an API key at [tickerdb.com/dashboard](https://tickerdb.com/dashboard).
 
 ## Structure
 
-This is a three-package workspace:
+Three-package monorepo:
 
-- **`shared/`** — Shared tool definitions, API client, and server factory (internal, not published)
-- **`remote/`** — Cloudflare Worker deployed at `mcp.tickerdb.com` (Streamable HTTP transport + OAuth 2.1)
-- **`local/`** — Published npm package `tickerdb-mcp` (stdio transport)
+- **`shared/`** — Tool definitions, API client, and server factory (internal)
+- **`remote/`** — Cloudflare Worker at `mcp.tickerdb.com` (Streamable HTTP + OAuth 2.1)
+- **`local/`** — Published npm package `tickerdb-mcp` (stdio)
 
-Both the remote server and npm package use the same tool definitions from `shared/`. The MCP server is a thin proxy — all tier-based access control, rate limiting, and field filtering is handled by the TickerDB HTTP API.
+Both transports use the same tool definitions. The MCP server is a thin proxy — access control, rate limiting, and field filtering are handled by the TickerDB API.
 
 ### Authentication
 
-The remote server supports two authentication methods:
+- **Bearer token** — `Authorization: Bearer tdb_...`
+- **OAuth 2.1** — dynamic client registration, PKCE, token exchange, revocation. `/authorize` redirects to tickerdb.com for consent.
 
-- **Bearer token** — pass your `tdb_*` API key directly as `Authorization: Bearer tdb_...`
-- **OAuth 2.1** — used by Claude.ai Connectors. The server implements dynamic client registration, PKCE, token exchange, and revocation. The `/authorize` endpoint redirects to the main TickerDB site for consent.
+Unauthenticated `initialize` and `tools/list` are permitted for tool discovery; `tools/call` requires auth and returns a `401` Bearer challenge with `resource_metadata` for clean re-authorization.
 
-For OAuth-backed MCP clients that use mixed authentication, the worker permits unauthenticated `initialize` and `tools/list` discovery on `POST /mcp`, but requires authentication for actual tool execution. Protected tool calls return a standard `401` Bearer challenge with `resource_metadata` pointing at `/.well-known/oauth-protected-resource/mcp` so clients can re-authorize or remount cleanly.
+### Session strategy
 
-### Session Strategy
-
-The remote worker defaults to **stateless MCP transport**. That is intentional: all TickerDB MCP tools are request/response stateless, while Cloudflare Worker memory is isolate-local and can drift between requests. Defaulting to stateless transport avoids edge session loss that can invalidate connector-discovered `link_...` namespaces mid-chain. In stateless mode the worker only accepts `POST /mcp` requests, uses JSON request/response mode, and rejects `GET`/`DELETE` session lifecycle requests so connector runtimes do not accidentally tear down or rebind a namespace that was never meant to be stateful.
-
-If you need to debug explicit MCP session behavior, set `MCP_SESSION_MODE=stateful`. In that mode, stale or missing `Mcp-Session-Id` headers return explicit errors instead of silently downgrading to a fresh transport.
+The remote worker defaults to **stateless transport** — intentionally. All tools are request/response stateless, and Cloudflare Worker memory is isolate-local. Stateless mode avoids edge session loss that can invalidate connector-discovered namespaces. Set `MCP_SESSION_MODE=stateful` for explicit session debugging.
 
 ## Development
 
 ```bash
-# Install dependencies
-npm install
-
-# Type-check the remote worker/shared sources
-npm run build
-
-# Dev server for remote worker
-npx wrangler dev
-
-# Build the npm package
-cd local && npm install && npm run build
+npm install                              # workspace dependencies
+npm run build                            # type-check remote + shared
+npx wrangler dev                         # remote dev server
+cd local && npm install && npm run build  # npm package
 ```
 
 ## Deployment
 
-**Remote server:**
 ```bash
+# Remote server
 npx wrangler deploy
-```
 
-**npm package + MCP Registry (recommended):**
-```bash
-# From the monorepo root
+# npm + MCP Registry (recommended)
 export MCP_PUBLISHER_KEY="your_saved_tickerdb_registry_private_key_hex"
 ./release.sh mcp patch
+
+# npm only
+cd local && npm version patch && npm run build && npm publish
 ```
-
-This bumps `local/package.json`, keeps `server.json` in sync, publishes `tickerdb-mcp` to npm, refreshes DNS auth for `tickerdb.com`, and publishes the MCP server metadata to the official MCP Registry.
-
-**npm package only (manual):**
-```bash
-cd local
-npm version patch
-npm run build
-npm publish
-```
-
