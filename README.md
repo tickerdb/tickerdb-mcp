@@ -14,6 +14,7 @@ Connect your agent to hundreds of indicators like trend_direction, support_level
 | `get_search` | Search assets by categorical state or rank snapshots by fields such as `market_cap` |
 | `get_schema` | Discover available fields and filter options (always free, 0 credits) |
 | `get_watchlist` | Live data for your saved watchlist tickers |
+| `get_watchlist_changes` | Field-level diffs since the last pipeline run |
 | `add_to_watchlist` | Add tickers to your watchlist |
 | `remove_from_watchlist` | Remove tickers from your watchlist |
 | `get_account` | Account details, plan tier, and usage |
@@ -23,7 +24,7 @@ All tools are available on every tier (Free, Plus, Pro) — tiers differ by cred
 Use `get_summary` with `start`/`end` params for bulk ticker syncs across a date range, or with `field`/`band` params to query event occurrences. Add `stats=true` in event mode when you want aggregate event-band and aftermath distributions instead of raw rows.
 Paid event aftermaths include exact close-to-close fields such as `return_5d_pct`, `return_20d_pct`, and `return_100d_pct` alongside the categorical performance bands. Incomplete horizons return `null`.
 Use `get_ohlcv` when exact multi-bar daily history is required. `get_summary` includes the same-candle `ohlcv` object for the requested snapshot; follow `next_cursor` in `get_ohlcv` while `has_more` is true to retrieve additional bars. OHLCV costs 1 credit per 100 bars returned, rounded up, with a 1 credit minimum.
-`get_watchlist` does not take a timeframe. Each item carries a `notable_changes` array of day-over-day change alerts.
+`get_watchlist` does not take a timeframe; each item carries a `notable_changes` array of day-over-day change alerts. Use `get_watchlist_changes` for daily or weekly diffs — it returns only what changed, so prefer it over `get_watchlist` for monitoring a large watchlist.
 
 Current summary snapshots also expose top-level freshness via `as_of_date`, same-candle `ohlcv.open/high/low/close/volume`, stock `market_cap` / `market_cap_tier` when available, pattern setup states under `patterns.bull_flag`, `patterns.bull_flag_breakout`, `patterns.bear_flag`, `patterns.bear_flag_breakdown`, `patterns.ascending_triangle`, `patterns.descending_triangle`, `patterns.symmetrical_triangle`, `patterns.rising_wedge`, and `patterns.falling_wedge`, richer `volume` fields such as `price_direction_on_volume`, opt-in paid-tier level metadata like `support_level.status_meta`, Pro `sector_context` fields such as `agreement` and `overbought_count`, and stock-only fundamentals such as raw `fundamentals.pe_ratio`, `fundamentals.free_cash_flow`, and nested `fundamentals.insider_activity` when available.
 
@@ -34,13 +35,13 @@ MA distance fields are available throughout the stack:
 - MA distance event queries support grouped `band=above` and `band=below` aliases in addition to granular values like `proximity_above`.
 
 Raw P/E is exposed as `fundamentals.pe_ratio` in Summary and canonical `pe_ratio` in Schema/Search. It is the latest ratio on or before the snapshot date (including a weekly snapshot's week-ending date); negative values are preserved and unavailable values are `null`.
-Fundamental bands follow the same naming pattern: use `fundamentals.free_cash_flow` in summary field selection and `fundamentals_free_cash_flow` in schema, search, and event queries.
+Fundamental bands follow the same naming pattern: use `fundamentals.free_cash_flow` in summary field selection and `fundamentals_free_cash_flow` in schema, search, watchlist change, and event queries.
 The Pro-only Value Divergence Model is available on verified weekly stock snapshots. Use `value_divergence_eligible`, `value_divergence_score`, `value_divergence_band`, and `value_divergence_exclusion_reason` with `get_search`, or request the same top-level fields from `get_summary`. Daily, ETF, crypto, and unverified historical rows return `null` model fields.
 
 
 ### Band Stability Metadata
 
-`get_summary` keeps sibling `_meta` objects off by default so the primary band label stays front-and-center. Pass `meta: true` to include full paid-tier stability metadata across the response, or request just the specific `*_meta` fields you want. `get_watchlist` still includes paid-tier `_meta` objects by default.
+`get_summary` keeps sibling `_meta` objects off by default so the primary band label stays front-and-center. Pass `meta: true` to include full paid-tier stability metadata across the response, or request just the specific `*_meta` fields you want. `get_watchlist` still includes paid-tier `_meta` objects by default, and `get_watchlist_changes` returns stability fields inline on each change object.
 
 The stability label is one of `fresh`, `holding`, `established`, or `volatile`. Full metadata includes `periods_in_current_state`, `flips_recent`, and `flips_lookback`, which helps agents distinguish between a newly entered state and one that has persisted for many periods.
 

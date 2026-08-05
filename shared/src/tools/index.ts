@@ -5,6 +5,7 @@ import { registerGetSearch } from "./get-search.js";
 import { registerGetSchema } from "./get-schema.js";
 import { registerGetAccount } from "./get-account.js";
 import { registerGetWatchlist } from "./get-watchlist.js";
+import { registerGetWatchlistChanges } from "./get-watchlist-changes.js";
 import { registerAddToWatchlist } from "./add-to-watchlist.js";
 import { registerRemoveFromWatchlist } from "./remove-from-watchlist.js";
 export function registerAllTools(server: McpServer, apiKey: string) {
@@ -14,6 +15,7 @@ export function registerAllTools(server: McpServer, apiKey: string) {
   registerGetSchema(server, apiKey);
   registerGetAccount(server, apiKey);
   registerGetWatchlist(server, apiKey);
+  registerGetWatchlistChanges(server, apiKey);
   registerAddToWatchlist(server, apiKey);
   registerRemoveFromWatchlist(server, apiKey);
 }

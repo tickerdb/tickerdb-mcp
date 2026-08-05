@@ -12,6 +12,7 @@ const expectedTools = [
   "get_search",
   "get_summary",
   "get_watchlist",
+  "get_watchlist_changes",
   "remove_from_watchlist",
 ];
 
