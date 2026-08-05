@@ -14,6 +14,29 @@ export function initApiClient(binding: { fetch: typeof fetch } | undefined) {
   _serviceBinding = binding;
 }
 
+const MAX_ERROR_BODY_CHARS = 500;
+
+/**
+ * Turn a non-JSON upstream body into something an agent can act on. An HTML body
+ * means the request never reached the API handler, so say that instead of piping
+ * a full web page back through the tool result.
+ */
+function describeNonJsonBody(text: string, status: number): string {
+  const trimmed = text.trim();
+
+  if (!trimmed) {
+    return `TickerDB upstream returned an empty non-JSON response (${status}).`;
+  }
+
+  if (/^\s*<(!doctype|html)/i.test(trimmed)) {
+    return `TickerDB returned an HTML page instead of JSON (${status}). The request did not reach the API. This is a server-side fault — retry, and report it at https://github.com/tickerdb/tickerdb-mcp/issues if it persists.`;
+  }
+
+  return trimmed.length > MAX_ERROR_BODY_CHARS
+    ? `${trimmed.slice(0, MAX_ERROR_BODY_CHARS)}… (truncated, ${status})`
+    : trimmed;
+}
+
 export async function callTickerDb(
   apiKey: string,
   path: string,
@@ -74,12 +97,7 @@ export async function callTickerDb(
       try {
         data = JSON.parse(text);
       } catch {
-        data = {
-          error: {
-            message:
-              text.trim() || `TickerDB upstream returned a non-JSON response (${resp.status}).`,
-          },
-        };
+        data = { error: { message: describeNonJsonBody(text, resp.status) } };
       }
     }
 
