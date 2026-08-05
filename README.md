@@ -8,12 +8,12 @@ Pre-computed stock market data for AI agents. TickerDB returns indicators like `
 
 | Tool | Description |
 |---|---|
-| `get_summary` | Technical + fundamental snapshot for a ticker. Supports historical dates, date ranges, and event queries with aftermath stats |
-| `get_ohlcv` | Paginated daily or weekly EOD candles for exact returns, charts, and backtests |
+| `get_summary` | Technical + fundamental snapshot for a ticker. Historical lookups, state transition history, and what usually happens after |
+| `get_ohlcv` | Daily or weekly EOD candles for returns, charts, and backtests |
 | `get_search` | Screen assets by categorical state or rank by fields like `market_cap` or `pe_ratio` |
-| `get_schema` | Discover all 182 fields and their valid band values (always free, 0 credits) |
+| `get_schema` | Discover all 182 fields and their valid band values |
 | `get_watchlist` | Full analytical summary for every ticker on your saved watchlist |
-| `get_watchlist_changes` | Field-level diffs since last pipeline run — daily or weekly |
+| `get_watchlist_changes` | What changed on your watchlist — day-over-day or week-over-week |
 | `add_to_watchlist` | Add tickers to your watchlist |
 | `remove_from_watchlist` | Remove tickers from your watchlist |
 | `get_account` | Account details, plan tier, and usage |
