@@ -66,6 +66,15 @@ test("allows the complete unauthenticated MCP discovery handshake", async (t) =>
   const payload = await toolList.json();
   assert.deepEqual(
     payload.result.tools.map(({ name }) => name).sort(),
-    ["get_account", "get_ohlcv", "get_schema", "get_search", "get_summary"],
+    [
+      "add_to_watchlist",
+      "get_account",
+      "get_ohlcv",
+      "get_schema",
+      "get_search",
+      "get_summary",
+      "get_watchlist",
+      "remove_from_watchlist",
+    ],
   );
 });

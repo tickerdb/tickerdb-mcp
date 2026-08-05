@@ -4,10 +4,16 @@ import { registerGetOhlcv } from "./get-ohlcv.js";
 import { registerGetSearch } from "./get-search.js";
 import { registerGetSchema } from "./get-schema.js";
 import { registerGetAccount } from "./get-account.js";
+import { registerGetWatchlist } from "./get-watchlist.js";
+import { registerAddToWatchlist } from "./add-to-watchlist.js";
+import { registerRemoveFromWatchlist } from "./remove-from-watchlist.js";
 export function registerAllTools(server: McpServer, apiKey: string) {
   registerGetSummary(server, apiKey);
   registerGetOhlcv(server, apiKey);
   registerGetSearch(server, apiKey);
   registerGetSchema(server, apiKey);
   registerGetAccount(server, apiKey);
+  registerGetWatchlist(server, apiKey);
+  registerAddToWatchlist(server, apiKey);
+  registerRemoveFromWatchlist(server, apiKey);
 }
