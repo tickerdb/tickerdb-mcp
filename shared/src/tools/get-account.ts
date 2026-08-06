@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { callTickerDb } from "../api-client.js";
 import { formatApiError } from "../errors.js";
-import { formatTickerDbResult, tickerDbOutputSchema } from "./result.js";
+import { formatTickerDbResult, tickerDbOAuthMeta, tickerDbOutputSchema } from "./result.js";
 
 export function registerGetAccount(server: McpServer, apiKey: string) {
   const tool = server.tool(
@@ -17,5 +17,5 @@ export function registerGetAccount(server: McpServer, apiKey: string) {
       return formatTickerDbResult(data);
     },
   );
-  tool.update({ outputSchema: tickerDbOutputSchema });
+  tool.update({ outputSchema: tickerDbOutputSchema, _meta: tickerDbOAuthMeta });
 }

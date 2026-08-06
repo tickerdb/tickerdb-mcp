@@ -40,7 +40,7 @@ export interface Env {
 export function handleAuthorizationServerMetadata(env: Env): Response {
   return jsonResponse({
     issuer: env.MCP_URL,
-    authorization_endpoint: `${env.MCP_URL}/authorize`,
+    authorization_endpoint: `${env.SITE_URL}/oauth/authorize`,
     token_endpoint: `${env.MCP_URL}/token`,
     registration_endpoint: `${env.MCP_URL}/register`,
     revocation_endpoint: `${env.MCP_URL}/revoke`,
@@ -73,28 +73,14 @@ export async function handleAuthorize(request: Request, env: Env): Promise<Respo
 }
 
 async function authorizeGet(request: Request, env: Env): Promise<Response> {
-  const url = new URL(request.url);
-  const clientId = url.searchParams.get('client_id');
-  const redirectUri = url.searchParams.get('redirect_uri');
-  const state = url.searchParams.get('state') ?? '';
-  const codeChallenge = url.searchParams.get('code_challenge');
-  const codeChallengeMethod = url.searchParams.get('code_challenge_method');
-  const responseType = url.searchParams.get('response_type');
-  const scope = url.searchParams.get('scope') ?? 'tickerdb';
+  const requestUrl = new URL(request.url);
+  const siteAuthorizeUrl = new URL('/oauth/authorize', env.SITE_URL);
+  siteAuthorizeUrl.search = requestUrl.search;
 
-  if (!clientId || !redirectUri || !codeChallenge || codeChallengeMethod !== 'S256' || responseType !== 'code') {
-    return htmlError('Missing or invalid OAuth parameters.');
-  }
-
-  const db = createDb(env.HYPERDRIVE?.connectionString ?? env.DATABASE_URL);
-  const clients = await db.select().from(tOAuthClients).where(eq(tOAuthClients.clientId, clientId)).limit(1);
-  if (clients.length === 0) return htmlError('Unknown OAuth client.');
-
-  const client = clients[0];
-  const allowedUris: string[] = JSON.parse(client.redirectUris);
-  if (!allowedUris.includes(redirectUri)) return htmlError('redirect_uri not registered for this client.');
-
-  return consentHtml({ clientName: client.clientName ?? clientId, clientId, redirectUri, state, codeChallenge, codeChallengeMethod, scope });
+  return new Response(null, {
+    status: 302,
+    headers: { Location: siteAuthorizeUrl.toString() },
+  });
 }
 
 async function authorizePost(request: Request, env: Env): Promise<Response> {
@@ -696,6 +682,18 @@ export async function handleToken(request: Request, env: Env): Promise<Response>
     params = new URLSearchParams(text);
   } catch {
     return jsonResponse({ error: 'invalid_request' }, 400);
+  }
+
+  const resource = params.get('resource');
+  const expectedResource = `${env.MCP_URL}/mcp`;
+
+  // OpenAI sends the RFC 8707 resource parameter. Keep it optional for older
+  // OAuth clients, but reject a token explicitly requested for another server.
+  if (resource && resource !== expectedResource) {
+    return jsonResponse(
+      { error: 'invalid_target', error_description: 'Invalid resource.' },
+      400,
+    );
   }
 
   const grantType = params.get('grant_type');

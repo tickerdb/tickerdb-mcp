@@ -143,6 +143,25 @@ export default {
       });
 
       if (!allowPublicDiscovery) {
+        if (rpcInfo.method === "tools/call") {
+          const response = oauthRequiredToolResponse(parsedBody, env);
+          logRequest("finish", {
+            requestId,
+            path: url.pathname,
+            method: request.method,
+            authMode,
+            sessionMode,
+            sessionId,
+            isInit,
+            rpcMethod: rpcInfo.method,
+            toolName: rpcInfo.toolName,
+            toolMode: rpcInfo.toolMode,
+            summaryField: rpcInfo.summaryField,
+            status: response.status,
+          });
+          return response;
+        }
+
         const status = malformedAnonymousMcpPost ? 400 : 401;
         logRequest("finish", {
           requestId,
@@ -557,6 +576,46 @@ function jsonError(status: number, message: string, extraHeaders?: Record<string
       ...extraHeaders,
     },
   });
+}
+
+function oauthRequiredToolResponse(parsedBody: unknown, env: Env): Response {
+  const challengeHeaders = oauthChallengeHeaders(env, {
+    error: "invalid_token",
+    errorDescription: "Sign in to TickerDB to continue.",
+  });
+  const challenge = challengeHeaders["WWW-Authenticate"];
+
+  return new Response(
+    JSON.stringify({
+      jsonrpc: "2.0",
+      id: getRpcId(parsedBody),
+      result: {
+        content: [{ type: "text", text: "Authentication required: sign in to TickerDB." }],
+        _meta: { "mcp/www_authenticate": [challenge] },
+        isError: true,
+      },
+    }),
+    {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        ...corsHeaders(),
+        ...challengeHeaders,
+      },
+    },
+  );
+}
+
+function getRpcId(parsedBody: unknown): string | number | null {
+  if (!parsedBody || typeof parsedBody !== "object" || Array.isArray(parsedBody)) {
+    return null;
+  }
+  if (!("id" in parsedBody)) {
+    return null;
+  }
+
+  const id = parsedBody.id;
+  return typeof id === "string" || typeof id === "number" ? id : null;
 }
 
 function oauthChallengeHeaders(
