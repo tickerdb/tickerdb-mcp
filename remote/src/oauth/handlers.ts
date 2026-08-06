@@ -30,6 +30,7 @@ export interface Env {
   SITE_URL: string; // https://tickerdb.com
   MCP_URL: string; // https://mcp.tickerdb.com
   MCP_ENCRYPTION_KEY: string; // Base64-encoded AES-256 key for oauth_mcp_keys
+  MCP_ENCRYPTION_KEY_NEXT?: string; // Optional second key for non-breaking key migration
   MCP_SESSION_MODE?: string; // optional override: "stateless" (default) or "stateful"
   OPENAI_APPS_CHALLENGE_TOKEN?: string; // optional domain verification token
   TICKERDB?: { fetch: typeof fetch }; // Service binding to the tickerdb Worker
@@ -985,8 +986,15 @@ export async function resolveOAuthToken(
     return null;
   }
 
-  // Decrypt the raw API key
-  const apiKey = await aesDecrypt(mcpKeys[0].encryptedApiKey, env.MCP_ENCRYPTION_KEY);
+  // Decrypt with the original key first so existing OAuth connections remain
+  // valid. New website-issued keys may use the optional migration key.
+  let apiKey: string;
+  try {
+    apiKey = await aesDecrypt(mcpKeys[0].encryptedApiKey, env.MCP_ENCRYPTION_KEY);
+  } catch (primaryError) {
+    if (!env.MCP_ENCRYPTION_KEY_NEXT) throw primaryError;
+    apiKey = await aesDecrypt(mcpKeys[0].encryptedApiKey, env.MCP_ENCRYPTION_KEY_NEXT);
+  }
 
   return { apiKey, userId };
 }
