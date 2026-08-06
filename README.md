@@ -52,9 +52,9 @@ The remote server at `https://mcp.tickerdb.com/mcp` supports OAuth 2.1 and Beare
 
 | Client | How |
 |---|---|
-| Claude.ai | Settings → Connectors → Add → `https://mcp.tickerdb.com/mcp` → Authorize with your TickerDB API key |
+| Claude.ai | Settings → Connectors → Add → `https://mcp.tickerdb.com/mcp` → Authorize |
 | Claude Code | `claude mcp add --transport http --scope user tickerdb https://mcp.tickerdb.com/mcp` |
-| ChatGPT | Plugins → Add → `https://mcp.tickerdb.com/mcp` → Authorize with your TickerDB API key |
+| ChatGPT | Plugins → + → `https://mcp.tickerdb.com/mcp` → Create → Authorize |
 | Cursor | `.cursor/mcp.json` → `{"tickerdb": {"url": "https://mcp.tickerdb.com/mcp"}}` |
 | Any MCP client | Streamable HTTP to `https://mcp.tickerdb.com/mcp` with `Authorization: Bearer tdb_...` |
 
