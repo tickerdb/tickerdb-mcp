@@ -347,8 +347,14 @@ async function resolveApiKey(bearerToken: string, env: Env): Promise<string | nu
     return bearerToken;
   }
 
-  const result = await resolveOAuthToken(bearerToken, env);
-  return result?.apiKey ?? null;
+  try {
+    const result = await resolveOAuthToken(bearerToken, env);
+    return result?.apiKey ?? null;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('[oauth] Failed to resolve bearer token:', message);
+    return null;
+  }
 }
 
 async function createStatefulTransport(
