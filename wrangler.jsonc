@@ -90,7 +90,7 @@
 					// oauth_authorization_codes, oauth_clients and oauth_mcp_keys.
 					// Pointed at production, every staging OAuth flow inserts,
 					// updates and deletes rows in the live customer plane.
-					"id": "REPLACE_WITH_STAGING_HYPERDRIVE_ID"
+					"id": "e51b57f8f07c4bf6b9e4277db6991d86"
 				}
 			]
 		}
