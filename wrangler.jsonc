@@ -54,43 +54,17 @@
 			]
 		},
 		"staging": {
-			// Deploy: wrangler deploy --env staging
-			// Custom domain: staging.mcp.tickerdb.com (set in Cloudflare dashboard)
-			// Secrets (set via `wrangler secret put <NAME> --env staging`):
-			//   SITE_URL           — https://tickerdb.com
-			//   MCP_URL            — https://staging.mcp.tickerdb.com
-			//   MCP_ENCRYPTION_KEY — use a SEPARATE key, not production's: it
-			//                        encrypts oauth_mcp_keys rows, and sharing it
-			//                        means a staging leak decrypts production data
-			// Optional:
-			//   MCP_SESSION_MODE
-			//   OPENAI_APPS_CHALLENGE_TOKEN
 			"name": "tickerdb-mcp-staging",
 			"services": [
 				{
 					"binding": "TICKERDB",
-					"service": "tickerdb",
-					// REQUIRED. Without it the binding resolves to the DEFAULT
-					// (production) environment of the tickerdb worker, so staging
-					// MCP tool calls execute against production. That was the
-					// behaviour before this change.
-					"environment": "staging"
+					"service": "tickerdb-staging"
 				}
 			],
 			"hyperdrive": [
 				{
 					"binding": "HYPERDRIVE",
-					// REPLACE with a staging Hyperdrive whose origin is tickerdb-1
-					// (168.119.97.179:5432/tickerdb), using a dedicated
-					// tickerdb_staging role rather than production's credential.
-					//
-					// This binding is not cosmetic. remote/src/oauth/handlers.ts
-					// connects with createDb(env.HYPERDRIVE.connectionString) and
-					// writes oauth_access_tokens, oauth_refresh_tokens,
-					// oauth_authorization_codes, oauth_clients and oauth_mcp_keys.
-					// Pointed at production, every staging OAuth flow inserts,
-					// updates and deletes rows in the live customer plane.
-					"id": "e51b57f8f07c4bf6b9e4277db6991d86"
+					"id": "e6b01e1d5a714d75bf4eaad04e4ba671"
 				}
 			]
 		}
