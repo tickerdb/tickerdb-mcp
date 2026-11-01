@@ -7,7 +7,7 @@ import { formatTickerDbResult, tickerDbOAuthMeta, tickerDbOutputSchema } from ".
 export function registerGetUniverse(server: McpServer, apiKey: string) {
   const tool = server.tool(
     "get_universe",
-    "Get selected fields for EVERY asset on one date in a single call (about 11,000 rows), ordered by ticker: the input of a daily or weekly trading model run. Fields use the same names as get_search and are tier-gated the same way; at most 60 per call. Costs 5 credits per 10 fields. member_of / held_by restrict it to an index's or a fund's holdings on that date (\"S&P 500 members with garp_score\"). A row dated D reflects everything known by 04:00 UTC on D+1, so a backtest acts at the next session's open. For filtered or ranked subsets use get_search; for one ticker use get_summary.",
+    "Get selected fields for EVERY asset on one date in a single call (about 11,000 rows), ordered by ticker: the input of a daily or weekly trading model run. Fields use the same names as get_search and are tier-gated the same way; at most 60 per call. Costs 5 credits per 10 fields. member_of / held_by restrict it to an index's or a fund's holdings on that date (\"S&P 500 members with garp_core_score\"). A row dated D reflects everything known by 04:00 UTC on D+1, so a backtest acts at the next session's open. For filtered or ranked subsets use get_search; for one ticker use get_summary.",
     {
       fields: z
         .array(z.string())
