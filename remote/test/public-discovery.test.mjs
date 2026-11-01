@@ -69,6 +69,7 @@ test("allows the complete unauthenticated MCP discovery handshake", async (t) =>
     [
       "add_to_watchlist",
       "get_account",
+      "get_market",
       "get_ohlcv",
       "get_schema",
       "get_search",

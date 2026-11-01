@@ -7,6 +7,7 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 const expectedTools = [
   "add_to_watchlist",
   "get_account",
+  "get_market",
   "get_ohlcv",
   "get_schema",
   "get_search",

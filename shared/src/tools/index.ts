@@ -3,6 +3,7 @@ import { registerGetSummary } from "./get-summary.js";
 import { registerGetOhlcv } from "./get-ohlcv.js";
 import { registerGetSearch } from "./get-search.js";
 import { registerGetSchema } from "./get-schema.js";
+import { registerGetMarket } from "./get-market.js";
 import { registerGetAccount } from "./get-account.js";
 import { registerGetWatchlist } from "./get-watchlist.js";
 import { registerGetWatchlistChanges } from "./get-watchlist-changes.js";
@@ -13,6 +14,7 @@ export function registerAllTools(server: McpServer, apiKey: string) {
   registerGetOhlcv(server, apiKey);
   registerGetSearch(server, apiKey);
   registerGetSchema(server, apiKey);
+  registerGetMarket(server, apiKey);
   registerGetAccount(server, apiKey);
   registerGetWatchlist(server, apiKey);
   registerGetWatchlistChanges(server, apiKey);
