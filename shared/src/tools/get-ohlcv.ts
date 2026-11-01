@@ -7,7 +7,7 @@ import { formatTickerDbResult, tickerDbOAuthMeta, tickerDbOutputSchema } from ".
 export function registerGetOhlcv(server: McpServer, apiKey: string) {
   const tool = server.tool(
     "get_ohlcv",
-    "Get stored end-of-day OHLCV candles for a stock, ETF, or crypto ticker, daily or weekly. Use this for exact-return calculations, charts, and backtests after get_summary identifies a setup. Results are paginated; pass next_cursor back as cursor to continue. Equity and ETF bars are split-and-dividend adjusted; crypto bars are unadjusted. Credit cost is 1 credit per 100 bars returned, rounded up, with a 1 credit minimum.",
+    "Get stored end-of-day OHLCV candles for a stock, ETF, or crypto ticker, daily or weekly. Use this for exact-return calculations, charts, and backtests after get_summary identifies a setup. Results are paginated; pass next_cursor back as cursor to continue. Prices are stored as traded; adjustment picks the basis: split (default), split_dividend (total return) or raw. Credit cost is 1 credit per 100 bars returned, rounded up, with a 1 credit minimum.",
     {
       ticker: z.string().describe("Ticker symbol, e.g. AAPL, BTCUSD, SPY"),
       timeframe: z
@@ -21,9 +21,15 @@ export function registerGetOhlcv(server: McpServer, apiKey: string) {
       limit: z.number().int().min(1).max(1000).optional().describe("Maximum candles to return (1-1000). Default: 100."),
       order: z.enum(["asc", "desc"]).optional().describe("Sort by candle date. Default: desc."),
       cursor: z.string().optional().describe("Exclusive date cursor from next_cursor for pagination (YYYY-MM-DD)."),
+      adjustment: z
+        .enum(["split", "split_dividend", "raw"])
+        .optional()
+        .describe(
+          "Price basis. split (default): today's share basis, every split applied. split_dividend: splits plus cash dividends (a total-return series). raw: as traded on each date (daily only for ohlcv).",
+        ),
     },
     { readOnlyHint: true, destructiveHint: false, openWorldHint: true },
-    async ({ ticker, timeframe, start, end, limit, order, cursor }) => {
+    async ({ ticker, timeframe, start, end, limit, order, cursor, adjustment }) => {
       const { status, data } = await callTickerDb(
         apiKey,
         `/ohlcv/${encodeURIComponent(ticker.toUpperCase())}`,
@@ -34,6 +40,7 @@ export function registerGetOhlcv(server: McpServer, apiKey: string) {
           limit: limit?.toString(),
           order,
           cursor,
+          adjustment,
         },
       );
 

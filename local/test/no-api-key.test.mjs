@@ -5,16 +5,14 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 
 const expectedTools = [
-  "add_to_watchlist",
   "get_account",
+  "get_changes",
   "get_market",
   "get_ohlcv",
   "get_schema",
   "get_search",
   "get_summary",
-  "get_watchlist",
-  "get_watchlist_changes",
-  "remove_from_watchlist",
+  "get_universe",
 ];
 
 async function assertDiscoveryWorks(t, env, expectedError) {

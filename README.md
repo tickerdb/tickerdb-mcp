@@ -13,13 +13,11 @@ Pre-computed stock market data for AI agents. TickerDB returns indicators like `
 | `get_search` | Screen assets by categorical state or rank by fields like `market_cap` or `pe_ratio` |
 | `get_schema` | Discover every field (ticker level and market level) and its valid band values |
 | `get_market` | Market and macro regime bands (market_*, macro_*): latest, history, regime changes; combine with `get_search` to screen tickers under a regime |
-| `get_watchlist` | Full analytical summary for every ticker on your saved watchlist |
-| `get_watchlist_changes` | What changed on your watchlist — day-over-day or week-over-week |
-| `add_to_watchlist` | Add tickers to your watchlist |
-| `remove_from_watchlist` | Remove tickers from your watchlist |
+| `get_changes` | What changed on the newest date for up to 50 tickers — day-over-day or week-over-week |
+| `get_universe` | Selected fields for every asset on one date, in one call (trading-model input) |
 | `get_account` | Account details, plan tier, and usage |
 
-All tools are available on every tier (Free, Plus, Pro). Tiers differ by credit limits, history depth, number of filters, and watchlist size. See [tickerdb.com/pricing](https://tickerdb.com/pricing).
+All tools are available on every tier (Free, Plus, Pro). Tiers differ by credit limits, history depth, and number of filters. See [tickerdb.com/pricing](https://tickerdb.com/pricing).
 
 ## Quick start
 
@@ -33,9 +31,9 @@ The agent calls `get_search` with filters for `momentum_rsi_zone = oversold` and
 
 `get_summary` with `field=momentum_rsi_zone`, `band=oversold`, `stats=true` returns aggregate aftermath distributions: how the stock performed 5, 10, 20, 50, and 100 days after each oversold entry over 7 years of history.
 
-> **"What changed on my watchlist?"**
+> **"What changed for AAPL, MSFT and NVDA today?"**
 
-`get_watchlist_changes` returns only the field-level state transitions since the last pipeline run — band entries, exits, and shifts — so the agent reports what moved without pulling full summaries for every ticker.
+`get_changes` returns only the field-level state transitions of the newest date — band entries, exits, and shifts — so the agent reports what moved without pulling full summaries for every ticker.
 
 ## Why not just pass raw OHLCV?
 

@@ -5,10 +5,8 @@ import { registerGetSearch } from "./get-search.js";
 import { registerGetSchema } from "./get-schema.js";
 import { registerGetMarket } from "./get-market.js";
 import { registerGetAccount } from "./get-account.js";
-import { registerGetWatchlist } from "./get-watchlist.js";
-import { registerGetWatchlistChanges } from "./get-watchlist-changes.js";
-import { registerAddToWatchlist } from "./add-to-watchlist.js";
-import { registerRemoveFromWatchlist } from "./remove-from-watchlist.js";
+import { registerGetChanges } from "./get-changes.js";
+import { registerGetUniverse } from "./get-universe.js";
 export function registerAllTools(server: McpServer, apiKey: string) {
   registerGetSummary(server, apiKey);
   registerGetOhlcv(server, apiKey);
@@ -16,8 +14,6 @@ export function registerAllTools(server: McpServer, apiKey: string) {
   registerGetSchema(server, apiKey);
   registerGetMarket(server, apiKey);
   registerGetAccount(server, apiKey);
-  registerGetWatchlist(server, apiKey);
-  registerGetWatchlistChanges(server, apiKey);
-  registerAddToWatchlist(server, apiKey);
-  registerRemoveFromWatchlist(server, apiKey);
+  registerGetChanges(server, apiKey);
+  registerGetUniverse(server, apiKey);
 }

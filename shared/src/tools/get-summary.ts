@@ -97,9 +97,15 @@ export function registerGetSummary(server: McpServer, apiKey: string) {
         .describe(
           "Only return events where the context ticker was in this band (e.g. downtrend). For MA distance context fields, grouped aliases above and below are also supported. Must be provided with context_ticker and context_field.",
         ),
+      adjustment: z
+        .enum(["split", "split_dividend", "raw"])
+        .optional()
+        .describe(
+          "Price basis. split (default): today's share basis, every split applied. split_dividend: splits plus cash dividends (a total-return series). raw: as traded on each date (prices in the ohlcv block).",
+        ),
     },
     { readOnlyHint: true, destructiveHint: false, openWorldHint: true },
-    async ({ ticker, timeframe, date, start, end, fields, meta, field, band, sample, limit, before, after, stats, context_ticker, context_field, context_band }) => {
+    async ({ ticker, timeframe, date, start, end, fields, meta, field, band, sample, limit, before, after, stats, context_ticker, context_field, context_band, adjustment }) => {
       const params: Record<string, string | undefined> = {
         timeframe,
         date,
@@ -117,6 +123,7 @@ export function registerGetSummary(server: McpServer, apiKey: string) {
         context_ticker: context_ticker?.toUpperCase(),
         context_field,
         context_band,
+        adjustment,
       };
       const { status, data } = await callTickerDb(
         apiKey,
