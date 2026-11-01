@@ -15,9 +15,6 @@ const TOOLS = join(ROOT, "shared", "src", "tools");
 
 /** Routes that are not MCP tools, with the reason. */
 const NOT_TOOLS = {
-  "/bulk/manifest": "bulk Parquet downloads are files, not tool results",
-  "/bulk/market": "bulk Parquet downloads are files, not tool results",
-  "/bulk/snapshots": "bulk Parquet downloads are files, not tool results",
   "/stripe/webhook": "billing webhook, not a public endpoint",
 };
 
