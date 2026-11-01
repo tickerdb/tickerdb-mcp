@@ -33,7 +33,7 @@ export function registerGetSearch(server: McpServer, apiKey: string) {
       timeframe: z
         .enum(["daily", "weekly"])
         .optional()
-        .describe("Analysis timeframe. Default: daily"),
+        .describe("Analysis timeframe. Daily snapshots are Pro and Commercial only (Free and Plus read weekly; daily returns 403). Default: daily on Pro and Commercial, weekly on Free and Plus"),
       date: z
         .string()
         .optional()
@@ -53,9 +53,17 @@ export function registerGetSearch(server: McpServer, apiKey: string) {
         .max(500)
         .optional()
         .describe("Max results to return. Tier-gated: Starter 25, Plus 100, Pro 500. Default: 20"),
+      member_of: z
+        .string()
+        .optional()
+        .describe("Only members of this index on each row's date, e.g. \"sp500\", \"nasdaq100\", \"russell2000\" (list: get_indexes). Point in time: the tracking fund's N-PORT portfolio public on that date (typically 2-5 months old)."),
+      held_by: z
+        .string()
+        .optional()
+        .describe("Only assets this fund held on each row's date: fund ticker (e.g. \"IVV\", \"ARKK\") or SEC series id (find with get_funds). Point in time like member_of."),
     },
     { readOnlyHint: true, destructiveHint: false, openWorldHint: true },
-    async ({ filters, fields, sort_by, sort_direction, timeframe, date, start, end, limit }) => {
+    async ({ filters, fields, sort_by, sort_direction, timeframe, date, start, end, limit, member_of, held_by }) => {
       const params: Record<string, string | undefined> = {
         filters,
         fields,
@@ -66,6 +74,8 @@ export function registerGetSearch(server: McpServer, apiKey: string) {
         start,
         end,
         limit: limit?.toString(),
+        member_of,
+        held_by,
       };
       const { status, data } = await callTickerDb(
         apiKey,

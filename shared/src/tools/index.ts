@@ -10,6 +10,11 @@ import { registerGetUniverse } from "./get-universe.js";
 import { registerGetInsiders } from "./get-insiders.js";
 import { registerGetInsiderTrades } from "./get-insider-trades.js";
 import { registerGetStatus } from "./get-status.js";
+import { registerGetFunds } from "./get-funds.js";
+import { registerGetFundHoldings } from "./get-fund-holdings.js";
+import { registerGetFundHolders } from "./get-fund-holders.js";
+import { registerGetIndexes } from "./get-indexes.js";
+import { registerGetIndexMembers } from "./get-index-members.js";
 export function registerAllTools(server: McpServer, apiKey: string) {
   registerGetSummary(server, apiKey);
   registerGetOhlcv(server, apiKey);
@@ -22,4 +27,9 @@ export function registerAllTools(server: McpServer, apiKey: string) {
   registerGetInsiders(server, apiKey);
   registerGetInsiderTrades(server, apiKey);
   registerGetStatus(server, apiKey);
+  registerGetFunds(server, apiKey);
+  registerGetFundHoldings(server, apiKey);
+  registerGetFundHolders(server, apiKey);
+  registerGetIndexes(server, apiKey);
+  registerGetIndexMembers(server, apiKey);
 }

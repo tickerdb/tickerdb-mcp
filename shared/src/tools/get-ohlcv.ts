@@ -14,7 +14,7 @@ export function registerGetOhlcv(server: McpServer, apiKey: string) {
         .enum(["daily", "weekly"])
         .optional()
         .describe(
-          "Candle timeframe. Default: daily. Weekly candles cover Monday-Sunday and are dated by the Sunday week end, matching get_summary with timeframe=weekly. The in-progress week is not returned.",
+          "Candle timeframe. Daily snapshots are Pro and Commercial only (Free and Plus read weekly; daily returns 403). Default: daily on Pro and Commercial, weekly on Free and Plus. Weekly candles cover Monday-Sunday and are dated by the Sunday week end, matching get_summary with timeframe=weekly. The in-progress week is not returned.",
         ),
       start: z.string().optional().describe("Inclusive start date (YYYY-MM-DD). Compared against the candle date, so for weekly this is the Sunday week end. Lookback is limited by plan."),
       end: z.string().optional().describe("Inclusive end date (YYYY-MM-DD). Compared against the candle date."),

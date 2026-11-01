@@ -17,7 +17,7 @@ export function registerGetChanges(server: McpServer, apiKey: string) {
       timeframe: z
         .enum(["daily", "weekly"])
         .optional()
-        .describe("daily (day-over-day) or weekly (week-over-week). Default: daily"),
+        .describe("daily (day-over-day) or weekly (week-over-week). Daily snapshots are Pro and Commercial only (Free and Plus read weekly; daily returns 403). Default: daily on Pro and Commercial, weekly on Free and Plus"),
     },
     { readOnlyHint: true, destructiveHint: false, openWorldHint: true },
     async ({ tickers, timeframe }) => {

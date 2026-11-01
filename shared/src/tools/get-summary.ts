@@ -15,7 +15,7 @@ export function registerGetSummary(server: McpServer, apiKey: string) {
       timeframe: z
         .enum(["daily", "weekly"])
         .optional()
-        .describe("Analysis timeframe. Default: daily"),
+        .describe("Analysis timeframe. Daily snapshots are Pro and Commercial only (Free and Plus read weekly; daily returns 403). Default: daily on Pro and Commercial, weekly on Free and Plus"),
       date: z
         .string()
         .optional()
