@@ -17,6 +17,11 @@ Pre-computed stock market data for AI agents. TickerDB returns indicators like `
 | `get_universe` | Selected fields for every asset on one date, in one call (trading-model input) |
 | `get_insiders` | Find insiders (CEOs, directors, 10% owners, funds) by name, ticker or role |
 | `get_insider_trades` | One insider's disclosed trades by disclosure time (copy/inverse insider models) |
+| `get_funds` | Find ETFs and mutual funds that file SEC N-PORT holdings, by name or ticker |
+| `get_fund_holdings` | A fund's full portfolio as public on a date (point in time by filing date) |
+| `get_fund_holders` | Which funds held a stock on a date, plus its tracked index memberships |
+| `get_indexes` | Tracked indexes (S&P 500/400/600/100, Nasdaq-100, Russell 1000/2000) and their source funds |
+| `get_index_members` | An index's members on a date (point in time; also `member_of` in get_universe/get_search) |
 | `get_status` | When data was last released (daily/weekly, preliminary or final): poll this, not ticker tools |
 | `get_account` | Account details, plan tier, and usage |
 
