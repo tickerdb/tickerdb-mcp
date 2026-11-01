@@ -15,6 +15,8 @@ Pre-computed stock market data for AI agents. TickerDB returns indicators like `
 | `get_market` | Market and macro regime bands (market_*, macro_*): latest, history, regime changes; combine with `get_search` to screen tickers under a regime |
 | `get_changes` | What changed on the newest date for up to 50 tickers — day-over-day or week-over-week |
 | `get_universe` | Selected fields for every asset on one date, in one call (trading-model input) |
+| `get_insiders` | Find insiders (CEOs, directors, 10% owners, funds) by name, ticker or role |
+| `get_insider_trades` | One insider's disclosed trades by disclosure time (copy/inverse insider models) |
 | `get_account` | Account details, plan tier, and usage |
 
 All tools are available on every tier (Free, Plus, Pro). Tiers differ by credit limits, history depth, and number of filters. See [tickerdb.com/pricing](https://tickerdb.com/pricing).

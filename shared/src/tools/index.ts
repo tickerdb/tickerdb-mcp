@@ -7,6 +7,8 @@ import { registerGetMarket } from "./get-market.js";
 import { registerGetAccount } from "./get-account.js";
 import { registerGetChanges } from "./get-changes.js";
 import { registerGetUniverse } from "./get-universe.js";
+import { registerGetInsiders } from "./get-insiders.js";
+import { registerGetInsiderTrades } from "./get-insider-trades.js";
 export function registerAllTools(server: McpServer, apiKey: string) {
   registerGetSummary(server, apiKey);
   registerGetOhlcv(server, apiKey);
@@ -16,4 +18,6 @@ export function registerAllTools(server: McpServer, apiKey: string) {
   registerGetAccount(server, apiKey);
   registerGetChanges(server, apiKey);
   registerGetUniverse(server, apiKey);
+  registerGetInsiders(server, apiKey);
+  registerGetInsiderTrades(server, apiKey);
 }

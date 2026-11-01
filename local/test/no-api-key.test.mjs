@@ -7,6 +7,8 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 const expectedTools = [
   "get_account",
   "get_changes",
+  "get_insider_trades",
+  "get_insiders",
   "get_market",
   "get_ohlcv",
   "get_schema",
