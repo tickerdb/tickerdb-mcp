@@ -13,6 +13,7 @@ const expectedTools = [
   "get_ohlcv",
   "get_schema",
   "get_search",
+  "get_status",
   "get_summary",
   "get_universe",
 ];
