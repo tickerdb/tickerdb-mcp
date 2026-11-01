@@ -18,7 +18,6 @@ const NOT_TOOLS = {
   "/bulk/manifest": "bulk Parquet downloads are files, not tool results",
   "/bulk/market": "bulk Parquet downloads are files, not tool results",
   "/bulk/snapshots": "bulk Parquet downloads are files, not tool results",
-  "/team": "team seat management happens in the dashboard",
   "/stripe/webhook": "billing webhook, not a public endpoint",
 };
 
