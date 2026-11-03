@@ -30,7 +30,7 @@ export interface Env {
   DATABASE_URL: string;
   SITE_URL: string; // https://tickerdb.com
   MCP_URL: string; // https://mcp.tickerdb.com
-  MCP_ENCRYPTION_KEY: string; // Base64-encoded AES-256 key for oauth_mcp_keys
+  MCP_ENCRYPTION_KEY: string; // Base64-encoded AES-256 key for tickerdb_oauth_mcp_keys
   MCP_ENCRYPTION_KEY_NEXT?: string; // Optional second key for non-breaking key migration
   MCP_SESSION_MODE?: string; // optional override: "stateless" (default) or "stateful"
   OPENAI_APPS_CHALLENGE_TOKEN?: string; // optional domain verification token

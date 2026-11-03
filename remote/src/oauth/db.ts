@@ -16,13 +16,13 @@ import {
 // ── Re-define only the tables the MCP worker needs ───────────────────────────
 // (Avoids importing the full Astro site schema which has Astro-specific deps)
 
-export const tUsers = pgTable('users', {
+export const tUsers = pgTable('tickerdb_users', {
   id: varchar('id', { length: 36 }).primaryKey(),
   email: varchar('email', { length: 255 }).notNull(),
 });
 
 export const tApiKeys = pgTable(
-  'api_keys',
+  'tickerdb_api_keys',
   {
     id: varchar('id', { length: 36 }).primaryKey(),
     userId: varchar('user_id', { length: 36 }).notNull(),
@@ -34,13 +34,13 @@ export const tApiKeys = pgTable(
     revokedAt: timestamp('revoked_at', { withTimezone: true, mode: 'date' }),
   },
   (table) => ({
-    keyHashIdx: uniqueIndex('uq_api_key_hash').on(table.keyHash),
-    userIdx: index('idx_api_keys_user').on(table.userId),
+    keyHashIdx: uniqueIndex('tickerdb_uq_api_key_hash').on(table.keyHash),
+    userIdx: index('tickerdb_idx_api_keys_user').on(table.userId),
   }),
 );
 
 export const tOAuthClients = pgTable(
-  'oauth_clients',
+  'tickerdb_oauth_clients',
   {
     id: varchar('id', { length: 36 }).primaryKey(),
     clientId: varchar('client_id', { length: 64 }).notNull(),
@@ -56,12 +56,12 @@ export const tOAuthClients = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull(),
   },
   (table) => ({
-    clientIdIdx: uniqueIndex('uq_oauth_client_id').on(table.clientId),
+    clientIdIdx: uniqueIndex('tickerdb_uq_oauth_client_id').on(table.clientId),
   }),
 );
 
 export const tOAuthAuthorizationCodes = pgTable(
-  'oauth_authorization_codes',
+  'tickerdb_oauth_authorization_codes',
   {
     id: varchar('id', { length: 36 }).primaryKey(),
     codeHash: varchar('code_hash', { length: 64 }).notNull(),
@@ -75,12 +75,12 @@ export const tOAuthAuthorizationCodes = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull(),
   },
   (table) => ({
-    codeHashIdx: uniqueIndex('uq_oauth_code_hash').on(table.codeHash),
+    codeHashIdx: uniqueIndex('tickerdb_uq_oauth_code_hash').on(table.codeHash),
   }),
 );
 
 export const tOAuthAccessTokens = pgTable(
-  'oauth_access_tokens',
+  'tickerdb_oauth_access_tokens',
   {
     id: varchar('id', { length: 36 }).primaryKey(),
     tokenHash: varchar('token_hash', { length: 64 }).notNull(),
@@ -92,12 +92,12 @@ export const tOAuthAccessTokens = pgTable(
     revokedAt: timestamp('revoked_at', { withTimezone: true, mode: 'date' }),
   },
   (table) => ({
-    tokenHashIdx: uniqueIndex('uq_oauth_access_token_hash').on(table.tokenHash),
+    tokenHashIdx: uniqueIndex('tickerdb_uq_oauth_access_token_hash').on(table.tokenHash),
   }),
 );
 
 export const tOAuthRefreshTokens = pgTable(
-  'oauth_refresh_tokens',
+  'tickerdb_oauth_refresh_tokens',
   {
     id: varchar('id', { length: 36 }).primaryKey(),
     tokenHash: varchar('token_hash', { length: 64 }).notNull(),
@@ -110,11 +110,11 @@ export const tOAuthRefreshTokens = pgTable(
     revokedAt: timestamp('revoked_at', { withTimezone: true, mode: 'date' }),
   },
   (table) => ({
-    tokenHashIdx: uniqueIndex('uq_oauth_refresh_token_hash').on(table.tokenHash),
+    tokenHashIdx: uniqueIndex('tickerdb_uq_oauth_refresh_token_hash').on(table.tokenHash),
   }),
 );
 
-export const tOAuthMcpKeys = pgTable('oauth_mcp_keys', {
+export const tOAuthMcpKeys = pgTable('tickerdb_oauth_mcp_keys', {
   userId: varchar('user_id', { length: 36 }).primaryKey(),
   apiKeyId: varchar('api_key_id', { length: 36 }).notNull(),
   encryptedApiKey: text('encrypted_api_key').notNull(),

@@ -26,7 +26,7 @@
 	//   DATABASE_URL       — Direct PostgreSQL connection string (fallback for local dev)
 	//   SITE_URL           — https://tickerdb.com
 	//   MCP_URL            — https://mcp.tickerdb.com
-	//   MCP_ENCRYPTION_KEY — Base64-encoded 256-bit AES key for oauth_mcp_keys
+	//   MCP_ENCRYPTION_KEY — Base64-encoded 256-bit AES key for tickerdb_oauth_mcp_keys
 	// Optional:
 	//   MCP_SESSION_MODE   - "stateless" (default) or "stateful" for MCP session debugging
 	//   OPENAI_APPS_CHALLENGE_TOKEN - token served from /.well-known/openai-apps-challenge
