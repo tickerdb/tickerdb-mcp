@@ -17,11 +17,17 @@ export interface Op {
   purpose?: string;
   /** Long-tail ops only: parameters for search_tools and call_tool validation. */
   params?: Record<string, ParamSpec>;
-  request(args: Args): { path: string; query: Query };
+  request(args: Args): { path: string; query: Query; body?: Record<string, unknown> };
+  /** Routing ops (query): pick the concrete op and its args for this call. Throws on bad input. */
+  resolve?(args: Args): { op: Op; args: Args };
+  /** Filters the MCP server applies to each page's rows (the route cannot). */
+  localFilter?(rows: unknown[]): unknown[];
+  /** Which API route served the call, echoed in the result. */
+  route?: string;
   /** Where the rows are in the response. */
   rows?: (data: any) => unknown[] | undefined;
   /** How fetch_all follows pages. */
-  paging?: "offset" | "cursor" | "date";
+  paging?: "offset" | "offset_full" | "cursor" | "date" | "tokens";
   /** Page size fetch_all asks for when the caller gave no limit. */
   maxLimit?: number;
   /** Response-level values copied onto each stored row (e.g. ohlcv bars carry no ticker). */
@@ -55,6 +61,20 @@ export const OPS: Record<string, Op> = {
   },
   get_search: {
     name: "get_search",
+    purpose: "Raw /v1/search: filter and rank assets on one date (or a date range with a market_/macro_ filter). The query tool routes here for you.",
+    params: {
+      filters: { type: "string", required: true, desc: "JSON array of {field, op, value}" },
+      fields: { type: "string", desc: "JSON array" },
+      sort_by: { type: "string" },
+      sort_direction: { type: "asc|desc" },
+      timeframe: { type: "daily|weekly" },
+      date: { type: "YYYY-MM-DD" },
+      start: { type: "YYYY-MM-DD" },
+      end: { type: "YYYY-MM-DD" },
+      limit: { type: "integer", desc: "max 500" },
+      member_of: { type: "string" },
+      held_by: { type: "string" },
+    },
     request: (a) => ({
       path: "/search",
       query: {
@@ -67,6 +87,7 @@ export const OPS: Record<string, Op> = {
         start: str(a.start),
         end: str(a.end),
         limit: str(a.limit),
+        offset: str(a.offset),
         member_of: str(a.member_of),
         held_by: str(a.held_by),
       },
@@ -101,6 +122,15 @@ export const OPS: Record<string, Op> = {
   },
   get_universe: {
     name: "get_universe",
+    purpose: "Raw /v1/universe: selected fields (max 60) for every asset on one date. The query tool routes here for you.",
+    params: {
+      fields: { type: "string[]", required: true },
+      date: { type: "YYYY-MM-DD" },
+      timeframe: { type: "daily|weekly" },
+      asset_class: { type: "stock|etf|crypto" },
+      member_of: { type: "string" },
+      held_by: { type: "string" },
+    },
     request: (a) => ({
       path: "/universe",
       query: {

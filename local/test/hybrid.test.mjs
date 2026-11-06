@@ -71,6 +71,30 @@ function handle(url, res) {
     rows = rows.slice(0, n);
     return send({ timeframe: "daily", date_mode: "range", start, end, row_count: rows.length, rows });
   }
+  if (path === "/search") {
+    const n = limit(20, 500);
+    const offset = Number(p.get("offset") ?? 0);
+    const total = 1200;
+    const results = Array.from({ length: Math.max(0, Math.min(n, total - offset)) }, (_, i) => ({ ticker: `S${offset + i}`, market_cap_usd: offset + i }));
+    return send({ timeframe: p.get("timeframe") ?? "daily", date: p.get("date"), result_count: results.length, results });
+  }
+  if (path === "/history") {
+    // Three planned pages of whole assets; the middle one continues itself once.
+    // Tokens carry the parameters they were issued for, as the real signed ones do.
+    const tok = p.get("page_token");
+    const key = JSON.stringify(Object.fromEntries([...p].filter(([k]) => k !== "page_token")));
+    if (tok && tok.split("|")[1] !== key) return send({ error: { message: "page_token was issued for other parameters" } }, 400);
+    const at = (t, dateIdx) => ({ ticker: t, date: day(dateIdx), momentum_rsi_zone: dateIdx % 4 === 0 ? "oversold" : "neutral", fundamentals_pe_ratio: dateIdx });
+    const block = (t) => Array.from({ length: 10 }, (_, i) => at(t, i * 7));
+    const pages = { first: block("AAA"), p2: block("BBB").slice(0, 5), p2b: block("BBB").slice(5), p3: block("CCC") };
+    const name = tok ? tok.split("|")[0] : "first";
+    const rows = pages[name];
+    return send({
+      timeframe: p.get("timeframe"), start: p.get("start"), end: p.get("end"),
+      ...(tok ? {} : { pages: 3, page_tokens: [`p2|${key}`, `p3|${key}`] }),
+      row_count: rows.length, has_more: name === "p2", next_page_token: name === "p2" ? `p2b|${key}` : null, rows,
+    });
+  }
   if (path === "/status") return send({ daily: { stock: "2026-11-05" } });
   return send({ error: { message: `stub: no route ${path}` } }, 404);
 }
@@ -126,7 +150,7 @@ async function sql(query, extra = {}) {
 test("lists the hybrid tools with short descriptions and instructions", async () => {
   const { tools } = await client.listTools();
   assert.deepEqual(tools.map((t) => t.name).sort(), [
-    "call_tool", "get_market", "get_ohlcv", "get_schema", "get_search", "get_summary", "get_universe", "query_data", "search_tools",
+    "call_tool", "get_market", "get_ohlcv", "get_schema", "get_summary", "query", "query_data", "search_tools",
   ]);
   for (const t of tools) assert.ok(t.description.length < 600, `${t.name}: ${t.description.length} chars`);
   assert.ok(client.getInstructions().length < 1000);
@@ -277,21 +301,21 @@ test("call_tool get_changes stores one row per ticker and change", async () => {
 });
 
 test("store_as flattens nested fields, append adds rows", async () => {
-  const { json } = await call("get_universe", { fields: ["momentum_rsi_zone"], store_as: "uni" });
+  const { json } = await call("query", { fields: ["momentum_rsi_zone"], store_as: "uni" });
   assert.equal(json.row_count, UNIVERSE_ROWS);
   assert.ok(json.columns.includes("trend_direction"));
   assert.equal(json.response.date, "2026-11-05");
   const oversold = await sql("SELECT count(*) FROM uni WHERE momentum_rsi_zone = 'oversold' AND flag = 1");
   assert.equal(oversold.rows[0][0], UNIVERSE_ROWS / 10);
 
-  const again = await call("get_universe", { fields: ["momentum_rsi_zone"], store_as: "uni", append: true });
+  const again = await call("query", { fields: ["momentum_rsi_zone"], store_as: "uni", append: true });
   assert.equal(again.json.row_count, UNIVERSE_ROWS * 2);
-  const replaced = await call("get_universe", { fields: ["momentum_rsi_zone"], store_as: "uni" });
+  const replaced = await call("query", { fields: ["momentum_rsi_zone"], store_as: "uni" });
   assert.equal(replaced.json.row_count, UNIVERSE_ROWS);
 });
 
 test("large inline results are stored automatically", async () => {
-  const { json } = await call("get_universe", { fields: ["momentum_rsi_zone"] });
+  const { json } = await call("query", { fields: ["momentum_rsi_zone"] });
   assert.equal(json.stored, true);
   assert.match(json.note, /stored instead of returned/);
   assert.equal(json.row_count, UNIVERSE_ROWS);
@@ -312,4 +336,122 @@ test("store_as rejects unsafe table names", async () => {
   const { result, text } = await call("get_ohlcv", { ticker: "AAPL", store_as: "x; drop" });
   assert.equal(result.isError, true);
   assert.match(text, /plain table name/);
+});
+
+// ---- query routing ----
+
+function lastRequest(path) {
+  return requests.filter((r) => r.path === `/v1${path}`).at(-1);
+}
+
+test("query: one date with filters -> /v1/search (filters forwarded, asset_class becomes a filter)", async () => {
+  const filters = [{ field: "momentum_rsi_zone", op: "in", value: ["oversold"] }];
+  const { json } = await call("query", { date: "2026-10-30", fields: ["market_cap_usd"], filters, asset_class: "stock", sort_by: "market_cap_usd", limit: 50 });
+  assert.equal(json.route, "/v1/search");
+  const r = lastRequest("/search");
+  assert.deepEqual(JSON.parse(r.query.filters), [...filters, { field: "asset_class", op: "eq", value: "stock" }]);
+  assert.deepEqual(JSON.parse(r.query.fields), ["market_cap_usd"]);
+  assert.equal(r.query.date, "2026-10-30");
+  assert.equal(r.query.sort_by, "market_cap_usd");
+  assert.equal(r.query.limit, "50");
+});
+
+test("query: a limit or tickers without filters still goes to /v1/search", async () => {
+  await call("query", { fields: ["market_cap_usd"], sort_by: "market_cap_usd", limit: 10 });
+  assert.deepEqual(JSON.parse(lastRequest("/search").query.filters), [{ field: "ticker", op: "neq", value: "" }]);
+
+  await call("query", { fields: ["market_cap_usd"], tickers: ["aapl", "msft"] });
+  const r = lastRequest("/search");
+  assert.deepEqual(JSON.parse(r.query.filters), [{ field: "ticker", op: "in", value: ["AAPL", "MSFT"] }]);
+  assert.equal(r.query.limit, "2");
+});
+
+test("query: one date, no filters -> /v1/universe", async () => {
+  const before = requests.length;
+  const { json } = await call("query", { fields: ["momentum_rsi_zone"], date: "2026-10-30", asset_class: "etf", member_of: "sp500", store_as: "u1" });
+  assert.equal(json.route, "/v1/universe");
+  const sent = requests.slice(before);
+  assert.deepEqual(sent.map((r) => r.path), ["/v1/universe"]);
+  assert.equal(sent[0].query.asset_class, "etf");
+  assert.equal(sent[0].query.member_of, "sp500");
+  assert.equal(sent[0].query.date, "2026-10-30");
+});
+
+test("query: fetch_all on a one-date screen pages /v1/search by offset", async () => {
+  const before = requests.length;
+  const { json } = await call("query", { filters: [{ field: "market_cap_usd", op: "gt", value: 0 }], store_as: "screen", fetch_all: true });
+  assert.equal(json.row_count, 1200);
+  assert.deepEqual(requests.slice(before).map((r) => r.query.offset), [undefined, "500", "1000"]);
+});
+
+test("query: a range -> /v1/history, fetch_all follows page_tokens and next_page_token", async () => {
+  const before = requests.length;
+  const { json } = await call("query", { fields: ["momentum_rsi_zone"], start: "2019-01-01", end: "2025-12-31", store_as: "hist", fetch_all: true });
+  assert.equal(json.route, "/v1/history");
+  assert.equal(json.row_count, 30);
+  assert.equal(json.pages, 4);
+  const sent = requests.slice(before);
+  assert.ok(sent.every((r) => r.path === "/v1/history"));
+  assert.deepEqual(sent.map((r) => r.query.page_token?.split("|")[0]), [undefined, "p2", "p2b", "p3"]);
+  assert.equal(sent[0].query.timeframe, "weekly", "ranges over ~6 months default to weekly");
+  const per = await sql("SELECT ticker, count(*) FROM hist GROUP BY ticker ORDER BY ticker");
+  assert.deepEqual(per.rows, [["AAA", 10], ["BBB", 10], ["CCC", 10]]);
+});
+
+test("query: short ranges keep the plan's timeframe; explicit timeframe wins", async () => {
+  await call("query", { fields: ["momentum_rsi_zone"], start: "2025-01-01", end: "2025-03-31" });
+  assert.equal(lastRequest("/history").query.timeframe, undefined);
+  await call("query", { fields: ["momentum_rsi_zone"], start: "2019-01-01", end: "2025-12-31", timeframe: "daily" });
+  assert.equal(lastRequest("/history").query.timeframe, "daily");
+});
+
+test("query: ticker filters on a range are applied by the server, per page", async () => {
+  const { json } = await call("query", {
+    fields: ["fundamentals_pe_ratio"],
+    filters: [{ field: "momentum_rsi_zone", op: "eq", value: "oversold" }],
+    start: "2019-01-01", end: "2025-12-31", store_as: "hist_f", fetch_all: true,
+  });
+  assert.equal(json.row_count, 9, "dates 0, 28, 56 for each of three assets");
+  assert.deepEqual(JSON.parse(lastRequest("/history").query.fields), ["fundamentals_pe_ratio", "momentum_rsi_zone"]);
+  const zones = await sql("SELECT DISTINCT momentum_rsi_zone FROM hist_f");
+  assert.deepEqual(zones.rows, [["oversold"]]);
+
+  const inline = await call("query", { fields: ["fundamentals_pe_ratio"], filters: [{ field: "fundamentals_pe_ratio", op: "gte", value: 50 }], start: "2019-01-01", end: "2025-12-31" });
+  assert.deepEqual(inline.json.rows.map((r) => r.fundamentals_pe_ratio), [56, 63]);
+  assert.equal(inline.json.route, "/v1/history");
+});
+
+test("query: a range with a market filter -> /v1/search with start/end", async () => {
+  const { json } = await call("query", {
+    fields: ["ticker"], filters: [{ field: "market_breadth_ma200_zone", op: "eq", value: "washed_out" }],
+    tickers: ["aapl"], start: "2020-01-01", end: "2020-12-31",
+  });
+  assert.equal(json.route, "/v1/search");
+  const r = lastRequest("/search");
+  assert.equal(r.query.start, "2020-01-01");
+  assert.equal(r.query.end, "2020-12-31");
+  assert.equal(r.query.timeframe, "weekly");
+  assert.deepEqual(JSON.parse(r.query.filters).at(-1), { field: "ticker", op: "in", value: ["AAPL"] });
+});
+
+test("query: rejects mixed or incomplete date input", async () => {
+  for (const [args, re] of [
+    [{ fields: ["x"], date: "2025-01-01", start: "2024-01-01", end: "2025-01-01" }, /either date/],
+    [{ fields: ["x"], start: "2024-01-01" }, /both start and end/],
+    [{ start: "2024-01-01", end: "2025-01-01" }, /needs fields/],
+    [{ fields: ["x"], start: "2024-01-01", end: "2025-01-01", sort_by: "x" }, /sort_by works on one date/],
+    [{}, /needs fields/],
+  ]) {
+    const { result, text } = await call("query", args);
+    assert.equal(result.isError, true, JSON.stringify(args));
+    assert.match(text, re);
+  }
+});
+
+test("raw search and universe stay reachable through call_tool", async () => {
+  const { text } = await call("search_tools", { query: "universe" });
+  assert.match(text, /^get_universe:/);
+  const { json } = await call("call_tool", { name: "get_search", params: { filters: [{ field: "ticker", op: "eq", value: "AAPL" }], limit: 3 } });
+  assert.equal(json.result_count, 3);
+  assert.deepEqual(JSON.parse(lastRequest("/search").query.filters), [{ field: "ticker", op: "eq", value: "AAPL" }]);
 });

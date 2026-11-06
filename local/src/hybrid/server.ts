@@ -4,15 +4,17 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { OPS, checkParams, describeOp, searchOps } from "./ops.js";
+import { QUERY_OP } from "./query.js";
 import { runOp } from "./run.js";
 import { DataStore, QUERY_MAX_ROWS } from "./store.js";
 
 export const HYBRID_INSTRUCTIONS =
   "TickerDB: point-in-time market data for stocks, ETFs and crypto as named bands (e.g. momentum_rsi_zone) plus raw values. " +
   "Look up field names with get_schema search (e.g. search=\"rsi zone\", level=market) instead of guessing. " +
-  "Screen on the server with get_search (filters, fields, sort_by, limit) rather than pulling rows and filtering yourself. " +
-  "For multi-year research prefer timeframe=weekly; use daily only when needed. " +
-  "For large pulls (get_universe, long get_ohlcv or get_market ranges, many pages) pass store_as=<table> (plus fetch_all=true to follow pages): rows go into a local SQLite table and you get a short summary; then use query_data (SQL; output_path for CSV). " +
+  "Every band also has _prev, _periods, _flips_recent_count, _flips_lookback and _stability, usable as fields and filters (_periods = 1: changed that row). " +
+  "Use query for any cross-section or history: filter and sort on the server rather than pulling rows and filtering yourself. " +
+  "For multi-year research prefer timeframe=weekly. " +
+  "For large pulls pass store_as=<table> plus fetch_all=true: rows go into a local SQLite table and you get a short summary; then use query_data (SQL; output_path for CSV). " +
   "Other endpoints (changes, insiders, funds, indexes, status, account): search_tools, then call_tool. " +
   "A row dated D is known on D+1: act at the next session.";
 
@@ -49,7 +51,7 @@ export function createHybridServer(apiKey: string): McpServer {
 
   server.tool(
     "get_schema",
-    "Look up field names, descriptions, units and band values. Search rather than pulling everything (~230 KB): search=\"bull flag\", category=patterns, level=market. Names are <group>_<name>[_<unit>]; bands end in a category word (_zone, _state, _trend), raw numbers in a unit (_pct, _ratio, _usd). Tracked bands also have _prev, _periods, _stability and _flips_recent_count markers (markers=true lists them).",
+    "Look up field names, descriptions, units and band values. Search rather than pulling everything (~230 KB): search=\"bull flag\", category=patterns, level=market. Names are <group>_<name>[_<unit>]; bands end in a category word (_zone, _state, _trend), raw numbers in a unit (_pct, _ratio, _usd). Every band (tracked: true) also has _prev, _periods, _flips_recent_count, _flips_lookback and _stability, usable as fields and filters; lookups omit those rows unless markers=true.",
     {
       search: z.string().optional().describe("Words that must all appear in name, category or description."),
       category: z.string().optional().describe("Comma-separated, e.g. patterns,volume."),
@@ -63,24 +65,35 @@ export function createHybridServer(apiKey: string): McpServer {
   );
 
   server.tool(
-    "get_search",
-    "Screen or rank assets on the server. filters work on any ticker field (names from get_schema); market_*/macro_* filters keep only dates in that regime. sort_by ranks; fields picks columns ([\"*\"] = all). Latest date by default; date for one past date; start/end plus a market filter screens a range. member_of/held_by restrict to an index or fund.",
+    "query",
+    "One tool for any cross-section or history; use get_summary for a single ticker's full snapshot. Give fields and filters (any ticker field; names from get_schema), then EITHER date (default latest) OR start+end. One date with filters, tickers, sort_by or a limit screens and ranks; one date with neither returns every asset; a range returns every row in it (market_/macro_ filters keep only dates in that regime). Ranges over ~6 months default to weekly. For big pulls use store_as + fetch_all, then query_data.",
     {
-      filters: z.string().describe('JSON array of {field, op, value}; op: eq|neq|in|gt|gte|lt|lte. E.g. [{"field":"momentum_rsi_zone","op":"in","value":["oversold"]}].'),
-      fields: z.string().optional().describe('JSON array of columns, e.g. ["ticker","market_cap_usd"].'),
-      sort_by: z.string().optional().describe("Ticker field to sort by."),
-      sort_direction: z.enum(["asc", "desc"]).optional().describe("Default desc."),
-      timeframe: tf,
-      date: day("One snapshot date"),
-      start: day("Range start, with end and a market filter"),
+      fields: z.array(z.string()).optional().describe('Columns, e.g. ["market_cap_usd","momentum_rsi_zone"]. Max 60 per date, 30 per range.'),
+      filters: z
+        .array(z.object({ field: z.string(), op: z.enum(["eq", "neq", "in", "gt", "gte", "lt", "lte"]), value: z.unknown() }))
+        .optional()
+        .describe('E.g. [{"field":"momentum_rsi_zone","op":"in","value":["oversold"]}].'),
+      tickers: z.array(z.string()).optional().describe("Only these tickers."),
+      date: day("One date; default latest"),
+      start: day("Range start, with end"),
       end: day("Range end"),
-      limit: z.number().int().min(1).max(500).optional().describe("Default 20; plan caps apply."),
-      member_of: z.string().optional().describe("Index id, e.g. sp500."),
+      timeframe: z.enum(["daily", "weekly"]).optional().describe("Default: weekly for ranges over ~6 months, else your plan's default."),
+      asset_class: z.enum(["stock", "etf", "crypto"]).optional(),
+      member_of: z.string().optional().describe("Index id, e.g. sp500 (point in time)."),
       held_by: z.string().optional().describe("Fund ticker or SEC series id."),
+      sort_by: z.string().optional().describe("Ticker field to rank by (one date)."),
+      sort_direction: z.enum(["asc", "desc"]).optional().describe("Default desc."),
+      limit: z.number().int().min(1).optional().describe("Max rows on one date (default 20, max 500); rows per page on a range."),
+      ohlcv: z.boolean().optional().describe("Range only: add ohlcv_open/high/low/close/volume."),
+      adjustment: z.enum(["split", "split_dividend", "raw"]).optional().describe("With ohlcv; default split."),
       ...storeParams,
+      ...fetchAll,
     },
     RO,
-    run("get_search"),
+    async (args: Args) => {
+      const { rest, opts } = split(args);
+      return runOp(apiKey, store, QUERY_OP, rest, opts);
+    },
   );
 
   server.tool(
@@ -112,24 +125,8 @@ export function createHybridServer(apiKey: string): McpServer {
   );
 
   server.tool(
-    "get_universe",
-    "Selected fields (max 60) for every asset on one date, about 11,000 rows: a trading model's input. Pass store_as and use query_data instead of reading rows inline. member_of/held_by restrict to an index's or fund's holdings on that date. 5 credits per 10 fields.",
-    {
-      fields: z.array(z.string()).min(1).max(60).describe("Field names, as in get_search."),
-      date: day("Date; default newest"),
-      timeframe: tf,
-      asset_class: z.enum(["stock", "etf", "crypto"]).optional(),
-      member_of: z.string().optional().describe("Index id, e.g. sp500."),
-      held_by: z.string().optional().describe("Fund ticker or SEC series id."),
-      ...storeParams,
-    },
-    RO,
-    run("get_universe"),
-  );
-
-  server.tool(
     "get_market",
-    "Market-level rows, one per date, point in time: US equity market regime (market_*) and economy (macro_*) bands and values, e.g. market_regime_zone, macro_yield_curve_zone. changes=true returns only dates where a band changed. Field list: get_schema level=market. To find tickers under a regime, use market_/macro_ filters in get_search.",
+    "Market-level rows, one per date, point in time: US equity market regime (market_*) and economy (macro_*) bands and values, e.g. market_regime_zone, macro_yield_curve_zone. changes=true returns only dates where a band changed. Field list: get_schema level=market. To find tickers under a regime, put market_/macro_ filters into query.",
     {
       fields: z.string().optional().describe('JSON array of market fields; ["*"] adds change markers.'),
       filters: z.string().optional().describe("JSON array of {field, op, value} on market fields."),
@@ -168,7 +165,7 @@ export function createHybridServer(apiKey: string): McpServer {
 
   server.tool(
     "search_tools",
-    "Find the other TickerDB endpoints: changes, insiders, insider trades, funds, fund holdings and holders, indexes, index members, status, account. Returns each match's name, purpose and params (* = required). Empty query lists all. Run one with call_tool.",
+    "Find the other TickerDB endpoints: changes, insiders, insider trades, funds, fund holdings and holders, indexes, index members, status, account, and the raw search and universe routes. Returns each match's name, purpose and params (* = required). Empty query lists all. Run one with call_tool.",
     { query: z.string().optional().describe("Words, e.g. insider trades.") },
     RO,
     async ({ query }) => {

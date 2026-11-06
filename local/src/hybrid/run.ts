@@ -37,7 +37,7 @@ function envelope(data: any, rowsRef: unknown[] | undefined): Record<string, unk
   const out: Record<string, unknown> = {};
   if (!data || typeof data !== "object") return out;
   for (const [k, v] of Object.entries(data)) {
-    if (v === rowsRef || k === "band_contract") continue;
+    if (v === rowsRef || k === "band_contract" || k === "next_page_token") continue;
     if (v === null || ["string", "number", "boolean"].includes(typeof v)) {
       out[k] = typeof v === "string" && v.length > 120 ? `${v.slice(0, 120)}…` : v;
     }
@@ -45,17 +45,48 @@ function envelope(data: any, rowsRef: unknown[] | undefined): Record<string, unk
   return out;
 }
 
-export async function runOp(apiKey: string, store: DataStore, op: Op, args: Args, opts: StoreOptions): Promise<ToolResult> {
+/** One API call for an op (GET with a query string, or POST with a JSON body). */
+async function callOp(apiKey: string, op: Op, args: Args) {
+  const { path, query, body } = op.request(args);
+  return body ? callTickerDb(apiKey, path, undefined, { method: "POST", body }) : callTickerDb(apiKey, path, query);
+}
+
+const rawCounts = new WeakMap<object, number>();
+
+/** Apply an op's server-side (MCP-side) row filter in place; returns the row array. */
+function pageRows(op: Op, data: any): unknown[] | undefined {
+  const rows = (op.rows ?? findRows)(data);
+  if (rows && data && typeof data === "object") rawCounts.set(data, rawCounts.get(data) ?? rows.length);
+  if (rows && op.localFilter) {
+    const keep = op.localFilter(rows);
+    if (keep.length !== rows.length) {
+      rows.length = 0;
+      rows.push(...keep);
+      if (data && typeof data === "object") data.row_count_after_filters = rows.length;
+    }
+  }
+  return rows;
+}
+
+export async function runOp(apiKey: string, store: DataStore, baseOp: Op, args: Args, opts: StoreOptions): Promise<ToolResult> {
+  let op: Op = baseOp;
+  if (baseOp.resolve) {
+    try {
+      ({ op, args } = baseOp.resolve(args));
+    } catch (e) {
+      return text((e as Error).message, true);
+    }
+  }
   let table = opts.store_as?.trim() || undefined;
   if (opts.fetch_all && !table) table = `${op.name.replace(/^get_/, "")}_${++autoCounter}`;
 
   if (!table) {
-    const { path, query } = op.request(args);
-    const { status, data } = await callTickerDb(apiKey, path, query);
+    const { status, data } = await callOp(apiKey, op, args);
     if (status !== 200) return formatApiError(status, data);
+    const rows = pageRows(op, data);
+    if (op.route && data && typeof data === "object" && !Array.isArray(data)) (data as any).route = op.route;
     const body = JSON.stringify(data);
     if (INLINE_MAX_CHARS > 0 && body.length > INLINE_MAX_CHARS) {
-      const rows = (op.rows ?? findRows)(data);
       if (rows && rows.length > 0) {
         const auto = `${op.name.replace(/^get_/, "")}_${++autoCounter}`;
         return storePages(apiKey, store, op, args, { store_as: auto }, { status, data }, `Result was ${body.length} chars, so it was stored instead of returned.`);
@@ -88,6 +119,7 @@ async function storePages(
   if (follow && pageArgs.limit === undefined && op.maxLimit) pageArgs.limit = op.maxLimit;
   if (follow && op.paging === "offset" && pageArgs.offset === undefined) pageArgs.offset = 0;
 
+  const tokenQueue: string[] = [];
   let pages = 0;
   let total = 0;
   let meta: Record<string, unknown> | undefined;
@@ -96,10 +128,7 @@ async function storePages(
   for (;;) {
     let res = first;
     first = undefined;
-    if (!res) {
-      const { path, query } = op.request(pageArgs);
-      res = await callTickerDb(apiKey, path, query);
-    }
+    if (!res) res = await callOp(apiKey, op, pageArgs);
     const { status, data } = res;
     if (status !== 200) {
       if (pages === 0) return formatApiError(status, data);
@@ -107,7 +136,8 @@ async function storePages(
       break;
     }
     pages += 1;
-    const rawRows = (op.rows ?? findRows)(data);
+    const rawRows = pageRows(op, data);
+    const served = (data && typeof data === "object" ? rawCounts.get(data) : undefined) ?? rawRows?.length ?? 0;
     const rows = rawRows ?? [data];
     if (!meta) meta = envelope(data, rawRows);
     const hoisted = op.hoist?.(data, pageArgs) ?? {};
@@ -123,7 +153,7 @@ async function storePages(
     }
     total += flat.length;
 
-    if (!follow || !rawRows || rawRows.length === 0) break;
+    if (!follow || !rawRows || served === 0) break;
     if (pages >= MAX_PAGES) { stopped = `page cap ${MAX_PAGES} reached`; break; }
     if (total >= MAX_ROWS) { stopped = `row cap ${MAX_ROWS} reached`; break; }
 
@@ -134,6 +164,20 @@ async function storePages(
     } else if (op.paging === "offset") {
       if (!(data as any)?.has_more) break;
       pageArgs.offset = Number(pageArgs.offset ?? 0) + rawRows.length;
+    } else if (op.paging === "offset_full") {
+      // No has_more: a full page means there may be more.
+      if (served < Number(pageArgs.limit ?? 0)) break;
+      pageArgs.offset = Number(pageArgs.offset ?? 0) + served;
+      if (Number(pageArgs.offset) > 10_000) { stopped = "offset cap 10,000 reached"; break; }
+    } else if (op.paging === "tokens") {
+      // History: the first page lists page_tokens for every other page; any page
+      // may also continue itself with next_page_token. Same params on every page.
+      if (pages === 1) tokenQueue.push(...(((data as any)?.page_tokens ?? []) as string[]));
+      const own = (data as any)?.next_page_token;
+      if (own) tokenQueue.unshift(own);
+      const next = tokenQueue.shift();
+      if (!next) break;
+      pageArgs.page_token = next;
     } else if (op.paging === "date") {
       // Market ranges have no cursor: a full page means there may be more, so
       // move the range edge past the last date returned.
@@ -149,6 +193,7 @@ async function storePages(
 
   const summary = {
     stored: true,
+    ...(op.route ? { route: op.route } : {}),
     ...store.summary(table),
     ...(opts.append ? { rows_added: total } : {}),
     pages,
