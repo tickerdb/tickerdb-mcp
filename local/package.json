@@ -6,10 +6,11 @@
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "tickerdb-mcp": "bin/cli.js"
+    "tickerdb-mcp": "bin/cli.js",
+    "tickerdb-mcp-hybrid": "bin/hybrid.js"
   },
   "scripts": {
-    "build": "tsup src/index.ts --format esm --dts --external @modelcontextprotocol/sdk --external zod",
+    "build": "tsup src/index.ts src/hybrid.ts --format esm --dts --external @modelcontextprotocol/sdk --external zod",
     "test": "npm run build && node --test test/*.test.mjs"
   },
   "dependencies": {
