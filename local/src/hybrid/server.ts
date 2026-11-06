@@ -51,7 +51,7 @@ export function createHybridServer(apiKey: string): McpServer {
 
   server.tool(
     "get_schema",
-    "Look up field names, descriptions, units and band values. Search rather than pulling everything (~230 KB): search=\"bull flag\", category=patterns, level=market. Names are <group>_<name>[_<unit>]; bands end in a category word (_zone, _state, _trend), raw numbers in a unit (_pct, _ratio, _usd). Every band (tracked: true) also has _prev, _periods, _flips_recent_count, _flips_lookback and _stability, usable as fields and filters; lookups omit those rows unless markers=true.",
+    "Look up field names, descriptions, units and band values. Search rather than pulling everything (~230 KB): search=\"bull flag\", category=patterns, level=market. Names are <group>_<name>[_<unit>]; bands end in a category word (_zone, _state, _trend), raw numbers in a unit (_pct, _ratio, _usd). Every band (tracked: true) also has _prev, _periods, _flips_recent_count, _flips_lookback and _stability, usable as fields and filters; lookups omit those rows unless markers=true. Over 25 matches lists names only: search again by exact name for a description.",
     {
       search: z.string().optional().describe("Words that must all appear in name, category or description."),
       category: z.string().optional().describe("Comma-separated, e.g. patterns,volume."),
