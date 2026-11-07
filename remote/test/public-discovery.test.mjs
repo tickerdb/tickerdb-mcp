@@ -67,22 +67,14 @@ test("allows the complete unauthenticated MCP discovery handshake", async (t) =>
   assert.deepEqual(
     payload.result.tools.map(({ name }) => name).sort(),
     [
-      "get_account",
-      "get_changes",
-      "get_fund_holders",
-      "get_fund_holdings",
-      "get_funds",
-      "get_index_members",
-      "get_indexes",
-      "get_insider_trades",
-      "get_insiders",
+      "call_tool",
       "get_market",
       "get_ohlcv",
       "get_schema",
-      "get_search",
-      "get_status",
       "get_summary",
-      "get_universe",
+      "query",
+      "query_data",
+      "search_tools",
     ],
   );
 });

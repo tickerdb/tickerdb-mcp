@@ -1,20 +1,31 @@
 // Runs an operation: one call inline, or into the store (optionally following pages).
-import { callTickerDb } from "../../../shared/src/api-client.js";
-import { formatApiError } from "../../../shared/src/errors.js";
+import { callTickerDb } from "../api-client.js";
+import { formatApiError } from "../errors.js";
 import { findRows, type Op } from "./ops.js";
-import { DataStore, flattenRow } from "./store.js";
+import { flattenRow, type DataStore } from "./store.js";
 
 type Args = Record<string, unknown>;
-type ToolResult = { content: Array<{ type: "text"; text: string }>; isError?: boolean };
+export type ToolResult = { content: Array<{ type: "text"; text: string }>; isError?: boolean };
 
-const envInt = (name: string, fallback: number) => {
-  const n = Number(process.env[name]);
-  return Number.isFinite(n) && n >= 0 ? n : fallback;
-};
-const MAX_PAGES = envInt("TICKERDB_FETCH_MAX_PAGES", 500);
-const MAX_ROWS = envInt("TICKERDB_FETCH_MAX_ROWS", 2_000_000);
-/** Inline results larger than this go into a table automatically (0 = never). */
-const INLINE_MAX_CHARS = envInt("TICKERDB_INLINE_MAX_CHARS", 40_000);
+export interface RunLimits {
+  /** fetch_all stops after this many pages. */
+  maxPages: number;
+  /** fetch_all stops after this many rows. */
+  maxRows: number;
+  /** Inline results larger than this go into a table automatically (0 = never). */
+  inlineMaxChars: number;
+  /** Rows per /v1/history page when the caller gives no limit (undefined = the plan's page size). */
+  historyPageRows?: number;
+}
+
+export const DEFAULT_LIMITS: RunLimits = { maxPages: 500, maxRows: 2_000_000, inlineMaxChars: 40_000 };
+
+export interface RunContext {
+  apiKey: string;
+  /** Absent when this server has nowhere to keep tables. */
+  store?: DataStore;
+  limits: RunLimits;
+}
 
 export interface StoreOptions {
   store_as?: string;
@@ -22,9 +33,11 @@ export interface StoreOptions {
   fetch_all?: boolean;
 }
 
-const text = (t: string, isError = false): ToolResult => ({ content: [{ type: "text", text: t }], ...(isError ? { isError } : {}) });
+export const NO_STORE = "store_as, fetch_all and query_data are not available on this server.";
 
-let autoCounter = 0;
+export const text = (t: string, isError = false): ToolResult => ({ content: [{ type: "text", text: t }], ...(isError ? { isError } : {}) });
+
+const tablePrefix = (op: Op) => op.name.replace(/^get_/, "");
 
 function dayShift(date: string, days: number): string {
   const d = new Date(`${date.slice(0, 10)}T00:00:00Z`);
@@ -45,6 +58,12 @@ function envelope(data: any, rowsRef: unknown[] | undefined): Record<string, unk
   return out;
 }
 
+/** Whether a response says there is more to fetch. */
+function hasMorePages(data: any): boolean {
+  if (!data || typeof data !== "object") return false;
+  return Boolean(data.has_more || data.next_cursor || data.next_page_token || (Array.isArray(data.page_tokens) && data.page_tokens.length));
+}
+
 /** One API call for an op (GET with a query string, or POST with a JSON body). */
 async function callOp(apiKey: string, op: Op, args: Args) {
   const { path, query, body } = op.request(args);
@@ -53,7 +72,7 @@ async function callOp(apiKey: string, op: Op, args: Args) {
 
 const rawCounts = new WeakMap<object, number>();
 
-/** Apply an op's server-side (MCP-side) row filter in place; returns the row array. */
+/** Apply an op's MCP-side row filter in place; returns the row array. */
 function pageRows(op: Op, data: any): unknown[] | undefined {
   const rows = (op.rows ?? findRows)(data);
   if (rows && data && typeof data === "object") rawCounts.set(data, rawCounts.get(data) ?? rows.length);
@@ -68,7 +87,7 @@ function pageRows(op: Op, data: any): unknown[] | undefined {
   return rows;
 }
 
-export async function runOp(apiKey: string, store: DataStore, baseOp: Op, args: Args, opts: StoreOptions): Promise<ToolResult> {
+export async function runOp(ctx: RunContext, baseOp: Op, args: Args, opts: StoreOptions): Promise<ToolResult> {
   let op: Op = baseOp;
   if (baseOp.resolve) {
     try {
@@ -77,28 +96,31 @@ export async function runOp(apiKey: string, store: DataStore, baseOp: Op, args: 
       return text((e as Error).message, true);
     }
   }
+  if (op.paging === "tokens" && args.limit === undefined && ctx.limits.historyPageRows) {
+    args = { ...args, limit: ctx.limits.historyPageRows };
+  }
+  const { store } = ctx;
   let table = opts.store_as?.trim() || undefined;
-  if (opts.fetch_all && !table) table = `${op.name.replace(/^get_/, "")}_${++autoCounter}`;
+  if ((table || opts.fetch_all) && !store) return text(NO_STORE, true);
+  if (opts.fetch_all && !table) table = await store!.autoName(tablePrefix(op));
 
-  if (!table) {
-    const { status, data } = await callOp(apiKey, op, args);
+  if (!table || !store) {
+    const { status, data } = await callOp(ctx.apiKey, op, args);
     if (status !== 200) return formatApiError(status, data);
     const rows = pageRows(op, data);
     if (op.route && data && typeof data === "object" && !Array.isArray(data)) (data as any).route = op.route;
     const body = JSON.stringify(data);
-    if (INLINE_MAX_CHARS > 0 && body.length > INLINE_MAX_CHARS) {
-      if (rows && rows.length > 0) {
-        const auto = `${op.name.replace(/^get_/, "")}_${++autoCounter}`;
-        return storePages(apiKey, store, op, args, { store_as: auto }, { status, data }, `Result was ${body.length} chars, so it was stored instead of returned.`);
-      }
+    if (store && ctx.limits.inlineMaxChars > 0 && body.length > ctx.limits.inlineMaxChars && rows && rows.length > 0) {
+      const auto = await store.autoName(tablePrefix(op));
+      return storePages(ctx, store, op, args, { store_as: auto }, { status, data }, `Result was ${body.length} chars, so it was stored instead of returned.`);
     }
     return text(body);
   }
-  return storePages(apiKey, store, op, args, { ...opts, store_as: table });
+  return storePages(ctx, store, op, args, { ...opts, store_as: table });
 }
 
 async function storePages(
-  apiKey: string,
+  ctx: RunContext,
   store: DataStore,
   op: Op,
   args: Args,
@@ -109,11 +131,12 @@ async function storePages(
   const table = opts.store_as;
   const source = `${op.name} ${JSON.stringify(args)}`;
   try {
-    store.begin(table, source, opts.append);
+    await store.begin(table, source, opts.append);
   } catch (e) {
     return text((e as Error).message, true);
   }
 
+  const { maxPages, maxRows } = ctx.limits;
   const follow = Boolean(opts.fetch_all && op.paging);
   const pageArgs: Args = { ...args };
   if (follow && pageArgs.limit === undefined && op.maxLimit) pageArgs.limit = op.maxLimit;
@@ -124,11 +147,12 @@ async function storePages(
   let total = 0;
   let meta: Record<string, unknown> | undefined;
   let stopped: string | undefined;
+  let more = false;
 
   for (;;) {
     let res = first;
     first = undefined;
-    if (!res) res = await callOp(apiKey, op, pageArgs);
+    if (!res) res = await callOp(ctx.apiKey, op, pageArgs);
     const { status, data } = res;
     if (status !== 200) {
       if (pages === 0) return formatApiError(status, data);
@@ -147,15 +171,19 @@ async function storePages(
       return f;
     });
     try {
-      store.insert(table, flat);
+      await store.insert(table, flat);
     } catch (e) {
       return text(`Storing into ${table} failed: ${(e as Error).message}`, true);
     }
     total += flat.length;
 
-    if (!follow || !rawRows || served === 0) break;
-    if (pages >= MAX_PAGES) { stopped = `page cap ${MAX_PAGES} reached`; break; }
-    if (total >= MAX_ROWS) { stopped = `row cap ${MAX_ROWS} reached`; break; }
+    if (!follow) {
+      more = Boolean(op.paging) && hasMorePages(data);
+      break;
+    }
+    if (!rawRows || served === 0) break;
+    if (pages >= maxPages) { stopped = `page cap ${maxPages} reached`; break; }
+    if (total >= maxRows) { stopped = `row cap ${maxRows} reached`; break; }
 
     if (op.paging === "cursor") {
       const next = (data as any)?.next_cursor;
@@ -194,10 +222,11 @@ async function storePages(
   const summary = {
     stored: true,
     ...(op.route ? { route: op.route } : {}),
-    ...store.summary(table),
+    ...(await store.summary(table)),
     ...(opts.append ? { rows_added: total } : {}),
     pages,
     ...(stopped ? { stopped } : {}),
+    ...(more ? { more_pages: "This is the first page only: repeat with fetch_all=true to store every page." } : {}),
     ...(note ? { note } : {}),
     response: meta,
     next: `query_data with SQL over ${table}`,

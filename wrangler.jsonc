@@ -18,6 +18,24 @@
 			"service": "tickerdb"
 		}
 	],
+	"durable_objects": {
+		"bindings": [
+			{
+				"name": "TICKERDB_STORE",
+				"class_name": "TickerDbStore"
+			}
+		]
+	},
+	// store_as / query_data tables: one SQLite Durable Object per API key, deleted
+	// 24 h after last use (remote/src/store.ts).
+	"migrations": [
+		{
+			"tag": "v1-table-store",
+			"new_sqlite_classes": [
+				"TickerDbStore"
+			]
+		}
+	],
 	// Secrets (set via `wrangler secret put`):
 	//   DATABASE_URL       — Direct PostgreSQL connection string (fallback for local dev)
 	//   SITE_URL           — https://tickerdb.com
@@ -38,6 +56,14 @@
 			//   MCP_SESSION_MODE
 			//   OPENAI_APPS_CHALLENGE_TOKEN
 			"name": "tickerdb-mcp-staging",
+			"durable_objects": {
+				"bindings": [
+					{
+						"name": "TICKERDB_STORE",
+						"class_name": "TickerDbStore"
+					}
+				]
+			},
 			"services": [
 				{
 					"binding": "TICKERDB",

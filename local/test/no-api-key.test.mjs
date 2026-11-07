@@ -5,17 +5,14 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 
 const expectedTools = [
-  "get_account",
-  "get_changes",
-  "get_insider_trades",
-  "get_insiders",
+  "call_tool",
   "get_market",
   "get_ohlcv",
   "get_schema",
-  "get_search",
-  "get_status",
   "get_summary",
-  "get_universe",
+  "query",
+  "query_data",
+  "search_tools",
 ];
 
 async function assertDiscoveryWorks(t, env, expectedError) {
@@ -41,8 +38,8 @@ async function assertDiscoveryWorks(t, env, expectedError) {
   );
 
   const result = await client.callTool({
-    name: "get_account",
-    arguments: {},
+    name: "call_tool",
+    arguments: { name: "get_account" },
   });
 
   assert.equal(result.isError, true);

@@ -1,15 +1,18 @@
 const DEFAULT_API_BASE = "https://api.tickerdb.com/v1";
 
 /**
- * The stdio server can be pointed at another deployment (a local benchmark API, a
- * staging host) with TICKERDB_API_BASE, e.g. http://127.0.0.1:18080/v1. The Worker
- * has no `process` and always uses the default (or its service binding).
+ * Production unless the stdio server is pointed at another deployment (a local
+ * benchmark API, a staging host) with TICKERDB_API_BASE, e.g.
+ * http://127.0.0.1:18080/v1: local/src/index.ts calls setApiBase. The Worker never
+ * calls it, so the hosted server always reaches production (or its service binding).
  */
-const API_BASE: string = (() => {
-  const env = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env;
-  const override = env?.TICKERDB_API_BASE?.trim();
-  return override ? override.replace(/\/+$/, "") : DEFAULT_API_BASE;
-})();
+let API_BASE = DEFAULT_API_BASE;
+
+/** Override the API base; empty or missing keeps production. */
+export function setApiBase(base: string | undefined): void {
+  const trimmed = base?.trim();
+  API_BASE = trimmed ? trimmed.replace(/\/+$/, "") : DEFAULT_API_BASE;
+}
 
 export interface ApiCallOptions {
   method?: "GET" | "POST" | "PUT" | "DELETE";

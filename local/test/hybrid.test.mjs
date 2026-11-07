@@ -1,4 +1,4 @@
-// Hybrid server (dist/hybrid.js) against a stub TickerDB API: store_as/query_data,
+// The stdio server (dist/index.js) against a stub TickerDB API: store_as/query_data,
 // fetch_all paging, search_tools and call_tool.
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
@@ -95,6 +95,9 @@ function handle(url, res) {
       row_count: rows.length, has_more: name === "p2", next_page_token: name === "p2" ? `p2b|${key}` : null, rows,
     });
   }
+  if (path === "/insiders/holdings") {
+    return send({ insider: { slug: p.get("insider") }, source: p.get("source") ?? "13f", basis: "filed_holdings", limit: 100, offset: 0, has_more: false, row_count: 2, holdings: [{ ticker: "AAPL", value_usd: 2 }, { ticker: "KO", value_usd: 1 }] });
+  }
   if (path === "/status") return send({ daily: { stock: "2026-11-05" } });
   return send({ error: { message: `stub: no route ${path}` } }, 404);
 }
@@ -114,7 +117,7 @@ test.before(async () => {
   tmp = mkdtempSync(join(tmpdir(), "hybrid-test-"));
   const transport = new StdioClientTransport({
     command: process.execPath,
-    args: ["bin/hybrid.js"],
+    args: ["bin/cli.js"],
     cwd: fileURLToPath(new URL("..", import.meta.url)),
     env: { ...getDefaultEnvironment(), TICKERDB_KEY: "tdb_test", TICKERDB_API_BASE: `http://127.0.0.1:${port}/v1` },
     stderr: "pipe",
@@ -147,7 +150,7 @@ async function sql(query, extra = {}) {
   return json;
 }
 
-test("lists the hybrid tools with short descriptions and instructions", async () => {
+test("lists the tools with short descriptions and instructions", async () => {
   const { tools } = await client.listTools();
   assert.deepEqual(tools.map((t) => t.name).sort(), [
     "call_tool", "get_market", "get_ohlcv", "get_schema", "get_summary", "query", "query_data", "search_tools",
@@ -186,10 +189,17 @@ test("query_data caps rows, writes CSV, and lists/describes tables", async () =>
 
   const csvPath = join(tmp, "out", "bars.csv");
   const written = await sql("SELECT date, close FROM aapl ORDER BY date", { output_path: csvPath });
-  assert.equal(written.csv, csvPath);
+  assert.equal(written.csv_file, csvPath);
   const lines = readFileSync(csvPath, "utf8").trim().split("\n");
   assert.equal(lines.length, BAR_COUNT + 1);
   assert.equal(lines[0], "date,close");
+
+  const inlineCsv = await sql("SELECT date, close FROM aapl ORDER BY date", { format: "csv", max_rows: 2 });
+  assert.equal(inlineCsv.csv, `date,close
+${day(0)},0.5
+${day(1)},1.5`);
+  assert.equal(inlineCsv.truncated, true);
+  assert.equal(inlineCsv.rows, undefined);
 
   const tables = await sql("SHOW TABLES");
   const aapl = tables.tables.find((t) => t.table === "aapl");
@@ -225,7 +235,7 @@ test("search_tools finds long-tail endpoints with params", async () => {
   assert.match(text, /insider\*: string/);
 
   const all = (await call("search_tools", {})).text;
-  for (const name of ["get_changes", "get_insiders", "get_insider_trades", "get_funds", "get_fund_holdings", "get_fund_holders", "get_indexes", "get_index_members", "get_status", "get_account"]) {
+  for (const name of ["get_changes", "get_insiders", "get_insider_trades", "get_insider_holdings", "get_funds", "get_fund_holdings", "get_fund_holders", "get_indexes", "get_index_members", "get_status", "get_account"]) {
     assert.match(all, new RegExp(`^${name}:`, "m"));
   }
   assert.doesNotMatch(all, /^get_ohlcv:/m);
@@ -454,4 +464,41 @@ test("raw search and universe stay reachable through call_tool", async () => {
   const { json } = await call("call_tool", { name: "get_search", params: { filters: [{ field: "ticker", op: "eq", value: "AAPL" }], limit: 3 } });
   assert.equal(json.result_count, 3);
   assert.deepEqual(JSON.parse(lastRequest("/search").query.filters), [{ field: "ticker", op: "eq", value: "AAPL" }]);
+});
+
+test("query: offset pages a one-date screen; page_token and dry_run go to /v1/history", async () => {
+  await call("query", { fields: ["market_cap_usd"], sort_by: "market_cap_usd", limit: 20, offset: 40 });
+  assert.equal(lastRequest("/search").query.offset, "40");
+
+  await call("query", { fields: ["momentum_rsi_zone"], start: "2019-01-01", end: "2025-12-31", page_token: `p3|x`, dry_run: false });
+  const h = lastRequest("/history");
+  assert.equal(h.query.page_token, "p3|x");
+  assert.equal(h.query.dry_run, "false");
+
+  for (const [args, re] of [
+    [{ fields: ["x"], dry_run: true }, /apply to ranges/],
+    [{ fields: ["x"], start: "2024-01-01", end: "2025-01-01", offset: 10 }, /offset pages one-date/],
+  ]) {
+    const { result, text } = await call("query", args);
+    assert.equal(result.isError, true, JSON.stringify(args));
+    assert.match(text, re);
+  }
+});
+
+test("a stored first page says when more pages exist", async () => {
+  const { json } = await call("query", { fields: ["momentum_rsi_zone"], start: "2019-01-01", end: "2025-12-31", store_as: "hist_one" });
+  assert.equal(json.pages, 1);
+  assert.match(json.more_pages, /fetch_all=true/);
+});
+
+test("call_tool get_insider_holdings (launch route) with its params", async () => {
+  const { text } = await call("search_tools", { query: "insider holdings" });
+  assert.match(text.split("\n")[0], /^get_insider_holdings:/);
+  const { json } = await call("call_tool", { name: "get_insider_holdings", params: { insider: "Berkshire-Hathaway-Inc", source: "13f", include_closed: true }, store_as: "brk" });
+  assert.equal(json.row_count, 2);
+  const r = lastRequest("/insiders/holdings");
+  assert.equal(r.query.insider, "berkshire-hathaway-inc");
+  assert.equal(r.query.include_closed, "true");
+  const ins = await sql("SELECT DISTINCT insider FROM brk");
+  assert.deepEqual(ins.rows, [["berkshire-hathaway-inc"]]);
 });

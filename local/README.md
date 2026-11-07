@@ -24,48 +24,53 @@ Add to your MCP client config:
 
 Get an API key at [tickerdb.com/dashboard](https://tickerdb.com/dashboard).
 
-Works with Claude Desktop, Claude Code, Cursor, Windsurf, and any MCP client that supports stdio transport.
+Works with Claude Desktop, Claude Code, Cursor, Windsurf, and any MCP client that supports stdio transport. Needs Node 22.5 or newer (the table store uses `node:sqlite`).
+
+Optional environment: `TICKERDB_API_BASE` points the server at another TickerDB deployment (default `https://api.tickerdb.com/v1`); `TICKERDB_FETCH_MAX_PAGES` (500), `TICKERDB_FETCH_MAX_ROWS` (2,000,000) and `TICKERDB_INLINE_MAX_CHARS` (40,000; 0 = never auto-store) tune `fetch_all` and auto-storing.
 
 > **Prefer not to run a local process?** Connect directly to the hosted server at `https://mcp.tickerdb.com/mcp` with OAuth or Bearer token auth — no install needed. See the [main repo](https://github.com/tickerdb/tickerdb-mcp) for details.
 
 ## Tools
 
+Eight tools. Short descriptions keep the tool list small (about 14K characters including the server instructions, down from 43.5K); field lists live in `get_schema`, and the rarer endpoints sit behind `search_tools` / `call_tool`.
+
 | Tool | Description |
 |---|---|
-| `get_summary` | Technical + fundamental snapshot for a ticker. Historical lookups, state transition history, and what usually happens after |
-| `get_ohlcv` | Daily or weekly EOD candles for returns, charts, and backtests |
-| `get_search` | Screen assets by categorical state or rank by fields like `market_cap` or `pe_ratio` |
-| `get_schema` | Discover every field (ticker level and market level) and its valid band values |
-| `get_market` | Market and macro regime bands (market_*, macro_*): latest, history, regime changes; combine with `get_search` to screen tickers under a regime |
-| `get_changes` | What changed on the newest date for up to 50 tickers — day-over-day or week-over-week |
-| `get_universe` | Selected fields for every asset on one date, in one call (trading-model input) |
-| `get_insiders` | Find insiders (CEOs, directors, 10% owners, funds) by name, ticker or role |
-| `get_insider_trades` | One insider's disclosed trades by disclosure time (copy/inverse insider models) |
-| `get_funds` | Find ETFs and mutual funds that file SEC N-PORT holdings, by name or ticker |
-| `get_fund_holdings` | A fund's full portfolio as public on a date (point in time by filing date) |
-| `get_fund_holders` | Which funds held a stock on a date, plus its tracked index memberships |
-| `get_indexes` | Tracked indexes (S&P 500/400/600/100, Nasdaq-100, Russell 1000/2000) and their source funds |
-| `get_index_members` | An index's members on a date (point in time; also `member_of` in get_universe/get_search) |
-| `get_status` | When data was last released (daily/weekly, preliminary or final): poll this, not ticker tools |
-| `get_account` | Account details, plan tier, and usage |
+| `get_schema` | Look up field names, units and band values: `search="rsi zone"`, `category=patterns`, `level=market` |
+| `query` | Any cross-section or history. One date with filters, tickers, a sort or a limit screens and ranks (`/v1/search`); one date with only fields returns every asset (`/v1/universe`); `start`+`end` returns every row in the range (`/v1/history`, weekly by default past ~6 months) |
+| `get_summary` | One ticker: latest snapshot, a date, a series, or band events and what usually happens after (`field`, `band`, `stats=true`) |
+| `get_market` | Market (`market_*`) and economy (`macro_*`) regime rows, one per date, and regime changes |
+| `get_ohlcv` | Daily or weekly EOD candles for returns, charts and backtests |
+| `search_tools` | Find the other endpoints and their params: changes, insiders, insider trades and holdings, funds, fund holdings and holders, indexes, index members, status, account, raw search and universe |
+| `call_tool` | Run an endpoint found with `search_tools` |
+| `query_data` | Read-only SQL (SQLite) over results saved with `store_as` |
 
-All tools are available on every tier (Free, Plus, Pro, Business). Tiers differ by credit limits, history depth, and number of filters. See [tickerdb.com/pricing](https://tickerdb.com/pricing).
+**Large pulls stay out of the context.** Every data tool takes `store_as=<table>` (and `fetch_all=true` to follow every page): rows go into a SQLite table and the tool returns a short summary (row count, columns, five sample rows). Read them with `query_data` (`SELECT`/`WITH`, `SHOW TABLES`, `DESCRIBE <table>`; at most 200 rows back, `format=csv` for CSV text). Inline results over 40K characters are stored automatically. Where the tables live:
+
+- **stdio (`npx tickerdb-mcp`)**: in memory for the life of the process; `query_data` also takes `output_path` to write the full result to a CSV file.
+- **Hosted (`mcp.tickerdb.com`)**: a SQLite Durable Object per API key, deleted 24 hours after last use. No `output_path`.
+
+All tools are available on every plan; plans differ by credits, history depth and timeframe. See [tickerdb.com/pricing](https://tickerdb.com/pricing).
+
+### Upgrading from 2.x
+
+3.0 replaces the one-tool-per-route list. These tool names are gone: `get_search` and `get_universe` (use `query`, or `call_tool` with the same name for the raw route), and `get_changes`, `get_insiders`, `get_insider_trades`, `get_funds`, `get_fund_holdings`, `get_fund_holders`, `get_indexes`, `get_index_members`, `get_status`, `get_account` (use `call_tool` with the same name; its params are the route's query params). New: `get_insider_holdings` through `call_tool`. `get_schema`, `get_summary`, `get_market` and `get_ohlcv` keep their names.
 
 ## Quick start
 
-Connect TickerDB, then try:
+Connect TickerDB to Claude, ChatGPT, or another MCP client, then try:
 
 > **"Show me oversold large-cap stocks near support"**
 
-The agent calls `get_search` with filters for `momentum_rsi_zone = oversold` and `market_cap_tier in [large, mega]`, then follows up with `get_summary` on individual results. No raw number crunching — the agent reads categorical states and reasons over them directly.
+The agent looks up the field names with `get_schema`, then calls `query` with filters for `momentum_rsi_zone = oversold` and `market_cap_tier in [large, mega]`, and follows up with `get_summary` on individual results. The filtering happens on the server, not in the agent's context.
 
 > **"What usually happens when AAPL goes oversold?"**
 
 `get_summary` with `field=momentum_rsi_zone`, `band=oversold`, `stats=true` returns aggregate aftermath distributions: how the stock performed 5, 10, 20, 50, and 100 days after each oversold entry over 7 years of history.
 
-> **"What changed for AAPL, MSFT and NVDA today?"**
+> **"Weekly P/E of every S&P 500 stock since 2019"**
 
-`get_changes` returns only the field-level state transitions of the newest date — band entries, exits, and shifts — so the agent reports what moved without pulling full summaries for every ticker.
+`query` with `fields=["fundamentals_pe_ratio"]`, `member_of=sp500`, `start`/`end`, `store_as=pe` and `fetch_all=true` pulls the whole history into a table in one call; the agent then answers with SQL in `query_data` instead of reading hundreds of thousands of rows.
 
 ## Why not just pass raw OHLCV?
 

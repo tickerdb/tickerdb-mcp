@@ -13,6 +13,8 @@ export interface ParamSpec {
 
 export interface Op {
   name: string;
+  /** The /v1 route this op calls, as the website names its file: /funds/holders, /summary/[ticker]. */
+  apiRoute?: string;
   /** Long-tail ops only: one line for search_tools. */
   purpose?: string;
   /** Long-tail ops only: parameters for search_tools and call_tool validation. */
@@ -54,6 +56,7 @@ export function findRows(data: any): unknown[] | undefined {
 export const OPS: Record<string, Op> = {
   get_schema: {
     name: "get_schema",
+    apiRoute: "/schema/fields",
     request: (a) => ({
       path: "/schema/fields",
       query: { search: str(a.search), category: str(a.category), level: str(a.level), compact: str(a.compact), markers: str(a.markers) },
@@ -61,6 +64,7 @@ export const OPS: Record<string, Op> = {
   },
   get_search: {
     name: "get_search",
+    apiRoute: "/search",
     purpose: "Raw /v1/search: filter and rank assets on one date (or a date range with a market_/macro_ filter). The query tool routes here for you.",
     params: {
       filters: { type: "string", required: true, desc: "JSON array of {field, op, value}" },
@@ -72,6 +76,7 @@ export const OPS: Record<string, Op> = {
       start: { type: "YYYY-MM-DD" },
       end: { type: "YYYY-MM-DD" },
       limit: { type: "integer", desc: "max 500" },
+      offset: { type: "integer" },
       member_of: { type: "string" },
       held_by: { type: "string" },
     },
@@ -95,6 +100,7 @@ export const OPS: Record<string, Op> = {
   },
   get_summary: {
     name: "get_summary",
+    apiRoute: "/summary/[ticker]",
     request: (a) => ({
       path: `/summary/${encodeURIComponent(upper(a.ticker) ?? "")}`,
       query: {
@@ -122,6 +128,7 @@ export const OPS: Record<string, Op> = {
   },
   get_universe: {
     name: "get_universe",
+    apiRoute: "/universe",
     purpose: "Raw /v1/universe: selected fields (max 60) for every asset on one date. The query tool routes here for you.",
     params: {
       fields: { type: "string[]", required: true },
@@ -145,6 +152,7 @@ export const OPS: Record<string, Op> = {
   },
   get_market: {
     name: "get_market",
+    apiRoute: "/market",
     request: (a) => ({
       path: "/market",
       query: {
@@ -164,6 +172,7 @@ export const OPS: Record<string, Op> = {
   },
   get_ohlcv: {
     name: "get_ohlcv",
+    apiRoute: "/ohlcv/[ticker]",
     request: (a) => ({
       path: `/ohlcv/${encodeURIComponent(upper(a.ticker) ?? "")}`,
       query: {
@@ -184,6 +193,7 @@ export const OPS: Record<string, Op> = {
   // ---- Long tail: reached through search_tools / call_tool ----
   get_changes: {
     name: "get_changes",
+    apiRoute: "/changes",
     purpose: "Band changes on the newest date (day-over-day or week-over-week) for up to 50 tickers; one row per ticker and changed field.",
     params: {
       tickers: { type: "string[]", required: true, desc: "up to 50" },
@@ -205,26 +215,31 @@ export const OPS: Record<string, Op> = {
   },
   get_insiders: {
     name: "get_insiders",
-    purpose: "Find insiders (SEC Form 4 filers: CEOs, directors, 10% owners, funds) by loose name search, ticker, type or role; gives the slug for get_insider_trades.",
+    apiRoute: "/insiders",
+    purpose: "Find insiders (Form 4 officers, directors and 10% owners, 13F managers, Members of Congress) by loose name search, ticker, type, role or source; gives the slug for get_insider_trades and get_insider_holdings.",
     params: {
       q: { type: "string", desc: "name, e.g. jeff bezos" },
       ticker: { type: "string" },
       type: { type: "person|organization" },
-      role: { type: "ceo|cfo|coo|president|chair|officer|director|ten_percent_owner" },
+      role: {
+        type: "ceo|cfo|coo|president|chair|officer|director|ten_percent_owner|politician|member_house|member_senate|congress_filer|thirteen_f_manager|hedge_fund|private_equity|venture_capital|real_estate_fund|liquidity_fund|securitized_asset_fund|other_private_fund",
+      },
+      source: { type: "form4|13f|congress" },
       active_since: { type: "YYYY-MM-DD" },
       limit: { type: "integer", desc: "max 100" },
       offset: { type: "integer" },
     },
     request: (a) => ({
       path: "/insiders",
-      query: { q: str(a.q), ticker: upper(a.ticker), type: str(a.type), role: str(a.role), active_since: str(a.active_since), limit: str(a.limit), offset: str(a.offset) },
+      query: { q: str(a.q), ticker: upper(a.ticker), type: str(a.type), role: str(a.role), source: str(a.source), active_since: str(a.active_since), limit: str(a.limit), offset: str(a.offset) },
     }),
     paging: "offset",
     maxLimit: 100,
   },
   get_insider_trades: {
     name: "get_insider_trades",
-    purpose: "One insider's Form 4 trades by disclosure time. Backtests act at disclosed_at, never trade_date; open_market_only drops grants/exercises/gifts.",
+    apiRoute: "/insiders/trades",
+    purpose: "One insider's disclosed trades (Form 4, Congress) by disclosure time. Backtests act at disclosed_at, never trade_date; open_market_only drops grants/exercises/gifts.",
     params: {
       insider: { type: "string", required: true, desc: "slug from get_insiders" },
       start: { type: "YYYY-MM-DD" },
@@ -232,8 +247,10 @@ export const OPS: Record<string, Op> = {
       ticker: { type: "string" },
       open_market_only: { type: "boolean" },
       exclude_planned: { type: "boolean", desc: "drop Rule 10b5-1 trades" },
+      owner: { type: "self|SP|JT|DC", desc: "Congress: self, spouse, joint, child" },
+      exclude_options: { type: "boolean", desc: "Congress: drop option lines" },
       order: { type: "asc|desc" },
-      limit: { type: "integer", desc: "max 1000" },
+      limit: { type: "integer", desc: "max 500" },
       offset: { type: "integer" },
     },
     request: (a) => ({
@@ -245,17 +262,51 @@ export const OPS: Record<string, Op> = {
         ticker: upper(a.ticker),
         open_market_only: str(a.open_market_only),
         exclude_planned: str(a.exclude_planned),
+        owner: str(a.owner),
+        exclude_options: str(a.exclude_options),
         order: str(a.order),
         limit: str(a.limit),
         offset: str(a.offset),
       },
     }),
     paging: "offset",
-    maxLimit: 1000,
+    maxLimit: 500,
     hoist: (d) => ({ insider: d?.insider?.slug }),
+  },
+  get_insider_holdings: {
+    name: "get_insider_holdings",
+    apiRoute: "/insiders/holdings",
+    purpose: "What an insider's disclosures say they hold on a date, point in time by filing date: 13F positions, Form 4 shares after the last trade, or Congress trades (not a portfolio). basis says which.",
+    params: {
+      insider: { type: "string", required: true, desc: "slug from get_insiders" },
+      date: { type: "YYYY-MM-DD" },
+      source: { type: "13f|form4|congress" },
+      ticker: { type: "string" },
+      owner: { type: "self|SP|JT|DC", desc: "Congress" },
+      include_closed: { type: "boolean" },
+      limit: { type: "integer", desc: "max 1000" },
+      offset: { type: "integer" },
+    },
+    request: (a) => ({
+      path: "/insiders/holdings",
+      query: {
+        insider: lower(a.insider),
+        date: str(a.date),
+        source: str(a.source),
+        ticker: upper(a.ticker),
+        owner: str(a.owner),
+        include_closed: str(a.include_closed),
+        limit: str(a.limit),
+        offset: str(a.offset),
+      },
+    }),
+    paging: "offset",
+    maxLimit: 1000,
+    hoist: (d, a) => ({ insider: d?.insider?.slug ?? lower(a.insider) }),
   },
   get_funds: {
     name: "get_funds",
+    apiRoute: "/funds",
     purpose: "Find ETFs and mutual funds that file SEC N-PORT holdings, by name words or ticker; largest first.",
     params: {
       q: { type: "string" },
@@ -273,6 +324,7 @@ export const OPS: Record<string, Op> = {
   },
   get_fund_holdings: {
     name: "get_fund_holdings",
+    apiRoute: "/funds/holdings",
     purpose: "A fund's full N-PORT portfolio as public on a date (point in time by filing date), largest first.",
     params: {
       fund: { type: "string", required: true, desc: "fund ticker or SEC series id" },
@@ -290,6 +342,7 @@ export const OPS: Record<string, Op> = {
   },
   get_fund_holders: {
     name: "get_fund_holders",
+    apiRoute: "/funds/holders",
     purpose: "Which funds held a stock on a date (N-PORT, point in time), largest first, plus its tracked index memberships.",
     params: {
       ticker: { type: "string", required: true },
@@ -307,13 +360,15 @@ export const OPS: Record<string, Op> = {
   },
   get_indexes: {
     name: "get_indexes",
+    apiRoute: "/indexes",
     purpose: "Tracked indexes (sp500, sp400, sp600, sp100, nasdaq100, russell1000, russell2000), their source funds and member counts.",
     params: {},
     request: () => ({ path: "/indexes", query: {} }),
   },
   get_index_members: {
     name: "get_index_members",
-    purpose: "An index's members on a date, point in time (tracking fund's newest N-PORT filed by then). To screen members use member_of on get_search/get_universe.",
+    apiRoute: "/indexes/members",
+    purpose: "An index's members on a date, point in time (tracking fund's newest N-PORT filed by then). To screen members use member_of on query.",
     params: {
       index: { type: "string", required: true, desc: "e.g. sp500" },
       date: { type: "YYYY-MM-DD" },
@@ -323,12 +378,14 @@ export const OPS: Record<string, Op> = {
   },
   get_status: {
     name: "get_status",
+    apiRoute: "/status",
     purpose: "Free: newest published daily/weekly dates per asset class, preliminary or final, and the release schedule.",
     params: {},
     request: () => ({ path: "/status", query: {} }),
   },
   get_account: {
     name: "get_account",
+    apiRoute: "/account",
     purpose: "Your plan tier, credit limits and usage.",
     params: {},
     request: () => ({ path: "/account", query: {} }),

@@ -60,6 +60,7 @@ export function matches(row: Record<string, unknown>, f: Filter): boolean {
 
 const historyOp = (filters: Filter[]): Op => ({
   name: "query",
+  apiRoute: "/history",
   route: "/v1/history",
   request: (a) => {
     const tickers = a.tickers as string[] | undefined;
@@ -76,6 +77,7 @@ const historyOp = (filters: Filter[]): Op => ({
       adjustment: a.adjustment as string | undefined,
       limit: a.limit === undefined ? undefined : String(a.limit),
       page_token: a.page_token as string | undefined,
+      dry_run: a.dry_run === undefined ? undefined : String(a.dry_run),
     };
     if (tickers && tickers.length > HISTORY_POST_AFTER_TICKERS) {
       // Long lists go in a POST body (same parameters).
@@ -100,7 +102,8 @@ export const QUERY_OP: Op = {
     const filters = parseFilters(input.filters);
     const fields = parseList(input.fields);
     const tickers = parseList(input.tickers)?.map((t) => t.trim().toUpperCase());
-    const { date, start, end, sort_by, sort_direction, limit, asset_class, member_of, held_by, ohlcv, adjustment } = input as Record<string, any>;
+    const { date, start, end, sort_by, sort_direction, limit, offset, page_token, dry_run, asset_class, member_of, held_by, ohlcv, adjustment } =
+      input as Record<string, any>;
     let timeframe = input.timeframe as string | undefined;
 
     if (date && (start || end)) throw new Error("Pass either date, or start and end, not both.");
@@ -117,22 +120,24 @@ export const QUERY_OP: Op = {
         if (asset_class) all.push({ field: "asset_class", op: "eq", value: asset_class });
         return {
           op: { ...OPS.get_search, name: "query", route: "/v1/search" },
-          args: { filters: all, fields, sort_by, sort_direction, timeframe, start, end, limit, member_of, held_by },
+          args: { filters: all, fields, sort_by, sort_direction, timeframe, start, end, limit, offset, member_of, held_by },
         };
       }
+      if (offset !== undefined) throw new Error("offset pages one-date screens. A range pages with page_token (or fetch_all).");
       if (sort_by) throw new Error("sort_by works on one date. For a range, store_as then ORDER BY in query_data.");
       const wanted = fields ? [...fields] : [];
       for (const f of filters) if (f.field !== "ticker" && f.field !== "date" && !wanted.includes(f.field)) wanted.push(f.field);
       if (wanted.length === 0 && !ohlcv) throw new Error("A range needs fields (or ohlcv=true).");
       return {
         op: historyOp(filters),
-        args: { tickers, fields: wanted.length ? wanted : undefined, timeframe, start, end, asset_class, member_of, held_by, ohlcv, adjustment, limit },
+        args: { tickers, fields: wanted.length ? wanted : undefined, timeframe, start, end, asset_class, member_of, held_by, ohlcv, adjustment, limit, page_token, dry_run },
       };
     }
 
     // ---- One date (or latest) ----
     if (ohlcv || adjustment) throw new Error("ohlcv/adjustment apply to ranges; for one ticker's candles use get_ohlcv.");
-    const useSearch = filters.length > 0 || limit !== undefined || sort_by !== undefined || Boolean(tickers?.length);
+    if (page_token || dry_run) throw new Error("page_token and dry_run apply to ranges (start and end).");
+    const useSearch = filters.length > 0 || limit !== undefined || offset !== undefined || sort_by !== undefined || Boolean(tickers?.length);
     if (useSearch) {
       const all = [...filters];
       if (tickers?.length) all.push({ field: "ticker", op: "in", value: tickers });
@@ -142,7 +147,7 @@ export const QUERY_OP: Op = {
       const lim = limit ?? (tickers?.length ? Math.min(500, tickers.length) : undefined);
       return {
         op: { ...OPS.get_search, name: "query", route: "/v1/search", paging: "offset_full", maxLimit: 500 },
-        args: { filters: all, fields, sort_by, sort_direction, timeframe, date, limit: lim, member_of, held_by },
+        args: { filters: all, fields, sort_by, sort_direction, timeframe, date, limit: lim, offset, member_of, held_by },
       };
     }
     if (!fields?.length) throw new Error("Every asset on one date needs fields (max 60). Or add filters / a limit.");
