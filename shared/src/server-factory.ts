@@ -72,8 +72,15 @@ function split(args: Args) {
   return { rest, opts: { store_as: store_as as string | undefined, append: append as boolean | undefined, fetch_all: fetch_all as boolean | undefined } };
 }
 
-export function createTickerDbServer(apiKey: string, options: ServerOptions = {}): McpServer {
-  const ctx: RunContext = { apiKey, store: options.store, limits: { ...DEFAULT_LIMITS, ...options.limits } };
+/** apiKey may be a getter: the stdio server looks the key up per call (env, .env, config file). */
+export function createTickerDbServer(apiKey: string | (() => string), options: ServerOptions = {}): McpServer {
+  const ctx: RunContext = {
+    get apiKey() {
+      return typeof apiKey === "function" ? apiKey() : apiKey;
+    },
+    store: options.store,
+    limits: { ...DEFAULT_LIMITS, ...options.limits },
+  };
   const server = new McpServer(
     {
       name: "TickerDB",

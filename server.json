@@ -20,9 +20,9 @@
       },
       "environmentVariables": [
         {
-          "name": "TICKERDB_KEY",
-          "description": "Your TickerDB API key (get one at tickerdb.com/dashboard)",
-          "isRequired": true,
+          "name": "TICKERDB_API_KEY",
+          "description": "Your TickerDB API key. Optional: without it the server reads ./.env or the config file saved by device login (tickerdb.com/setup)",
+          "isRequired": false,
           "isSecret": true,
           "format": "string"
         }

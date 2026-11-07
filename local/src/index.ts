@@ -2,6 +2,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { setApiBase } from "../../shared/src/api-client.js";
 import { DEFAULT_LIMITS } from "../../shared/src/hybrid/run.js";
 import { createTickerDbServer } from "../../shared/src/server-factory.js";
+import { apiKeyGetter } from "./api-key.js";
 import { SqliteStore } from "./sqlite-store.js";
 
 // TICKERDB_API_BASE points the stdio server at another deployment; unset = production.
@@ -13,7 +14,9 @@ const envInt = (name: string, fallback: number) => {
   return raw !== undefined && raw !== "" && Number.isFinite(n) && n >= 0 ? n : fallback;
 };
 
-const server = createTickerDbServer(process.env.TICKERDB_KEY ?? "", {
+// Key lookup as on https://tickerdb.com/setup: TICKERDB_API_KEY env, then ./.env, then the
+// user config file. A missing key is not fatal: tools load and calls say how to get one.
+const server = createTickerDbServer(apiKeyGetter(), {
   store: new SqliteStore(),
   local: true,
   storeNote: "Tables live in memory for this server process.",

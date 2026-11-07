@@ -13,16 +13,21 @@ Add to your MCP client config:
   "mcpServers": {
     "tickerdb": {
       "command": "npx",
-      "args": ["tickerdb-mcp"],
-      "env": {
-        "TICKERDB_KEY": "tdb_your_api_key_here"
-      }
+      "args": ["tickerdb-mcp"]
     }
   }
 }
 ```
 
-Get an API key at [tickerdb.com/dashboard](https://tickerdb.com/dashboard).
+**API key.** The server looks for a key in the same order as [tickerdb.com/setup](https://tickerdb.com/setup):
+
+1. the `TICKERDB_API_KEY` environment variable (`TICKERDB_KEY`, the 2.x name, still works);
+2. a `TICKERDB_API_KEY=` line in the `.env` of the directory the server runs in;
+3. the user config file written by device login, `{"api_key": "tdb_..."}`:
+   - macOS / Linux: `$XDG_CONFIG_HOME/tickerdb/config.json` (default `~/.config/tickerdb/config.json`)
+   - Windows: `%APPDATA%\tickerdb\config.json`
+
+No key yet? Ask your agent to follow [tickerdb.com/setup](https://tickerdb.com/setup): device login gets a free key in one click and saves it to the config file, so the config above needs no `env` block. The server starts without a key; until one is found, tool calls return an error pointing to that page. The key is looked up again on each call until found, so no restart is needed, and it is never logged. To pass it explicitly instead, add `"env": {"TICKERDB_API_KEY": "tdb_..."}`.
 
 Works with Claude Desktop, Claude Code, Cursor, Windsurf, and any MCP client that supports stdio transport. Needs Node 22.5 or newer (the table store uses `node:sqlite`).
 
