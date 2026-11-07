@@ -502,3 +502,25 @@ test("call_tool get_insider_holdings (launch route) with its params", async () =
   const ins = await sql("SELECT DISTINCT insider FROM brk");
   assert.deepEqual(ins.rows, [["berkshire-hathaway-inc"]]);
 });
+
+test("every tool declares the shared output schema and returns structuredContent", async () => {
+  const { tools } = await client.listTools();
+  for (const t of tools) assert.deepEqual(Object.keys(t.outputSchema?.properties ?? {}), ["data"], t.name);
+
+  const inline = await call("call_tool", { name: "get_status" });
+  assert.deepEqual(inline.result.structuredContent, { data: inline.json });
+
+  const stored = await call("get_ohlcv", { ticker: "AAPL", store_as: "sc_check", fetch_all: true });
+  const data = stored.result.structuredContent.data;
+  assert.deepEqual(data, stored.json);
+  assert.equal(data.row_count, BAR_COUNT);
+  assert.equal(data.sample.length, 5, "a summary with sample rows, never the stored rows");
+  assert.equal(data.rows, undefined);
+
+  const q = await call("query_data", { sql: "SELECT count(*) FROM sc_check" });
+  assert.deepEqual(q.result.structuredContent.data.rows, [[BAR_COUNT]]);
+  const st = await call("search_tools", { query: "funds" });
+  assert.equal(st.result.structuredContent.data, st.text);
+  const err = await call("call_tool", { name: "get_nope" });
+  assert.equal(err.result.isError, true);
+});

@@ -6,7 +6,7 @@ Pre-computed stock market data for AI agents. TickerDB returns indicators like `
 
 ## Tools
 
-Eight tools. Short descriptions keep the tool list small (about 14K characters including the server instructions, down from 43.5K); field lists live in `get_schema`, and the rarer endpoints sit behind `search_tools` / `call_tool`.
+Eight tools. Short descriptions keep the tool list small (about 15K characters including the server instructions, down from 43.5K); field lists live in `get_schema`, and the rarer endpoints sit behind `search_tools` / `call_tool`.
 
 | Tool | Description |
 |---|---|

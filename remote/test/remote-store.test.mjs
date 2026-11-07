@@ -53,12 +53,16 @@ test("remote serves the same tools; query_data has format but no output_path", a
   const qd = tools.find((t) => t.name === "query_data");
   assert.deepEqual(Object.keys(qd.inputSchema.properties).sort(), ["format", "max_rows", "sql"]);
   for (const t of tools) assert.deepEqual(t._meta?.securitySchemes, [{ type: "oauth2", scopes: ["tickerdb"] }], t.name);
+  for (const t of tools) assert.deepEqual(Object.keys(t.outputSchema?.properties ?? {}), ["data"], t.name);
 });
 
 test("store_as + fetch_all lands in the Durable Object, across stateless requests", async () => {
   const { json, text } = await call("get_ohlcv", { ticker: "AAPL", store_as: "aapl", fetch_all: true });
   assert.equal(json?.row_count, 2500, text);
   assert.equal(json.pages, 3);
+  const { structuredContent } = (await call("get_ohlcv", { ticker: "AAPL", store_as: "aapl", fetch_all: true })).result;
+  assert.equal(structuredContent.data.row_count, 2500);
+  assert.equal(structuredContent.data.sample.length, 5);
   const agg = await sql("SELECT count(*), min(date), max(date), count(DISTINCT ticker) FROM aapl");
   assert.deepEqual(agg.rows, [[2500, "2015-01-01", "2021-11-04", 1]]);
   const capped = await sql("SELECT date FROM aapl ORDER BY date");

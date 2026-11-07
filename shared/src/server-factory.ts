@@ -6,7 +6,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { OPS, checkParams, describeOp, searchOps } from "./hybrid/ops.js";
 import { QUERY_OP } from "./hybrid/query.js";
-import { DEFAULT_LIMITS, NO_STORE, runOp, text, type RunContext, type RunLimits } from "./hybrid/run.js";
+import { DEFAULT_LIMITS, NO_STORE, ok, runOp, text, type RunContext, type RunLimits } from "./hybrid/run.js";
 import { QUERY_MAX_ROWS, type DataStore } from "./hybrid/store.js";
 
 /** Keep aligned with server.json and local/package.json. */
@@ -20,6 +20,13 @@ export const FIRST_CLASS_ROUTES: Record<string, string[]> = {
   get_market: ["/market"],
   get_ohlcv: ["/ohlcv/[ticker]"],
 };
+
+/**
+ * The one output schema every tool declares (ChatGPT apps read structuredContent):
+ * { data } is the API response, a stored-table summary, a query_data result, or
+ * search_tools' endpoint list.
+ */
+export const OUTPUT_SCHEMA = { data: z.unknown().describe("The tool's result.") };
 
 /** Tool arguments the MCP server handles itself; they are never sent to the API. */
 export const MCP_ONLY_PARAMS = ["store_as", "append", "fetch_all"];
@@ -76,8 +83,8 @@ export function createTickerDbServer(apiKey: string, options: ServerOptions = {}
     },
     { instructions: SERVER_INSTRUCTIONS },
   );
-  const meta = (tool: { update(u: { _meta?: Record<string, unknown> }): void }) => {
-    if (options.toolMeta) tool.update({ _meta: options.toolMeta });
+  const meta = (tool: { update(u: { outputSchema?: typeof OUTPUT_SCHEMA; _meta?: Record<string, unknown> }): void }) => {
+    tool.update({ outputSchema: OUTPUT_SCHEMA, ...(options.toolMeta ? { _meta: options.toolMeta } : {}) });
   };
 
   const run = (name: string) => async (args: Args) => {
@@ -210,7 +217,7 @@ export function createTickerDbServer(apiKey: string, options: ServerOptions = {}
     async ({ query }) => {
       const ops = searchOps(query ?? "");
       const body = ops.length ? ops.map(describeOp).join("\n") : `No match. Try: ${searchOps("").map((o) => o.name).join(", ")}.`;
-      return text(body);
+      return ok(body, body);
     },
   ));
 
@@ -260,7 +267,7 @@ export function createTickerDbServer(apiKey: string, options: ServerOptions = {}
           format: args.format as "json" | "csv" | undefined,
           outputPath: options.local ? (args.output_path as string | undefined) : undefined,
         });
-        return text(JSON.stringify(result));
+        return ok(result);
       } catch (e) {
         return text((e as Error).message, true);
       }

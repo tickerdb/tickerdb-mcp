@@ -5,7 +5,11 @@ import { findRows, type Op } from "./ops.js";
 import { flattenRow, type DataStore } from "./store.js";
 
 type Args = Record<string, unknown>;
-export type ToolResult = { content: Array<{ type: "text"; text: string }>; isError?: boolean };
+export type ToolResult = {
+  content: Array<{ type: "text"; text: string }>;
+  structuredContent?: { data: unknown };
+  isError?: boolean;
+};
 
 export interface RunLimits {
   /** fetch_all stops after this many pages. */
@@ -36,6 +40,16 @@ export interface StoreOptions {
 export const NO_STORE = "store_as, fetch_all and query_data are not available on this server.";
 
 export const text = (t: string, isError = false): ToolResult => ({ content: [{ type: "text", text: t }], ...(isError ? { isError } : {}) });
+
+/**
+ * A successful result: the text for every client plus structuredContent { data }
+ * for ChatGPT apps (every tool declares OUTPUT_SCHEMA). A stored result's data is
+ * its summary, never the stored rows.
+ */
+export const ok = (data: unknown, body = JSON.stringify(data)): ToolResult => ({
+  content: [{ type: "text", text: body }],
+  structuredContent: { data },
+});
 
 const tablePrefix = (op: Op) => op.name.replace(/^get_/, "");
 
@@ -114,7 +128,7 @@ export async function runOp(ctx: RunContext, baseOp: Op, args: Args, opts: Store
       const auto = await store.autoName(tablePrefix(op));
       return storePages(ctx, store, op, args, { store_as: auto }, { status, data }, `Result was ${body.length} chars, so it was stored instead of returned.`);
     }
-    return text(body);
+    return ok(data, body);
   }
   return storePages(ctx, store, op, args, { ...opts, store_as: table });
 }
@@ -231,5 +245,5 @@ async function storePages(
     response: meta,
     next: `query_data with SQL over ${table}`,
   };
-  return text(JSON.stringify(summary));
+  return ok(summary);
 }
