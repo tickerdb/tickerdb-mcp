@@ -6,35 +6,45 @@ Pre-computed stock market data for AI agents. TickerDB returns indicators like `
 
 ## Tools
 
+Eight tools. Short descriptions keep the tool list small (about 15K characters including the server instructions, down from 43.5K); field lists live in `get_schema`, and the rarer endpoints sit behind `search_tools` / `call_tool`.
+
 | Tool | Description |
 |---|---|
-| `get_summary` | Technical + fundamental snapshot for a ticker. Historical lookups, state transition history, and what usually happens after |
-| `get_ohlcv` | Daily or weekly EOD candles for returns, charts, and backtests |
-| `get_search` | Screen assets by categorical state or rank by fields like `market_cap` or `pe_ratio` |
-| `get_schema` | Discover all 182 fields and their valid band values |
-| `get_watchlist` | Full analytical summary for every ticker on your saved watchlist |
-| `get_watchlist_changes` | What changed on your watchlist — day-over-day or week-over-week |
-| `add_to_watchlist` | Add tickers to your watchlist |
-| `remove_from_watchlist` | Remove tickers from your watchlist |
-| `get_account` | Account details, plan tier, and usage |
+| `get_schema` | Look up field names, units and band values: `search="rsi zone"`, `category=patterns`, `level=market` |
+| `query` | Any cross-section or history. One date with filters, tickers, a sort or a limit screens and ranks (`/v1/search`); one date with only fields returns every asset (`/v1/universe`); `start`+`end` returns every row in the range (`/v1/history`, weekly by default past ~6 months) |
+| `get_summary` | One ticker: latest snapshot, a date, a series, or band events and what usually happens after (`field`, `band`, `stats=true`) |
+| `get_market` | Market (`market_*`) and economy (`macro_*`) regime rows, one per date, and regime changes |
+| `get_ohlcv` | Daily or weekly EOD candles for returns, charts and backtests |
+| `search_tools` | Find the other endpoints and their params: changes, insiders, insider trades and holdings, funds, fund holdings and holders, indexes, index members, status, account, raw search and universe |
+| `call_tool` | Run an endpoint found with `search_tools` |
+| `query_data` | Read-only SQL (SQLite) over results saved with `store_as` |
 
-All tools are available on every tier (Free, Plus, Pro). Tiers differ by credit limits, history depth, number of filters, and watchlist size. See [tickerdb.com/pricing](https://tickerdb.com/pricing).
+**Large pulls stay out of the context.** Every data tool takes `store_as=<table>` (and `fetch_all=true` to follow every page): rows go into a SQLite table and the tool returns a short summary (row count, columns, five sample rows). Read them with `query_data` (`SELECT`/`WITH`, `SHOW TABLES`, `DESCRIBE <table>`; at most 200 rows back, `format=csv` for CSV text). Inline results over 40K characters are stored automatically. Where the tables live:
+
+- **stdio (`npx tickerdb-mcp`)**: in memory for the life of the process; `query_data` also takes `output_path` to write the full result to a CSV file.
+- **Hosted (`mcp.tickerdb.com`)**: a SQLite Durable Object per API key, deleted 24 hours after last use. No `output_path`.
+
+All tools are available on every plan; plans differ by credits, history depth and timeframe. See [tickerdb.com/pricing](https://tickerdb.com/pricing).
+
+### Upgrading from 2.x
+
+3.0 replaces the one-tool-per-route list. These tool names are gone: `get_search` and `get_universe` (use `query`, or `call_tool` with the same name for the raw route), and `get_changes`, `get_insiders`, `get_insider_trades`, `get_funds`, `get_fund_holdings`, `get_fund_holders`, `get_indexes`, `get_index_members`, `get_status`, `get_account` (use `call_tool` with the same name; its params are the route's query params). New: `get_insider_holdings` through `call_tool`. `get_schema`, `get_summary`, `get_market` and `get_ohlcv` keep their names.
 
 ## Quick start
 
-Connect TickerDB to Claude, ChatGPT, or another MCP client (see [Setup](#setup) below), then try:
+Connect TickerDB to Claude, ChatGPT, or another MCP client, then try:
 
 > **"Show me oversold large-cap stocks near support"**
 
-The agent calls `get_search` with filters for `momentum_rsi_zone = oversold` and `market_cap_tier in [large, mega]`, then follows up with `get_summary` on individual results. No raw number crunching — the agent reads categorical states and reasons over them directly.
+The agent looks up the field names with `get_schema`, then calls `query` with filters for `momentum_rsi_zone = oversold` and `market_cap_tier in [large, mega]`, and follows up with `get_summary` on individual results. The filtering happens on the server, not in the agent's context.
 
 > **"What usually happens when AAPL goes oversold?"**
 
 `get_summary` with `field=momentum_rsi_zone`, `band=oversold`, `stats=true` returns aggregate aftermath distributions: how the stock performed 5, 10, 20, 50, and 100 days after each oversold entry over 7 years of history.
 
-> **"What changed on my watchlist?"**
+> **"Weekly P/E of every S&P 500 stock since 2019"**
 
-`get_watchlist_changes` returns only the field-level state transitions since the last pipeline run — band entries, exits, and shifts — so the agent reports what moved without pulling full summaries for every ticker.
+`query` with `fields=["fundamentals_pe_ratio"]`, `member_of=sp500`, `start`/`end`, `store_as=pe` and `fetch_all=true` pulls the whole history into a table in one call; the agent then answers with SQL in `query_data` instead of reading hundreds of thousands of rows.
 
 ## Why not just pass raw OHLCV?
 
@@ -82,11 +92,11 @@ Get an API key at [tickerdb.com/dashboard](https://tickerdb.com/dashboard).
 
 Three-package monorepo:
 
-- **`shared/`** — Tool definitions, API client, and server factory (internal)
+- **`shared/`** — Tool definitions, endpoint catalog (`shared/src/hybrid/ops.ts`), `query` routing, API client, and server factory (internal)
 - **`remote/`** — Cloudflare Worker at `mcp.tickerdb.com` (Streamable HTTP + OAuth 2.1)
 - **`local/`** — Published npm package `tickerdb-mcp` (stdio)
 
-Both transports use the same tool definitions. The MCP server is a thin proxy — access control, rate limiting, and field filtering are handled by the TickerDB API.
+Both transports use the same tool definitions; only the `store_as` table store differs (`local/src/sqlite-store.ts`, `remote/src/store.ts`). The MCP server is a thin client — access control, rate limiting, and field filtering are handled by the TickerDB API.
 
 ### Authentication
 
@@ -97,16 +107,23 @@ Unauthenticated `initialize` and `tools/list` are permitted for tool discovery; 
 
 ### Session strategy
 
-The remote worker defaults to **stateless transport** — intentionally. All tools are request/response stateless, and Cloudflare Worker memory is isolate-local. Stateless mode avoids edge session loss that can invalidate connector-discovered namespaces. Set `MCP_SESSION_MODE=stateful` for explicit session debugging.
+The remote worker defaults to **stateless transport** — intentionally. Cloudflare Worker memory is isolate-local, and stateless mode avoids edge session loss that can invalidate connector-discovered namespaces. Set `MCP_SESSION_MODE=stateful` for explicit session debugging. The only state is the `store_as` tables, which live in the `TickerDbStore` Durable Object (binding `TICKERDB_STORE`, SQLite storage, one object per API key, everything deleted by an alarm 24 hours after last use), so they survive across stateless requests.
 
 ## Development
 
 ```bash
 npm install                              # workspace dependencies
 npm run build                            # type-check remote + shared
+npx wrangler deploy --dry-run --outdir /tmp/mcp-build  # bundle the Worker without deploying
 npx wrangler dev                         # remote dev server
 cd local && npm install && npm run build  # npm package
+
+# Tests
+cd local && npm test                            # stdio server against a stub API
+TICKERDB_WEBSITE_DIR=../tickerdb.com npm test   # Worker tests + API parity
 ```
+
+The parity test (`remote/test/api-parity.test.mjs`) reads the website checkout at `TICKERDB_WEBSITE_DIR` (default `../tickerdb.com`) and fails when a public `/v1` route is not reachable through a first-class tool or `call_tool`, or when a tool's params differ from its route's.
 
 ## Deployment
 

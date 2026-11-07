@@ -34,12 +34,45 @@
 	// Bindings are NOT inherited by environments. Every env below repeats its own
 	// hyperdrive and services, deliberately: an env that omits one silently falls
 	// back to no binding rather than to the top-level value.
+	"durable_objects": {
+		"bindings": [
+			{
+				"name": "TICKERDB_STORE",
+				"class_name": "TickerDbStore"
+			}
+		]
+	},
+	// Durable Object store for MCP store_as / query_data (remote/src/store.ts), one object per API key.
+	"migrations": [
+		{
+			"tag": "v1-table-store",
+			"new_sqlite_classes": [
+				"TickerDbStore"
+			]
+		}
+	],
 	"env": {
 		"production": {
 			// Deploy: wrangler deploy --env production
 			// Mirrors the top level so the production target is explicit rather
 			// than implied by whatever happens to sit outside "env".
 			"name": "tickerdb-mcp",
+			"durable_objects": {
+				"bindings": [
+					{
+						"name": "TICKERDB_STORE",
+						"class_name": "TickerDbStore"
+					}
+				]
+			},
+			"migrations": [
+				{
+					"tag": "v1-table-store",
+					"new_sqlite_classes": [
+						"TickerDbStore"
+					]
+				}
+			],
 			"services": [
 				{
 					"binding": "TICKERDB",
@@ -55,6 +88,22 @@
 		},
 		"staging": {
 			"name": "tickerdb-mcp-staging",
+			"durable_objects": {
+				"bindings": [
+					{
+						"name": "TICKERDB_STORE",
+						"class_name": "TickerDbStore"
+					}
+				]
+			},
+			"migrations": [
+				{
+					"tag": "v1-table-store",
+					"new_sqlite_classes": [
+						"TickerDbStore"
+					]
+				}
+			],
 			"services": [
 				{
 					"binding": "TICKERDB",

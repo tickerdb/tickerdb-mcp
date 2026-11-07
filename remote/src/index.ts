@@ -1,7 +1,8 @@
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
-import { createTickerDbServer } from "../../shared/src/server-factory.js";
+import { createTickerDbServer, type ServerOptions } from "../../shared/src/server-factory.js";
 import { initApiClient } from "../../shared/src/api-client.js";
+import { RemoteStore, STORE_TTL_MS } from "./store.js";
 import {
   handleAuthorizationServerMetadata,
   handleProtectedResourceMetadata,
@@ -13,10 +14,34 @@ import {
   type Env,
 } from "./oauth/handlers.js";
 
+export { TickerDbStore } from "./store.js";
+
 const SESSION_TTL_MS = 60 * 60 * 1000;
 const DEFAULT_SESSION_MODE = "stateless";
 const STATELESS_ALLOW_HEADER = "POST, OPTIONS";
 const PUBLIC_DISCOVERY_API_KEY = "__public_discovery__";
+
+/** Tool _meta for ChatGPT apps: every tool call needs the tickerdb OAuth scope. */
+const TOOL_META: Record<string, unknown> = {
+  securitySchemes: [{ type: "oauth2", scopes: ["tickerdb"] }],
+};
+
+/**
+ * Worker limits for store_as / fetch_all: fewer pages than the stdio server (each
+ * page is a subrequest plus a store call) and smaller /v1/history pages so a page
+ * stays well inside isolate memory.
+ */
+const REMOTE_LIMITS = { maxPages: 200, maxRows: 1_000_000, inlineMaxChars: 40_000, historyPageRows: 10_000 };
+
+function serverOptions(apiKey: string, env: Env): ServerOptions {
+  const ttlHours = STORE_TTL_MS / 3_600_000;
+  return {
+    store: env.TICKERDB_STORE && apiKey !== PUBLIC_DISCOVERY_API_KEY ? new RemoteStore(env.TICKERDB_STORE, apiKey) : undefined,
+    limits: REMOTE_LIMITS,
+    toolMeta: TOOL_META,
+    storeNote: `Tables are kept per API key and deleted ${ttlHours} h after last use; format=csv returns CSV text.`,
+  };
+}
 
 type SessionMode = "stateless" | "stateful";
 type AuthMode =
@@ -235,6 +260,7 @@ export default {
     try {
       const transport = await resolveTransport({
         apiKey,
+        env,
         sessionId,
         isInit,
         sessionMode,
@@ -299,19 +325,21 @@ export default {
 
 async function resolveTransport({
   apiKey,
+  env,
   sessionId,
   isInit,
   sessionMode,
   requestId,
 }: {
   apiKey: string;
+  env: Env;
   sessionId: string | null;
   isInit: boolean;
   sessionMode: SessionMode;
   requestId: string;
 }): Promise<WebStandardStreamableHTTPServerTransport> {
   if (sessionMode === "stateless") {
-    return createStatelessTransport(apiKey);
+    return createStatelessTransport(apiKey, env);
   }
 
   if (sessionId) {
@@ -333,7 +361,7 @@ async function resolveTransport({
   }
 
   if (isInit) {
-    return createStatefulTransport(apiKey);
+    return createStatefulTransport(apiKey, env);
   }
 
   throw new TransportResolutionError(
@@ -359,8 +387,9 @@ async function resolveApiKey(bearerToken: string, env: Env): Promise<string | nu
 
 async function createStatefulTransport(
   apiKey: string,
+  env: Env,
 ): Promise<WebStandardStreamableHTTPServerTransport> {
-  const server = createTickerDbServer(apiKey);
+  const server = createTickerDbServer(apiKey, serverOptions(apiKey, env));
   let transport!: WebStandardStreamableHTTPServerTransport;
 
   transport = new WebStandardStreamableHTTPServerTransport({
@@ -389,8 +418,9 @@ async function createStatefulTransport(
 
 async function createStatelessTransport(
   apiKey: string,
+  env: Env,
 ): Promise<WebStandardStreamableHTTPServerTransport> {
-  const server = createTickerDbServer(apiKey);
+  const server = createTickerDbServer(apiKey, serverOptions(apiKey, env));
   const transport = new WebStandardStreamableHTTPServerTransport({
     sessionIdGenerator: undefined,
     enableJsonResponse: true,

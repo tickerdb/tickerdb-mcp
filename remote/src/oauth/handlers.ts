@@ -20,6 +20,7 @@ import {
   type McpDB,
 } from './db.js';
 import { sha256, generateToken, verifyPkceS256, aesEncrypt, aesDecrypt } from './crypto.js';
+import type { TickerDbStore } from "../store.js";
 
 const ACCESS_TOKEN_LIFETIME = 3600; // 1 hour
 const REFRESH_TOKEN_LIFETIME = 30 * 24 * 3600; // 30 days
@@ -34,6 +35,7 @@ export interface Env {
   MCP_SESSION_MODE?: string; // optional override: "stateless" (default) or "stateful"
   OPENAI_APPS_CHALLENGE_TOKEN?: string; // optional domain verification token
   TICKERDB?: { fetch: typeof fetch }; // Service binding to the tickerdb Worker
+  TICKERDB_STORE?: DurableObjectNamespace<TickerDbStore>; // store_as / query_data tables, one object per API key
 }
 
 // ── Discovery metadata ───────────────────────────────────────────────────────

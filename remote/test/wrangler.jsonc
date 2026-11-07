@@ -1,5 +1,7 @@
 {
   "main": "../src/index.ts",
   "compatibility_date": "2026-03-10",
-  "compatibility_flags": ["nodejs_compat"]
+  "compatibility_flags": ["nodejs_compat"],
+  "durable_objects": { "bindings": [{ "name": "TICKERDB_STORE", "class_name": "TickerDbStore" }] },
+  "migrations": [{ "tag": "v1-table-store", "new_sqlite_classes": ["TickerDbStore"] }]
 }
