@@ -12,7 +12,7 @@ export function formatApiError(
     case 403:
       message =
         errorObj?.message ??
-        "This endpoint requires a higher-tier plan.";
+        "Your plan does not include this date (history depth is per plan). See https://tickerdb.com/pricing.";
       break;
     case 404:
       message = errorObj?.message ?? "Resource not found.";

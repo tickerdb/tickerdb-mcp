@@ -2,7 +2,7 @@
 
 Pre-computed stock market data for AI agents. TickerDB returns indicators like `trend_direction`, `support_level`, and `analyst_consensus` as named states — plus what *changed* and what *usually happens next*.
 
-10,000+ US stocks, ETFs, and crypto pairs · 182 indicators across trend, momentum, volatility, volume, patterns, support/resistance, fundamentals, and sector context · 7 years of history · [tickerdb.com](https://tickerdb.com)
+10,000+ US stocks, ETFs, and crypto pairs · 182 indicators across trend, momentum, volatility, volume, patterns, support/resistance, fundamentals, and sector context · history from 2019 · [tickerdb.com](https://tickerdb.com)
 
 ## Setup
 
@@ -55,7 +55,7 @@ Eight tools. Short descriptions keep the tool list small (about 15K characters i
 - **stdio (`npx tickerdb-mcp`)**: in memory for the life of the process; `query_data` also takes `output_path` to write the full result to a CSV file.
 - **Hosted (`mcp.tickerdb.com`)**: a SQLite Durable Object per API key, deleted 24 hours after last use. No `output_path`.
 
-All tools are available on every plan; plans differ by credits, history depth and timeframe. See [tickerdb.com/pricing](https://tickerdb.com/pricing).
+All tools, fields and timeframes (daily and weekly) are available on every plan; plans differ by credits and history depth: Free reads the last 30 days (125 credits a month), Plus the last 4 years, Pro and Commercial all history from 2019. See [tickerdb.com/pricing](https://tickerdb.com/pricing).
 
 ### Upgrading from 2.x
 
@@ -71,7 +71,7 @@ The agent looks up the field names with `get_schema`, then calls `query` with fi
 
 > **"What usually happens when AAPL goes oversold?"**
 
-`get_summary` with `field=momentum_rsi_zone`, `band=oversold`, `stats=true` returns aggregate aftermath distributions: how the stock performed 5, 10, 20, 50, and 100 days after each oversold entry over 7 years of history.
+`get_summary` with `field=momentum_rsi_zone`, `band=oversold`, `stats=true` returns aggregate aftermath distributions: how the stock performed 5, 10, 20, 50, and 100 days after each oversold entry across the history your plan reads (all history from 2019 on Pro and Commercial).
 
 > **"Weekly P/E of every S&P 500 stock since 2019"**
 

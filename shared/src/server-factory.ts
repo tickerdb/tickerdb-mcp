@@ -55,7 +55,7 @@ export interface ServerOptions {
 
 const RO = { readOnlyHint: true, destructiveHint: false, openWorldHint: true };
 
-const tf = z.enum(["daily", "weekly"]).optional().describe("Default: daily on Pro/Commercial, weekly on Free/Plus.");
+const tf = z.enum(["daily", "weekly"]).optional().describe("Default: daily (every plan reads daily and weekly).");
 const day = (what: string) => z.string().optional().describe(`${what} (YYYY-MM-DD).`);
 const storeParams = {
   store_as: z.string().optional().describe("Table name: store rows in SQLite, return only a summary. Read with query_data."),
@@ -127,7 +127,7 @@ export function createTickerDbServer(apiKey: string | (() => string), options: S
       date: day("One date; default latest"),
       start: day("Range start, with end"),
       end: day("Range end"),
-      timeframe: z.enum(["daily", "weekly"]).optional().describe("Default: weekly for ranges over ~6 months, else your plan's default."),
+      timeframe: z.enum(["daily", "weekly"]).optional().describe("Default: weekly for ranges over ~6 months, else daily."),
       asset_class: z.enum(["stock", "etf", "crypto"]).optional(),
       member_of: z.string().optional().describe("Index id, e.g. sp500 (point in time)."),
       held_by: z.string().optional().describe("Fund ticker or SEC series id."),
