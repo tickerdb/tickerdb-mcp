@@ -31,6 +31,8 @@ const skip = existsSync(API) ? false : `no website checkout at ${WEBSITE}`;
 /** Routes that are not reachable from MCP, with the reason. */
 const NOT_TOOLS = {
   "/stripe/webhook": "billing webhook, not a public endpoint",
+  "/auth/device/index": "device login for agents without a key; an MCP already has one",
+  "/auth/device/token": "device login polling; an MCP already has a key",
 };
 
 /** Query parameters a route reads that the MCP deliberately omits, with the reason. */
