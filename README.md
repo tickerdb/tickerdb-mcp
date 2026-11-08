@@ -24,7 +24,7 @@ Eight tools. Short descriptions keep the tool list small (about 15K characters i
 - **stdio (`npx tickerdb-mcp`)**: in memory for the life of the process; `query_data` also takes `output_path` to write the full result to a CSV file.
 - **Hosted (`mcp.tickerdb.com`)**: a SQLite Durable Object per API key, deleted 24 hours after last use. No `output_path`.
 
-All tools, fields and timeframes (daily and weekly) are available on every plan; plans differ by credits and history depth: Free reads the last 30 days (125 credits a month), Plus the last 3 years, Pro and Commercial all history from 2019. See [tickerdb.com/pricing](https://tickerdb.com/pricing).
+All tools, fields and timeframes (daily and weekly) are available on every plan; plans differ by credits and history depth: Free reads the last 30 days (250 credits a month), Plus the last 3 years, Pro and Commercial all history from 2019. See [tickerdb.com/pricing](https://tickerdb.com/pricing).
 
 ### Upgrading from 2.x
 
