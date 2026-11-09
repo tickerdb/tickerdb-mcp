@@ -276,7 +276,7 @@ export const OPS: Record<string, Op> = {
   get_insider_holdings: {
     name: "get_insider_holdings",
     apiRoute: "/insiders/holdings",
-    purpose: "What an insider's disclosures say they hold on a date, point in time by filing date: 13F positions, Form 4 shares after the last trade, or Congress trades (not a portfolio). basis says which.",
+    purpose: "What an insider's disclosures say they hold on a date, point in time by filing date: 13F positions; Form 4 shares last stated (after a trade, or on a Form 3/4/5 holding row); Congress: the last annual report's rows (stated) beside what trades since imply (never netted, not a portfolio). basis and reported_by_filer say which.",
     params: {
       insider: { type: "string", required: true, desc: "slug from get_insiders" },
       date: { type: "YYYY-MM-DD" },
