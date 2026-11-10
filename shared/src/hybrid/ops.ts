@@ -41,7 +41,7 @@ const upper = (v: unknown) => str(v)?.trim().toUpperCase();
 const lower = (v: unknown) => str(v)?.trim().toLowerCase();
 const json = (v: unknown) => (v === undefined || v === null ? undefined : typeof v === "string" ? v : JSON.stringify(v));
 
-const ROW_KEYS = ["rows", "results", "bars", "trades", "insiders", "funds", "holdings", "members", "indexes", "events", "fields"];
+const ROW_KEYS = ["rows", "results", "bars", "trades", "insiders", "funds", "holdings", "members", "indexes", "models", "events", "fields"];
 
 /** Default row finder: a known array key, else the first array of objects. */
 export function findRows(data: any): unknown[] | undefined {
@@ -375,6 +375,141 @@ export const OPS: Record<string, Op> = {
     },
     request: (a) => ({ path: "/indexes/members", query: { index: lower(a.index), date: str(a.date) } }),
     hoist: (d) => ({ index: d?.index, date: d?.date }),
+  },
+  // ---- The model level: TickerDB's own trading models (/v1/models). All six are Pro and Commercial only:
+  // the API answers 403 tier_restricted on Free and Plus. ----
+  get_models: {
+    name: "get_models",
+    apiRoute: "/models",
+    purpose: "TickerDB's own trading models (model level, model_* fields): each model's description, status (backtest or live), newest row and stats per segment. Backtest rows are replays; live rows were decided on the day. Not investment advice. Pro and Commercial plans.",
+    params: {
+      asset_class: { type: "stock|crypto" },
+      filters: { type: "string", desc: "JSON array of {field, op, value} on model fields, applied to each model's newest row" },
+      sort_by: { type: "string", desc: "a numeric model field, e.g. model_return_1y_pct; default slug" },
+      order: { type: "asc|desc", desc: "with sort_by; default desc" },
+    },
+    request: (a) => ({
+      path: "/models",
+      query: { asset_class: str(a.asset_class), filters: json(a.filters), sort_by: str(a.sort_by), order: str(a.order) },
+    }),
+  },
+  get_model: {
+    name: "get_model",
+    apiRoute: "/models/[slug]",
+    purpose: "One trading model: its rules, params and the fields it reads, the newest row with every band's change markers, and stats (backtest, live, all) with yearly returns. Pro and Commercial plans.",
+    params: {
+      slug: { type: "string", required: true, desc: "model id from get_models, e.g. garp-core-10" },
+    },
+    request: (a) => ({ path: `/models/${encodeURIComponent(lower(a.slug) ?? "")}`, query: {} }),
+    // One row: the model's newest values (the response's `fields` is a list of names, not rows).
+    rows: (d) => (d?.model ? [{ model: d.model, status: d.status, as_of: d.as_of, ...(d.latest ?? {}) }] : undefined),
+  },
+  get_model_history: {
+    name: "get_model_history",
+    apiRoute: "/models/[slug]/history",
+    purpose: "A trading model's rows over time, one per date: equity, returns, drawdown, exposure, bands and change markers. model_segment says backtest (a replay) or live (decided on the day). Pro and Commercial plans.",
+    params: {
+      slug: { type: "string", required: true, desc: "model id from get_models" },
+      start: { type: "YYYY-MM-DD" },
+      end: { type: "YYYY-MM-DD" },
+      fields: { type: "string", desc: 'JSON array of model fields; default every value; ["*"] adds change markers' },
+      order: { type: "asc|desc", desc: "default desc" },
+      limit: { type: "integer", desc: "default 100, max 2000" },
+    },
+    request: (a) => ({
+      path: `/models/${encodeURIComponent(lower(a.slug) ?? "")}/history`,
+      query: { start: str(a.start), end: str(a.end), fields: json(a.fields), order: str(a.order), limit: str(a.limit) },
+    }),
+    paging: "date",
+    maxLimit: 2000,
+    hoist: (d, a) => ({ model: d?.model ?? lower(a.slug) }),
+  },
+  get_model_holdings: {
+    name: "get_model_holdings",
+    apiRoute: "/models/[slug]/holdings",
+    purpose: "A trading model's book on a date (default newest): held positions plus what the decision at that close will buy (entering) or sell (exiting) at the next open, each held row with return_zone, age_zone, weight_zone and its best and worst return so far. Pro and Commercial plans.",
+    params: {
+      slug: { type: "string", required: true, desc: "model id from get_models" },
+      date: { type: "YYYY-MM-DD" },
+      state: { type: "held|entering|exiting" },
+    },
+    request: (a) => ({
+      path: `/models/${encodeURIComponent(lower(a.slug) ?? "")}/holdings`,
+      query: { date: str(a.date), state: str(a.state) },
+    }),
+    hoist: (d, a) => ({ model: d?.model ?? lower(a.slug), date: d?.date }),
+  },
+  get_model_trades: {
+    name: "get_model_trades",
+    apiRoute: "/models/[slug]/trades",
+    purpose: "A trading model's trades, open and closed: entry and exit dates, prices and reasons, return after costs, plus bands per trade (exit_type, outcome_zone, path_zone, relative_zone vs the benchmark, duration_zone, entry market regime) that also work as filters. model_segment is the entry's segment (backtest or live). Pro and Commercial plans.",
+    params: {
+      slug: { type: "string", required: true, desc: "model id from get_models" },
+      status: { type: "open|closed|all" },
+      segment: { type: "backtest|live|all" },
+      ticker: { type: "string" },
+      exit_type: { type: "string", desc: "signal, pushed_out, thesis_broken, risk_off, take_profit, stopped_trading; one or a comma list" },
+      outcome_zone: { type: "string", desc: "big_loss, loss, scratch, win, big_win; one or a comma list" },
+      path_zone: { type: "string", desc: "never_underwater, recovered, gave_back, never_ahead; one or a comma list" },
+      relative_zone: { type: "string", desc: "lagged, in_line, beat vs the benchmark; one or a comma list" },
+      duration_zone: { type: "string", desc: "short, typical, long vs the model's earlier trades; one or a comma list" },
+      entry_market_regime_zone: { type: "string", desc: "market_regime_zone on the entry's decision day, e.g. bear,correction" },
+      start: { type: "YYYY-MM-DD", desc: "entry date on or after" },
+      end: { type: "YYYY-MM-DD", desc: "entry date on or before" },
+      order: { type: "asc|desc", desc: "by entry date; default desc" },
+      limit: { type: "integer", desc: "max 1000" },
+      offset: { type: "integer" },
+    },
+    request: (a) => ({
+      path: `/models/${encodeURIComponent(lower(a.slug) ?? "")}/trades`,
+      query: {
+        status: str(a.status),
+        segment: str(a.segment),
+        ticker: upper(a.ticker),
+        exit_type: lower(a.exit_type),
+        outcome_zone: lower(a.outcome_zone),
+        path_zone: lower(a.path_zone),
+        relative_zone: lower(a.relative_zone),
+        duration_zone: lower(a.duration_zone),
+        entry_market_regime_zone: lower(a.entry_market_regime_zone),
+        start: str(a.start),
+        end: str(a.end),
+        order: str(a.order),
+        limit: str(a.limit),
+        offset: str(a.offset),
+      },
+    }),
+    paging: "offset",
+    maxLimit: 1000,
+    hoist: (d, a) => ({ model: d?.model ?? lower(a.slug) }),
+  },
+  get_models_holdings: {
+    name: "get_models_holdings",
+    apiRoute: "/models/holdings",
+    purpose: "Holdings across every trading model, each at its own newest date: which models hold a ticker, or all current holdings, filterable by position band (return_zone, weight_zone). Pro and Commercial plans.",
+    params: {
+      ticker: { type: "string", desc: "only models holding it" },
+      asset_class: { type: "stock|crypto" },
+      state: { type: "held|entering|exiting" },
+      return_zone: { type: "string", desc: "big_loss, loss, scratch, win, big_win (unrealised return); one or a comma list" },
+      weight_zone: { type: "string", desc: "underweight, on_target, overweight vs an equal share; one or a comma list" },
+      limit: { type: "integer", desc: "max 2000" },
+      offset: { type: "integer" },
+    },
+    request: (a) => ({
+      path: "/models/holdings",
+      query: {
+        ticker: upper(a.ticker),
+        asset_class: str(a.asset_class),
+        state: str(a.state),
+        return_zone: lower(a.return_zone),
+        weight_zone: lower(a.weight_zone),
+        limit: str(a.limit),
+        offset: str(a.offset),
+      },
+    }),
+    paging: "offset",
+    maxLimit: 2000,
   },
   get_status: {
     name: "get_status",

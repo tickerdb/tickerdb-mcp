@@ -10,12 +10,12 @@ Eight tools. Short descriptions keep the tool list small (about 15K characters i
 
 | Tool | Description |
 |---|---|
-| `get_schema` | Look up field names, units and band values: `search="rsi zone"`, `category=patterns`, `level=market` |
+| `get_schema` | Look up field names, units and band values: `search="rsi zone"`, `category=patterns`, `level=market` (or `level=model`) |
 | `query` | Any cross-section or history. One date with filters, tickers, a sort or a limit screens and ranks (`/v1/search`); one date with only fields returns every asset (`/v1/universe`); `start`+`end` returns every row in the range (`/v1/history`, weekly by default past ~6 months) |
 | `get_summary` | One ticker: latest snapshot, a date, a series, or band events and what usually happens after (`field`, `band`, `stats=true`) |
 | `get_market` | Market (`market_*`) and economy (`macro_*`) regime rows, one per date, and regime changes |
 | `get_ohlcv` | Daily or weekly EOD candles for returns, charts and backtests |
-| `search_tools` | Find the other endpoints and their params: changes, insiders, insider trades and holdings, funds, fund holdings and holders, indexes, index members, status, account, raw search and universe |
+| `search_tools` | Find the other endpoints and their params: changes, insiders, insider trades and holdings, funds, fund holdings and holders, indexes, index members, TickerDB's own trading models, status, account, raw search and universe |
 | `call_tool` | Run an endpoint found with `search_tools` |
 | `query_data` | Read-only SQL (SQLite) over results saved with `store_as` |
 
@@ -24,7 +24,24 @@ Eight tools. Short descriptions keep the tool list small (about 15K characters i
 - **stdio (`npx tickerdb-mcp`)**: in memory for the life of the process; `query_data` also takes `output_path` to write the full result to a CSV file.
 - **Hosted (`mcp.tickerdb.com`)**: a SQLite Durable Object per API key, deleted 24 hours after last use. No `output_path`.
 
-All tools, fields and timeframes (daily and weekly) are available on every plan; plans differ by credits and history depth: Free reads the last 30 days (250 credits a month), Plus the last 3 years, Pro and Commercial all history from 2019. See [tickerdb.com/pricing](https://tickerdb.com/pricing).
+All tools, fields and timeframes (daily and weekly) are available on every plan, except the six model endpoints (`get_models`, `get_model`, `get_model_history`, `get_model_holdings`, `get_model_trades`, `get_models_holdings`), which are Pro and Commercial only; plans differ by credits and history depth: Free reads the last 30 days (250 credits a month), Plus the last 3 years, Pro and Commercial all history from 2019. See [tickerdb.com/pricing](https://tickerdb.com/pricing).
+
+### Trading models (`call_tool`)
+
+TickerDB runs its own rule-based trading models and publishes what each holds and how it has performed (the model level, `model_*` fields). **Pro and Commercial plans only:** on Free and Plus each of these returns `403 tier_restricted`. Six `call_tool` endpoints mirror the `/v1/models` routes; `slug` is the model id from `get_models` (for example `garp-core-10`).
+
+| `call_tool` name | Route | Returns |
+|---|---|---|
+| `get_models` | `/v1/models` | Every model: description, status, newest row, stats per segment. Params: `asset_class`, `filters`, `sort_by`, `order`. Pro and Commercial |
+| `get_model` | `/v1/models/{slug}` | One model: rules, newest row with change markers, stats with yearly returns. Param: `slug`. Pro and Commercial |
+| `get_model_history` | `/v1/models/{slug}/history` | Rows over time. Params: `slug`, `start`, `end`, `fields`, `order`, `limit`. Pro and Commercial |
+| `get_model_holdings` | `/v1/models/{slug}/holdings` | The book on a date: held, entering, exiting, each held row with `return_zone`, `age_zone`, `weight_zone`, `max_gain_pct`, `max_loss_pct`. Params: `slug`, `date`, `state`. Pro and Commercial |
+| `get_model_trades` | `/v1/models/{slug}/trades` | Trades, open and closed, with bands per trade (exit type, outcome, path, result against the benchmark, duration, entry market regime). Params: `slug`, `status`, `segment`, `ticker`, `exit_type`, `outcome_zone`, `path_zone`, `relative_zone`, `duration_zone`, `entry_market_regime_zone`, `start`, `end`, `order`, `limit`, `offset`. Pro and Commercial |
+| `get_models_holdings` | `/v1/models/holdings` | Holdings across models, each at its newest date. Params: `ticker`, `asset_class`, `state`, `return_zone`, `weight_zone`, `limit`, `offset`. Pro and Commercial |
+
+The band filters take one label or a comma-separated list (`outcome_zone=big_win,win`). Trade percentiles and `duration_zone` rank a trade against the model's earlier closed trades only (null until 10 exist); the benchmark fields are null for shorts; an open trade carries only its entry context and its best and worst return so far. Position bands are null on `entering` rows.
+
+Backtest rows are replays of a model's rules over history; live rows are what the model decided on the day (`model_segment` on every row). Neither current model is activated yet, so every row is a backtest row and `stats.live` is null. Model output is a record of what fixed rules did. It is not investment advice or a recommendation.
 
 ### Upgrading from 2.x
 

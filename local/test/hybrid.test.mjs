@@ -98,6 +98,31 @@ function handle(url, res) {
   if (path === "/insiders/holdings") {
     return send({ insider: { slug: p.get("insider") }, source: p.get("source") ?? "13f", basis: "filed_holdings", limit: 100, offset: 0, has_more: false, row_count: 2, holdings: [{ ticker: "AAPL", value_usd: 2 }, { ticker: "KO", value_usd: 1 }] });
   }
+  if (path === "/models/garp-core-10/trades") {
+    const n = limit(100, 1000);
+    const offset = Number(p.get("offset") ?? 0);
+    const all = Array.from({ length: 230 }, (_, i) => ({ ticker: `M${i}`, entry_date: day(i), side: "long", model_segment: "backtest" }));
+    const page = all.slice(offset, offset + n);
+    return send({ level: "model", model: "garp-core-10", limit: n, offset, has_more: offset + n < all.length, row_count: page.length, trades: page });
+  }
+  if (path === "/models/garp-core-10/history") {
+    const n = limit(100, 2000);
+    const start = p.get("start") ?? "0000";
+    const end = p.get("end") ?? "9999";
+    let rows = MARKET_ROWS.filter((r) => r.date >= start && r.date <= end).map((r, i) => ({ date: r.date, model_equity_ratio: 1 + i / 100, model_segment: "backtest" }));
+    if (p.get("order") !== "asc") rows = rows.reverse();
+    rows = rows.slice(0, n);
+    return send({ level: "model", model: "garp-core-10", fields: ["model_equity_ratio", "model_segment"], start, end, order: p.get("order") ?? "desc", row_count: rows.length, rows });
+  }
+  if (path === "/models/garp-core-10") {
+    return send({ level: "model", model: "garp-core-10", status: "backtest", as_of: "2026-11-06", rules: ["Decide weekly."], params: {}, fields: ["garp_core_score"], latest: { model_equity_ratio: 8.22, model_exposure_zone: "full" }, stats: { backtest: null, live: null, all: null } });
+  }
+  if (path === "/models/holdings") {
+    return send({ level: "model", limit: 250, offset: 0, has_more: false, row_count: 1, holdings: [{ model: "garp-core-10", date: "2026-11-06", ticker: p.get("ticker") ?? "NVDA", weight_pct: 11.2 }] });
+  }
+  if (path === "/models") {
+    return send({ level: "model", row_count: 1, models: [{ model: "garp-core-10", status: "backtest", latest: { model_equity_ratio: 8.22 }, stats: { backtest: { cagr_pct: 36.2 }, live: null, all: null } }] });
+  }
   if (path === "/status") return send({ daily: { stock: "2026-11-05" } });
   return send({ error: { message: `stub: no route ${path}` } }, 404);
 }
@@ -235,13 +260,54 @@ test("search_tools finds long-tail endpoints with params", async () => {
   assert.match(text, /insider\*: string/);
 
   const all = (await call("search_tools", {})).text;
-  for (const name of ["get_changes", "get_insiders", "get_insider_trades", "get_insider_holdings", "get_funds", "get_fund_holdings", "get_fund_holders", "get_indexes", "get_index_members", "get_status", "get_account"]) {
+  for (const name of ["get_changes", "get_insiders", "get_insider_trades", "get_insider_holdings", "get_funds", "get_fund_holdings", "get_fund_holders", "get_indexes", "get_index_members", "get_status", "get_account",
+    "get_models", "get_model", "get_model_history", "get_model_holdings", "get_model_trades", "get_models_holdings"]) {
     assert.match(all, new RegExp(`^${name}:`, "m"));
   }
   assert.doesNotMatch(all, /^get_ohlcv:/m);
 
   const none = (await call("search_tools", { query: "zzzz" })).text;
   assert.match(none, /No match/);
+});
+
+test("the model endpoints run through call_tool: slug in the path, paging, one-row detail", async () => {
+  const names = (await call("search_tools", { query: "trading models" })).text;
+  assert.match(names, /^get_models?(_\w+)?:/);
+  assert.match(names, /slug\*: string/);
+
+  const list = await call("call_tool", { name: "get_models", params: { asset_class: "stock", sort_by: "model_return_1y_pct" } });
+  assert.equal(list.json.models[0].model, "garp-core-10");
+  assert.deepEqual(requests.at(-1), { path: "/v1/models", query: { asset_class: "stock", sort_by: "model_return_1y_pct" }, auth: requests.at(-1).auth });
+
+  const missing = await call("call_tool", { name: "get_model_history", params: { limit: 5 } });
+  assert.equal(missing.result.isError, true);
+  assert.match(missing.text, /slug is required/);
+  const bad = await call("call_tool", { name: "get_model_holdings", params: { slug: "garp-core-10", state: "open" } });
+  assert.equal(bad.result.isError, true);
+
+  // Trades page by offset until has_more is false.
+  const trades = await call("call_tool", { name: "get_model_trades", params: { slug: "GARP-Core-10", ticker: "nvda", outcome_zone: "Big_Win,win", entry_market_regime_zone: "bear" }, store_as: "model_trades", fetch_all: true });
+  assert.equal(trades.json.row_count, 230);
+  assert.equal(requests.at(-1).path, "/v1/models/garp-core-10/trades");
+  assert.equal(requests.at(-1).query.ticker, "NVDA");
+  assert.equal(requests.at(-1).query.outcome_zone, "big_win,win");
+  assert.equal(requests.at(-1).query.entry_market_regime_zone, "bear");
+  assert.equal((await sql("SELECT count(DISTINCT model) FROM model_trades")).rows[0][0], 1);
+
+  // History pages a date range by moving its edge, like get_market.
+  const history = await call("call_tool", { name: "get_model_history", params: { slug: "garp-core-10", start: day(0), end: day(449), limit: 200 }, store_as: "model_history", fetch_all: true });
+  assert.equal(history.json.row_count, 450);
+  assert.equal(history.json.pages, 3);
+
+  // The detail response's `fields` is a list of names: the stored table is one row of the newest values.
+  const detail = await call("call_tool", { name: "get_model", params: { slug: "garp-core-10" }, store_as: "model_detail" });
+  assert.equal(detail.json.row_count, 1);
+  assert.deepEqual((await sql("SELECT model, status, model_exposure_zone FROM model_detail")).rows[0], ["garp-core-10", "backtest", "full"]);
+
+  const across = await call("call_tool", { name: "get_models_holdings", params: { ticker: "nvda", return_zone: "loss,big_loss", weight_zone: "overweight" } });
+  assert.equal(across.json.holdings[0].ticker, "NVDA");
+  assert.equal(requests.at(-1).path, "/v1/models/holdings");
+  assert.deepEqual(requests.at(-1).query, { ticker: "NVDA", return_zone: "loss,big_loss", weight_zone: "overweight" });
 });
 
 test("call_tool runs an endpoint inline", async () => {

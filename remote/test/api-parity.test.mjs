@@ -42,7 +42,14 @@ const NOT_PARAMS = {
 };
 
 /** Tool arguments that are path segments, not query parameters. */
-const PATH_ARGS = { "/summary/[ticker]": ["ticker"], "/ohlcv/[ticker]": ["ticker"] };
+const PATH_ARGS = {
+  "/summary/[ticker]": ["ticker"],
+  "/ohlcv/[ticker]": ["ticker"],
+  "/models/[slug]": ["slug"],
+  "/models/[slug]/history": ["slug"],
+  "/models/[slug]/holdings": ["slug"],
+  "/models/[slug]/trades": ["slug"],
+};
 
 function routes(dir, prefix = "") {
   return readdirSync(dir).flatMap((name) => {

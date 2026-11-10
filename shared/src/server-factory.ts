@@ -38,7 +38,7 @@ export const SERVER_INSTRUCTIONS =
   "Use query for any cross-section or history: filter and sort on the server rather than pulling rows and filtering yourself. " +
   "For multi-year research prefer timeframe=weekly. " +
   "For large pulls pass store_as=<table> plus fetch_all=true: rows go into a SQLite table and you get a short summary; then use query_data (SQL). " +
-  "Other endpoints (changes, insiders, holdings, funds, indexes, status, account): search_tools, then call_tool. " +
+  "Other endpoints (changes, insiders, holdings, funds, indexes, TickerDB's own trading models, status, account): search_tools, then call_tool. " +
   "A row dated D is known on D+1: act at the next session.";
 
 export interface ServerOptions {
@@ -105,7 +105,7 @@ export function createTickerDbServer(apiKey: string | (() => string), options: S
     {
       search: z.string().optional().describe("Words that must all appear in name, category or description."),
       category: z.string().optional().describe("Comma-separated, e.g. patterns,volume."),
-      level: z.enum(["ticker", "market"]).optional().describe("ticker = per-asset fields; market = market_*/macro_*."),
+      level: z.enum(["ticker", "market", "model"]).optional().describe("ticker = per-asset fields; market = market_*/macro_*; model = model_* (TickerDB's trading models)."),
       compact: z.boolean().optional().describe("Name, type, values and description only."),
       markers: z.boolean().optional().describe("Include change-marker fields."),
       ...storeParams,
@@ -218,7 +218,7 @@ export function createTickerDbServer(apiKey: string | (() => string), options: S
 
   meta(server.tool(
     "search_tools",
-    "Find the other TickerDB endpoints: changes, insiders, insider trades and holdings, funds, fund holdings and holders, indexes, index members, status, account, and the raw search and universe routes. Returns each match's name, purpose and params (* = required). Empty query lists all. Run one with call_tool.",
+    "Find the other TickerDB endpoints: changes, insiders, insider trades and holdings, funds, fund holdings and holders, indexes, index members, TickerDB's trading models (list, detail, history, holdings, trades; Pro and Commercial plans), status, account, and the raw search and universe routes. Returns each match's name, purpose and params (* = required). Empty query lists all. Run one with call_tool.",
     { query: z.string().optional().describe("Words, e.g. insider trades.") },
     RO,
     async ({ query }) => {
