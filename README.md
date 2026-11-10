@@ -41,7 +41,7 @@ TickerDB runs its own rule-based trading models and publishes what each holds an
 
 The band filters take one label or a comma-separated list (`outcome_zone=big_win,win`). Trade percentiles and `duration_zone` rank a trade against the model's earlier closed trades only (null until 10 exist); the benchmark fields are null for shorts; an open trade carries only its entry context and its best and worst return so far. Position bands are null on `entering` rows.
 
-Backtest rows are replays of a model's rules over history; live rows are what the model decided on the day (`model_segment` on every row). Neither current model is activated yet, so every row is a backtest row and `stats.live` is null. Model output is a record of what fixed rules did. It is not investment advice or a recommendation.
+Backtest rows are replays of a model's rules over history; live rows are what the model decided on the day (`model_segment` on every row). Both current models were activated on 2026-11-09; `stats.live` is null until two live rows exist. Model output is a record of what fixed rules did. It is not investment advice or a recommendation.
 
 ### Upgrading from 2.x
 
