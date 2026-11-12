@@ -153,6 +153,15 @@ export default {
     let authMode: AuthMode;
     let apiKey: string;
 
+    if (!authHeadersPresent && isInit) {
+      // Which client handshakes without sign-in (decides signsInFirst): its name and user agent only.
+      const info = (parsedBody as { params?: { clientInfo?: { name?: unknown; version?: unknown } } } | null)?.params?.clientInfo;
+      console.log("[mcp] unsigned-initialize", JSON.stringify({
+        requestId, client: String(info?.name ?? ""), version: String(info?.version ?? ""),
+        userAgent: (request.headers.get("User-Agent") ?? "").slice(0, 120), signInFirst: signsInFirst(parsedBody),
+      }));
+    }
+
     if (!authHeadersPresent) {
       authMode = allowPublicDiscovery ? "public_discovery" : "missing_auth";
       logRequest("start", {
