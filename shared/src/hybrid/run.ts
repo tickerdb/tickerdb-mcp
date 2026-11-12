@@ -37,7 +37,7 @@ export interface StoreOptions {
   fetch_all?: boolean;
 }
 
-export const NO_STORE = "store_as, fetch_all and query_data are not available on this server.";
+export const NO_STORE = "store_as, fetch_all and query_data are not available on this server. Page through the result with limit and offset, cursor or page_token.";
 
 export const text = (t: string, isError = false): ToolResult => ({ content: [{ type: "text", text: t }], ...(isError ? { isError } : {}) });
 

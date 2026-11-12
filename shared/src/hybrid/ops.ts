@@ -65,7 +65,7 @@ export const OPS: Record<string, Op> = {
   get_search: {
     name: "get_search",
     apiRoute: "/search",
-    purpose: "Raw /v1/search: filter and rank assets on one date (or a date range with a market_/macro_ filter). The query tool routes here for you.",
+    purpose: "Raw /v1/search: filter and rank assets on one date (or a date range with a market_/macro_ filter), up to 30 fields and 10 filters. The query tool routes here for you.",
     params: {
       filters: { type: "string", required: true, desc: "JSON array of {field, op, value}" },
       fields: { type: "string", desc: "JSON array" },
@@ -75,7 +75,7 @@ export const OPS: Record<string, Op> = {
       date: { type: "YYYY-MM-DD" },
       start: { type: "YYYY-MM-DD" },
       end: { type: "YYYY-MM-DD" },
-      limit: { type: "integer", desc: "max 500" },
+      limit: { type: "integer", desc: "default 20, max 250" },
       offset: { type: "integer" },
       member_of: { type: "string" },
       held_by: { type: "string" },
@@ -129,7 +129,7 @@ export const OPS: Record<string, Op> = {
   get_universe: {
     name: "get_universe",
     apiRoute: "/universe",
-    purpose: "Raw /v1/universe: selected fields (max 60) for every asset on one date. The query tool routes here for you.",
+    purpose: "Raw /v1/universe: selected fields (max 30) for every asset on one date. The query tool routes here for you.",
     params: {
       fields: { type: "string[]", required: true },
       date: { type: "YYYY-MM-DD" },
@@ -276,7 +276,7 @@ export const OPS: Record<string, Op> = {
   get_insider_holdings: {
     name: "get_insider_holdings",
     apiRoute: "/insiders/holdings",
-    purpose: "What an insider's disclosures say they hold on a date, point in time by filing date: 13F positions; Form 4 shares last stated (after a trade, or on a Form 3/4/5 holding row); Congress: the last annual report's rows (stated) beside what trades since imply (never netted, not a portfolio). basis and reported_by_filer say which.",
+    purpose: "What an insider's filings say they hold on a date, point in time by filing date. 13F: the positions filed. Form 4: the shares last stated, after a trade or on a Form 3/4/5 holding row. Congress: the last annual report's rows beside what trades since then imply; the ranges aren't netted, so bought minus sold isn't what's left. basis and reported_by_filer say which kind each row is.",
     params: {
       insider: { type: "string", required: true, desc: "slug from get_insiders" },
       date: { type: "YYYY-MM-DD" },
@@ -514,14 +514,14 @@ export const OPS: Record<string, Op> = {
   get_status: {
     name: "get_status",
     apiRoute: "/status",
-    purpose: "Free: newest published daily/weekly dates per asset class, preliminary or final, and the release schedule.",
+    purpose: "Newest published daily and weekly dates per asset class, preliminary or final, and the release schedule. Costs no credits.",
     params: {},
     request: () => ({ path: "/status", query: {} }),
   },
   get_account: {
     name: "get_account",
     apiRoute: "/account",
-    purpose: "Your plan tier, credit limits and usage.",
+    purpose: "Your plan, credits used and left, and when they renew. Costs no credits.",
     params: {},
     request: () => ({ path: "/account", query: {} }),
   },
@@ -566,7 +566,7 @@ export function describeOp(op: Op): string {
   const params = Object.entries(op.params ?? {})
     .map(([k, s]) => `${k}${s.required ? "*" : ""}: ${s.type}${s.desc ? ` (${s.desc})` : ""}`)
     .join("; ");
-  const paging = op.paging ? " Pages: fetch_all." : "";
+  const paging = op.paging ? " Paged: fetch_all=true stores every page." : "";
   return `${op.name}: ${op.purpose}${paging}\n  params: ${params || "none"}`;
 }
 

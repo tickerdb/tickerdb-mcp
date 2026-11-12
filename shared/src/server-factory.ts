@@ -32,14 +32,15 @@ export const OUTPUT_SCHEMA = { data: z.unknown().describe("The tool's result.") 
 export const MCP_ONLY_PARAMS = ["store_as", "append", "fetch_all"];
 
 export const SERVER_INSTRUCTIONS =
-  "TickerDB: point-in-time market data for stocks, ETFs and crypto as named bands (e.g. momentum_rsi_zone) plus raw values. " +
-  "Look up field names with get_schema search (e.g. search=\"rsi zone\", level=market) instead of guessing. " +
-  "Every band also has _prev, _periods, _flips_recent_count, _flips_lookback and _stability, usable as fields and filters (_periods = 1: changed that row). " +
+  "TickerDB: point-in-time market data for stocks, ETFs and crypto, as named bands (momentum_rsi_zone = \"oversold\") plus raw values. " +
+  "Look up field names with get_schema (search=\"rsi zone\", level=market) instead of guessing. " +
+  "null means unknown, not zero or low. " +
+  "Every band also has _prev, _periods, _flips_recent_count, _flips_lookback and _stability, usable as fields and filters; _periods = 1 means it changed on that row. " +
   "Use query for any cross-section or history: filter and sort on the server rather than pulling rows and filtering yourself. " +
   "For multi-year research prefer timeframe=weekly. " +
-  "For large pulls pass store_as=<table> plus fetch_all=true: rows go into a SQLite table and you get a short summary; then use query_data (SQL). " +
+  "For large pulls pass store_as=<table> plus fetch_all=true: rows go into a SQLite table, you get a short summary, and query_data reads it with SQL. " +
   "Other endpoints (changes, insiders, holdings, funds, indexes, TickerDB's own trading models, status, account): search_tools, then call_tool. " +
-  "A row dated D is known on D+1: act at the next session.";
+  "A row dated D is known on D+1: act at the next session's open.";
 
 export interface ServerOptions {
   /** Where store_as tables live. Without one, store_as, fetch_all and query_data return an error. */
@@ -55,7 +56,7 @@ export interface ServerOptions {
 
 const RO = { readOnlyHint: true, destructiveHint: false, openWorldHint: true };
 
-const tf = z.enum(["daily", "weekly"]).optional().describe("Default: daily (every plan reads daily and weekly).");
+const tf = z.enum(["daily", "weekly"]).optional().describe("Default daily.");
 const day = (what: string) => z.string().optional().describe(`${what} (YYYY-MM-DD).`);
 const storeParams = {
   store_as: z.string().optional().describe("Table name: store rows in SQLite, return only a summary. Read with query_data."),
@@ -116,29 +117,29 @@ export function createTickerDbServer(apiKey: string | (() => string), options: S
 
   meta(server.tool(
     "query",
-    "One tool for any cross-section or history; use get_summary for a single ticker's full snapshot. Give fields and filters (any ticker field; names from get_schema), then EITHER date (default latest) OR start+end. One date with filters, tickers, sort_by or a limit screens and ranks; one date with neither returns every asset; a range returns every row in it (market_/macro_ filters keep only dates in that regime). Ranges over ~6 months default to weekly. For big pulls use store_as + fetch_all, then query_data.",
+    "Any cross-section or history (one ticker's full snapshot: get_summary). Give fields and filters (names from get_schema), then EITHER date (default latest) OR start+end. One date with filters, tickers, sort_by or limit: a ranked screen. One date with only fields: every asset. A range: every row in it, weekly by default past ~6 months; market_/macro_ filters keep only dates in that regime, other filters apply after the rows are fetched, so narrow with tickers, member_of or asset_class. Big pulls: store_as + fetch_all, then query_data.",
     {
-      fields: z.array(z.string()).optional().describe('Columns, e.g. ["market_cap_usd","momentum_rsi_zone"]. Max 60 per date, 30 per range.'),
+      fields: z.array(z.string()).optional().describe('Columns, e.g. ["market_cap_usd","momentum_rsi_zone"]. Max 30.'),
       filters: z
         .array(z.object({ field: z.string(), op: z.enum(["eq", "neq", "in", "gt", "gte", "lt", "lte"]), value: z.unknown() }))
         .optional()
-        .describe('E.g. [{"field":"momentum_rsi_zone","op":"in","value":["oversold"]}].'),
+        .describe('Up to 10; a row must match all of them, and null matches none. E.g. [{"field":"momentum_rsi_zone","op":"in","value":["oversold"]}].'),
       tickers: z.array(z.string()).optional().describe("Only these tickers."),
       date: day("One date; default latest"),
       start: day("Range start, with end"),
       end: day("Range end"),
       timeframe: z.enum(["daily", "weekly"]).optional().describe("Default: weekly for ranges over ~6 months, else daily."),
-      asset_class: z.enum(["stock", "etf", "crypto"]).optional(),
-      member_of: z.string().optional().describe("Index id, e.g. sp500 (point in time)."),
-      held_by: z.string().optional().describe("Fund ticker or SEC series id."),
+      asset_class: z.enum(["stock", "etf", "crypto"]).optional().describe("Only this asset class."),
+      member_of: z.string().optional().describe("Only members of this index on the row's date, e.g. sp500. Ids: get_indexes."),
+      held_by: z.string().optional().describe("Only assets this fund held on the row's date: fund ticker (IVV) or SEC series id."),
       sort_by: z.string().optional().describe("Ticker field to rank by (one date)."),
       sort_direction: z.enum(["asc", "desc"]).optional().describe("Default desc."),
-      limit: z.number().int().min(1).optional().describe("Max rows on one date (default 20, max 500); rows per page on a range."),
+      limit: z.number().int().min(1).optional().describe("Rows on one date (default 20, max 250); rows per page on a range."),
       offset: z.number().int().min(0).optional().describe("One date: skip this many ranked rows."),
       page_token: z.string().optional().describe("Range: a token from page_tokens or next_page_token (same params)."),
-      dry_run: z.boolean().optional().describe("Range: price it in credits, no data, no charge."),
+      dry_run: z.boolean().optional().describe("Range: returns what it would cost in credits. No data, no charge."),
       ohlcv: z.boolean().optional().describe("Range only: add ohlcv_open/high/low/close/volume."),
-      adjustment: z.enum(["split", "split_dividend", "raw"]).optional().describe("With ohlcv; default split."),
+      adjustment: z.enum(["split", "split_dividend", "raw"]).optional().describe("With ohlcv: split (default), split_dividend (total return) or raw (as traded)."),
       ...storeParams,
       ...fetchAll,
     },
@@ -151,7 +152,7 @@ export function createTickerDbServer(apiKey: string | (() => string), options: S
 
   meta(server.tool(
     "get_summary",
-    "One ticker's state: latest snapshot, one date, a start/end series, or band events (field, optional band: when it was entered, what it left, how long it lasted; stats=true for counts). fields trims to sections or paths, e.g. trend, momentum.rsi_zone, fundamentals.pe_ratio. Market regimes are in get_market.",
+    "One ticker's state: latest snapshot, one date, a start/end series (up to 50 rows; for a longer range add sample=even or use query), or band events. For events give field and optionally band: each says when the band was entered, what it left and how long that had lasted; stats=true returns how often each band was entered. fields trims to sections or paths, e.g. trend, momentum.rsi_zone, fundamentals.pe_ratio. Market regimes are in get_market.",
     {
       ticker: z.string().describe("e.g. AAPL, BTCUSD, SPY"),
       timeframe: tf,
@@ -159,18 +160,18 @@ export function createTickerDbServer(apiKey: string | (() => string), options: S
       start: day("Series start"),
       end: day("Series end"),
       fields: z.array(z.string()).optional().describe("Sections or dotted paths."),
-      meta: z.boolean().optional().describe("Include _meta stability objects."),
+      meta: z.boolean().optional().describe("Add stability metadata (_meta) to every band."),
       field: z.string().optional().describe("Band field for events, e.g. momentum_rsi_zone."),
-      band: z.string().optional().describe("Events for this band value only."),
-      sample: z.enum(["even"]).optional().describe("Evenly spaced rows across start/end."),
-      limit: z.number().int().min(1).max(50).optional().describe("Events, or sampled rows."),
-      before: day("Events before"),
-      after: day("Events after"),
-      stats: z.boolean().optional().describe("Event counts instead of rows."),
-      context_ticker: z.string().optional().describe("Second ticker to condition events on."),
+      band: z.string().optional().describe("Only changes into this value, e.g. oversold."),
+      sample: z.enum(["even"]).optional().describe("Up to 50 rows spread evenly across start/end."),
+      limit: z.number().int().min(1).max(50).optional().describe("Events (default 10), or sampled rows (default 50)."),
+      before: day("Only events before"),
+      after: day("Only events after"),
+      stats: z.boolean().optional().describe("How often each band was entered, instead of the event list."),
+      context_ticker: z.string().optional().describe("Keep only events when this second asset was in context_band, e.g. SPY. Needs context_field and context_band."),
       context_field: z.string().optional().describe("Band field on context_ticker."),
       context_band: z.string().optional().describe("Band value on context_ticker."),
-      adjustment: z.enum(["split", "split_dividend", "raw"]).optional().describe("Price basis; default split."),
+      adjustment: z.enum(["split", "split_dividend", "raw"]).optional().describe("Price basis: split (default), split_dividend (total return) or raw (as traded)."),
       ...storeParams,
     },
     RO,
@@ -183,7 +184,7 @@ export function createTickerDbServer(apiKey: string | (() => string), options: S
     {
       fields: z.string().optional().describe('JSON array of market fields; ["*"] adds change markers.'),
       filters: z.string().optional().describe("JSON array of {field, op, value} on market fields."),
-      changes: z.string().optional().describe("true, or a JSON array of bands to watch."),
+      changes: z.string().optional().describe("true: only dates where any band changed. Or a JSON array of the bands to watch."),
       timeframe: tf,
       date: day("One date"),
       start: day("Range start"),
@@ -199,7 +200,7 @@ export function createTickerDbServer(apiKey: string | (() => string), options: S
 
   meta(server.tool(
     "get_ohlcv",
-    "End-of-day OHLCV candles for one ticker, daily or weekly (weeks dated by Sunday). Paged: pass next_cursor back as cursor, or use store_as with fetch_all for the whole range in one call. 1 credit per 100 bars.",
+    "End-of-day OHLCV candles for one ticker, daily or weekly (weeks dated by Sunday). Paged: pass next_cursor back as cursor, or use store_as with fetch_all for the whole range in one call.",
     {
       ticker: z.string().describe("e.g. AAPL"),
       timeframe: tf,
@@ -208,7 +209,7 @@ export function createTickerDbServer(apiKey: string | (() => string), options: S
       limit: z.number().int().min(1).max(1000).optional().describe("Default 100."),
       order: z.enum(["asc", "desc"]).optional().describe("Default desc."),
       cursor: z.string().optional().describe("next_cursor from the previous page."),
-      adjustment: z.enum(["split", "split_dividend", "raw"]).optional().describe("Default split; split_dividend = total return."),
+      adjustment: z.enum(["split", "split_dividend", "raw"]).optional().describe("split (default), split_dividend (total return) or raw (as traded)."),
       ...storeParams,
       ...fetchAll,
     },

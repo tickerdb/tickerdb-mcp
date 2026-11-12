@@ -12,16 +12,16 @@ export function formatApiError(
     case 403:
       message =
         errorObj?.message ??
-        "Your plan does not include this date (history depth is per plan). See https://tickerdb.com/pricing.";
+        "Your plan does not include this. See https://tickerdb.com/pricing.";
       break;
     case 404:
-      message = errorObj?.message ?? "Resource not found.";
+      message = errorObj?.message ?? "Not found. Check the ticker, slug or id.";
       break;
     case 429:
-      message = errorObj?.message ?? "Rate limit exceeded. Try again later.";
+      message = errorObj?.message ?? "Rate limit reached. Wait 10 seconds and retry; if it repeats, check get_account for credits left.";
       break;
     case 503:
-      message = errorObj?.message ?? "Data temporarily unavailable.";
+      message = errorObj?.message ?? "Data temporarily unavailable. Retry in a minute.";
       break;
     default:
       message = errorObj?.message ?? `API error (${status})`;

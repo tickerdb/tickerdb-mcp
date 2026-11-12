@@ -150,7 +150,7 @@ export const QUERY_OP: Op = {
         args: { filters: all, fields, sort_by, sort_direction, timeframe, date, limit: lim, offset, member_of, held_by },
       };
     }
-    if (!fields?.length) throw new Error("Every asset on one date needs fields (max 60). Or add filters / a limit.");
+    if (!fields?.length) throw new Error("Every asset on one date needs fields (max 30). Or add filters or a limit.");
     return {
       op: { ...OPS.get_universe, name: "query", route: "/v1/universe" },
       args: { fields, date, timeframe, asset_class, member_of, held_by },
