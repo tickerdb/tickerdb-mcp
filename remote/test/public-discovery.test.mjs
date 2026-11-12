@@ -42,12 +42,9 @@ const initializeBody = {
   },
 };
 
-// Owner 2026-11-12: sign-in is required up front, so Claude.ai and ChatGPT ask for it when the
-// connector is added. An unsigned handshake gets 401 with the OAuth challenge.
-test("requires sign-in for the handshake by default", async (t) => {
-  const worker = await startWorker(t);
-  // Plain HTTP: wrangler's fetch fails on a 401 to a request with a body ("expected non-null body source").
-  const post = (body) => new Promise((resolve, reject) => {
+// Plain HTTP: wrangler's fetch fails on a 401 to a request with a body ("expected non-null body source").
+function rawPost(worker, body) {
+  return new Promise((resolve, reject) => {
     const req = httpRequest({ host: worker.address, port: worker.port, path: "/mcp", method: "POST", headers: mcpHeaders }, (res) => {
       res.resume();
       res.on("end", () => resolve(res));
@@ -55,15 +52,31 @@ test("requires sign-in for the handshake by default", async (t) => {
     req.on("error", reject);
     req.end(JSON.stringify(body));
   });
-  for (const body of [initializeBody, { jsonrpc: "2.0", id: 2, method: "tools/list", params: {} }]) {
-    const res = await post(body);
-    assert.equal(res.statusCode, 401, `${body.method} returned ${res.statusCode}`);
+}
+
+const initAs = (name) => ({ ...initializeBody, params: { ...initializeBody.params, clientInfo: { name, version: "1.0.0" } } });
+
+// Owner 2026-11-12: Claude.ai and ChatGPT must sign in before the handshake, so they ask for it
+// when the connector is added; directories and other scanners keep the open handshake.
+test("Claude.ai and ChatGPT get the 401 sign-in challenge on initialize", async (t) => {
+  const worker = await startWorker(t);
+  for (const name of ["claude-ai", "openai-mcp", "ChatGPT"]) {
+    const res = await rawPost(worker, initAs(name));
+    assert.equal(res.statusCode, 401, `${name} initialize returned ${res.statusCode}`);
     assert.match(res.headers["www-authenticate"] ?? "", /resource_metadata=/);
   }
 });
 
-test("allows the complete unauthenticated MCP discovery handshake when MCP_PUBLIC_DISCOVERY=1", async (t) => {
-  const worker = await startWorker(t, { MCP_PUBLIC_DISCOVERY: "1" });
+test("MCP_PUBLIC_DISCOVERY=0 requires sign-in from every client", async (t) => {
+  const worker = await startWorker(t, { MCP_PUBLIC_DISCOVERY: "0" });
+  for (const body of [initAs("glama-inspector"), { jsonrpc: "2.0", id: 2, method: "tools/list", params: {} }]) {
+    const res = await rawPost(worker, body);
+    assert.equal(res.statusCode, 401, `${body.method} returned ${res.statusCode}`);
+  }
+});
+
+test("a directory scanner gets the complete unauthenticated discovery handshake by default", async (t) => {
+  const worker = await startWorker(t);
 
   const post = (body) =>
     worker.fetch("http://localhost/mcp", {
