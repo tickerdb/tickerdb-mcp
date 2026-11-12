@@ -26,9 +26,9 @@ const ACCESS_TOKEN_LIFETIME = 3600; // 1 hour
 const REFRESH_TOKEN_LIFETIME = 30 * 24 * 3600; // 30 days
 
 export interface Env {
-  /** "1" lets an unsigned client run initialize and tools/list (MCP directories' scans). Off by
-   *  default (owner 2026-11-12): sign-in is required up front, so Claude.ai and ChatGPT ask for it
-   *  when the connector is added instead of failing on the first tool call. */
+  /** "0" turns off the open handshake (initialize + tools/list without sign-in) for every client.
+   *  Default on, for MCP directories' scans; Claude.ai and ChatGPT must sign in first either way
+   *  (index.ts signsInFirst, owner 2026-11-12). */
   MCP_PUBLIC_DISCOVERY?: string;
   HYPERDRIVE?: { connectionString: string };
   DATABASE_URL: string;

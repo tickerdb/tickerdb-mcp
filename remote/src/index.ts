@@ -141,7 +141,9 @@ export default {
     const rpcInfo = getRpcInfo(parsedBody);
     const requestId = crypto.randomUUID().slice(0, 8);
     const allowPublicDiscovery =
-      env.MCP_PUBLIC_DISCOVERY === "1" && isPublicDiscoveryRequest(url.pathname, request.method, isInit, rpcInfo.method);
+      env.MCP_PUBLIC_DISCOVERY !== "0" &&
+      isPublicDiscoveryRequest(url.pathname, request.method, isInit, rpcInfo.method) &&
+      !(isInit && signsInFirst(parsedBody));
 
     const authHeader = request.headers.get("Authorization");
     const xApiKey = request.headers.get("x-api-key");
@@ -169,9 +171,9 @@ export default {
       });
 
       if (!allowPublicDiscovery) {
-        // With public discovery on, an unsigned tools/call is answered in-band (ChatGPT's mixed auth);
-        // with it off (the default) every unsigned request gets the 401 challenge below.
-        if (env.MCP_PUBLIC_DISCOVERY === "1" && rpcInfo.method === "tools/call") {
+        // With public discovery on (the default), an unsigned tools/call is answered in-band;
+        // anything else unsigned gets the 401 challenge below.
+        if (env.MCP_PUBLIC_DISCOVERY !== "0" && rpcInfo.method === "tools/call") {
           const response = oauthRequiredToolResponse(parsedBody, env);
           logRequest("finish", {
             requestId,
@@ -471,6 +473,19 @@ function getAuthMode(bearerToken: string, xApiKey: string | null): "api_key" | "
     return "api_key";
   }
   return "oauth";
+}
+
+/**
+ * Clients that must sign in before the handshake (owner 2026-11-12): Claude.ai and ChatGPT read an
+ * open initialize as "no sign-in needed", so a new connector failed its first tool call. A 401 on
+ * their initialize makes them start OAuth when the connector is added. Every other client (MCP
+ * directories and scanners) keeps the open initialize + tools/list; tool calls need sign-in for all.
+ */
+const SIGN_IN_FIRST_CLIENTS = /claude|openai|chatgpt/i;
+
+function signsInFirst(parsedBody: unknown): boolean {
+  const info = (parsedBody as { params?: { clientInfo?: { name?: unknown } } } | null)?.params?.clientInfo;
+  return typeof info?.name === "string" && SIGN_IN_FIRST_CLIENTS.test(info.name);
 }
 
 function isPublicDiscoveryRequest(
