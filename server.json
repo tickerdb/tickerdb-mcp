@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "com.tickerdb/mcp-server",
   "title": "TickerDB",
-  "description": "Pre-computed market data that improves agent reasoning, reduces token usage, and replaces pipelines.",
+  "description": "Point-in-time market data for AI agents: stocks, ETFs and crypto as named bands plus raw values.",
   "version": "3.0.0",
   "remotes": [
     {

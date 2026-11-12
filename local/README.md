@@ -1,12 +1,12 @@
-# TickerDB — Stock market data for agents.
+# TickerDB MCP server
 
-Pre-computed stock market data for AI agents. TickerDB returns indicators like `trend_direction`, `support_level`, and `analyst_consensus` as named states — plus what *changed* and what *usually happens next*.
+Market data for AI trading agents. This server connects Claude, ChatGPT, Cursor or any MCP client to [TickerDB](https://tickerdb.com), so your agent can screen the market, read a stock's state and backtest a trading model.
 
-10,000+ US stocks, ETFs, and crypto pairs · 182 indicators across trend, momentum, volatility, volume, patterns, support/resistance, fundamentals, and sector context · history from 2019 · [tickerdb.com](https://tickerdb.com)
+TickerDB covers 10,000+ US stocks, ETFs and crypto pairs, daily and weekly, with history from 2019. Each value comes as a number and as a named band, including things an agent can't work out from price bars: `pattern_bull_flag_state` is `"mature"`, `fundamentals_valuation_zone` is `"undervalued"`. Every row uses only what was public by its date, so a backtest sees what it would have seen live.
 
 ## Setup
 
-Add to your MCP client config:
+This package runs TickerDB as a local process over stdio, for clients that start their own servers (Claude Desktop, Claude Code, Codex, Cursor). Needs Node 22.5 or newer.
 
 ```json
 {
@@ -19,89 +19,103 @@ Add to your MCP client config:
 }
 ```
 
-**API key.** The server looks for a key in the same order as [tickerdb.com/setup](https://tickerdb.com/setup):
+**No API key yet?** Ask your agent to follow [tickerdb.com/setup](https://tickerdb.com/setup). It gets a free key by device login and saves it where the server looks, so the config above needs no `env` block. The server starts without a key and looks again on each call, so you don't need to restart it.
 
-1. the `TICKERDB_API_KEY` environment variable (`TICKERDB_KEY`, the 2.x name, still works);
+**Where the server looks for a key**, in order:
+
+1. the `TICKERDB_API_KEY` environment variable;
 2. a `TICKERDB_API_KEY=` line in the `.env` of the directory the server runs in;
-3. the user config file written by device login, `{"api_key": "tdb_..."}`:
+3. the config file written by device login, `{"api_key": "tdb_..."}`:
    - macOS / Linux: `$XDG_CONFIG_HOME/tickerdb/config.json` (default `~/.config/tickerdb/config.json`)
    - Windows: `%APPDATA%\tickerdb\config.json`
 
-No key yet? Ask your agent to follow [tickerdb.com/setup](https://tickerdb.com/setup): device login gets a free key in one click and saves it to the config file, so the config above needs no `env` block. The server starts without a key; until one is found, tool calls return an error pointing to that page. The key is looked up again on each call until found, so no restart is needed, and it is never logged. To pass it explicitly instead, add `"env": {"TICKERDB_API_KEY": "tdb_..."}`.
+To pass a key yourself, add `"env": {"TICKERDB_API_KEY": "tdb_..."}` to the config. The key is never logged.
 
-Works with Claude Desktop, Claude Code, Cursor, Windsurf, and any MCP client that supports stdio transport. Needs Node 22.5 or newer (the table store uses `node:sqlite`).
+Optional environment variables:
 
-Optional environment: `TICKERDB_API_BASE` points the server at another TickerDB deployment (default `https://api.tickerdb.com/v1`); `TICKERDB_FETCH_MAX_PAGES` (500), `TICKERDB_FETCH_MAX_ROWS` (2,000,000) and `TICKERDB_INLINE_MAX_CHARS` (40,000; 0 = never auto-store) tune `fetch_all` and auto-storing.
+| Variable | Default | What it does |
+|---|---|---|
+| `TICKERDB_API_BASE` | `https://api.tickerdb.com/v1` | Points the server at another TickerDB deployment |
+| `TICKERDB_FETCH_MAX_PAGES` | 500 | Most pages one `fetch_all` call follows |
+| `TICKERDB_FETCH_MAX_ROWS` | 2,000,000 | Most rows one `fetch_all` call stores |
+| `TICKERDB_INLINE_MAX_CHARS` | 40,000 | Results longer than this are stored in a table; 0 turns that off |
 
-> **Prefer not to run a local process?** Connect directly to the hosted server at `https://mcp.tickerdb.com/mcp` with OAuth or Bearer token auth — no install needed. See the [main repo](https://github.com/tickerdb/tickerdb-mcp) for details.
+**Prefer not to run a local process?** Connect to the hosted server at `https://mcp.tickerdb.com/mcp`: sign in and click Allow, no install and no API key. See the [MCP docs](https://tickerdb.com/docs/mcp).
+
+## Try it
+
+> **"Which stocks are forming a bull flag while their insiders are buying?"**
+
+The agent looks up the field names with `get_schema`, then calls `query` with two filters: `pattern_bull_flag_state = mature`, and `insider_cluster_buying_state = cluster` (three or more insiders bought on the open market in the last 30 days). The filtering happens on the server, so only the matches reach the agent. It can follow up with `get_summary` on any of them.
+
+> **"When has NVDA started a new uptrend?"**
+
+`get_summary` with `timeframe=weekly`, `field=trend_stage` and `band=stage_2_growth` returns each time it happened: the date, the stage NVDA left, and how long it had been there. Add `stats=true` to get how often each stage was entered.
+
+> **"Test a rule: each week, buy the 20 cheapest S&P 500 stocks by P/E. Since 2019."**
+
+`query` with `fields=["fundamentals_pe_ratio"]`, `member_of=sp500`, `start`/`end`, `ohlcv=true`, `store_as=rule` and `fetch_all=true` pulls the whole history into a table in one call. Each row has the P/E and the index's members as they were known that week, so the test sees what it would have seen then. The agent runs the test with SQL in `query_data`, and the hundreds of thousands of rows stay out of its context. How far back you can go depends on your plan.
 
 ## Tools
 
-Eight tools. Short descriptions keep the tool list small (about 15K characters including the server instructions, down from 43.5K); field lists live in `get_schema`, and the rarer endpoints sit behind `search_tools` / `call_tool`.
+Eight tools. Field lists live in `get_schema`, and the less common endpoints sit behind `search_tools` and `call_tool`, which keeps the tool list short.
 
-| Tool | Description |
+| Tool | What it does |
 |---|---|
-| `get_schema` | Look up field names, units and band values: `search="rsi zone"`, `category=patterns`, `level=market` (or `level=model`) |
-| `query` | Any cross-section or history. One date with filters, tickers, a sort or a limit screens and ranks (`/v1/search`); one date with only fields returns every asset (`/v1/universe`); `start`+`end` returns every row in the range (`/v1/history`, weekly by default past ~6 months) |
-| `get_summary` | One ticker: latest snapshot, a date, a series, or band events and what usually happens after (`field`, `band`, `stats=true`) |
-| `get_market` | Market (`market_*`) and economy (`macro_*`) regime rows, one per date, and regime changes |
-| `get_ohlcv` | Daily or weekly EOD candles for returns, charts and backtests |
-| `search_tools` | Find the other endpoints and their params: changes, insiders, insider trades and holdings, funds, fund holdings and holders, indexes, index members, TickerDB's own trading models, status, account, raw search and universe |
-| `call_tool` | Run an endpoint found with `search_tools` |
+| `get_schema` | Looks up field names, units and band values: `search="rsi zone"`, `category=patterns`, `level=market` (or `level=model`) |
+| `query` | Any cross-section or history. One date with filters, tickers, a sort or a limit is a ranked screen (`/v1/search`). One date with only fields is every asset (`/v1/universe`). `start` and `end` is every row in the range (`/v1/history`, weekly by default past about 6 months) |
+| `get_summary` | One ticker: its latest snapshot, one date, a series, or each time a band was entered (`field`, `band`, `stats=true`) |
+| `get_market` | Market (`market_*`) and economy (`macro_*`) regime rows, one per date, and the dates a regime changed |
+| `get_ohlcv` | Daily or weekly end-of-day candles |
+| `search_tools` | Finds the other endpoints and their parameters: changes, insiders, insider trades and holdings, funds, fund holdings and holders, indexes, index members, TickerDB's own trading models, status, account, and the raw search and universe routes |
+| `call_tool` | Runs an endpoint found with `search_tools` |
 | `query_data` | Read-only SQL (SQLite) over results saved with `store_as` |
 
-**Large pulls stay out of the context.** Every data tool takes `store_as=<table>` (and `fetch_all=true` to follow every page): rows go into a SQLite table and the tool returns a short summary (row count, columns, five sample rows). Read them with `query_data` (`SELECT`/`WITH`, `SHOW TABLES`, `DESCRIBE <table>`; at most 200 rows back, `format=csv` for CSV text). Inline results over 40K characters are stored automatically. Where the tables live:
+### Large pulls
 
-- **stdio (`npx tickerdb-mcp`)**: in memory for the life of the process; `query_data` also takes `output_path` to write the full result to a CSV file.
-- **Hosted (`mcp.tickerdb.com`)**: a SQLite Durable Object per API key, deleted 24 hours after last use. No `output_path`.
+Every data tool takes `store_as=<table>`, and `fetch_all=true` to follow every page. The rows go into a SQLite table and the tool returns a short summary: row count, columns and five sample rows. Read the table with `query_data` (`SELECT` or `WITH`, `SHOW TABLES`, `DESCRIBE <table>`). It returns at most 200 rows; `format=csv` returns CSV text. A result over 40,000 characters is stored automatically.
 
-All tools, fields and timeframes (daily and weekly) are available on every plan, except the six model endpoints (`get_models`, `get_model`, `get_model_history`, `get_model_holdings`, `get_model_trades`, `get_models_holdings`), which are Pro and Commercial only; plans differ by credits and history depth: Free reads the last 30 days (250 credits a month), Plus the last 3 years, Pro and Commercial all history from 2019. See [tickerdb.com/pricing](https://tickerdb.com/pricing).
+Where the tables live:
 
-### Trading models (`call_tool`)
+- **Local server:** in memory, until the process ends. `query_data` also takes `output_path` to write the full result to a CSV file.
+- **Hosted server:** in a store per API key, deleted 24 hours after last use.
 
-TickerDB runs its own rule-based trading models and publishes what each holds and how it has performed (the model level, `model_*` fields). **Pro and Commercial plans only:** on Free and Plus each of these returns `403 tier_restricted`. Six `call_tool` endpoints mirror the `/v1/models` routes; `slug` is the model id from `get_models` (for example `garp-core-10`).
+### Plans
+
+Every plan has every tool, field and timeframe except the [trading model data](#trading-models), which needs Pro or Commercial. Plans differ by credits and by how far back they read: Free reads the last 30 days (250 credits a month), Plus the last 3 years, Pro and Commercial everything from 2019. See [pricing](https://tickerdb.com/pricing).
+
+## Trading models
+
+TickerDB runs trading models of its own and publishes what each holds and how it has performed (the model level, `model_*` fields). Six endpoints read that record. They need a **Pro or Commercial** plan; on Free and Plus they return `403 tier_restricted`. Run them with `call_tool`. `slug` is the model id from `get_models`, for example `garp-core-10`.
 
 | `call_tool` name | Route | Returns |
 |---|---|---|
-| `get_models` | `/v1/models` | Every model: description, status, newest row, stats per segment. Params: `asset_class`, `filters`, `sort_by`, `order`. Pro and Commercial |
-| `get_model` | `/v1/models/{slug}` | One model: rules, newest row with change markers, stats with yearly returns. Param: `slug`. Pro and Commercial |
-| `get_model_history` | `/v1/models/{slug}/history` | Rows over time. Params: `slug`, `start`, `end`, `fields`, `order`, `limit`. Pro and Commercial |
-| `get_model_holdings` | `/v1/models/{slug}/holdings` | The book on a date: held, entering, exiting, each held row with `return_zone`, `age_zone`, `weight_zone`, `max_gain_pct`, `max_loss_pct`. Params: `slug`, `date`, `state`. Pro and Commercial |
-| `get_model_trades` | `/v1/models/{slug}/trades` | Trades, open and closed, with bands per trade (exit type, outcome, path, result against the benchmark, duration, entry market regime). Params: `slug`, `status`, `segment`, `ticker`, `exit_type`, `outcome_zone`, `path_zone`, `relative_zone`, `duration_zone`, `entry_market_regime_zone`, `start`, `end`, `order`, `limit`, `offset`. Pro and Commercial |
-| `get_models_holdings` | `/v1/models/holdings` | Holdings across models, each at its newest date. Params: `ticker`, `asset_class`, `state`, `return_zone`, `weight_zone`, `limit`, `offset`. Pro and Commercial |
+| `get_models` | `/v1/models` | Every model: description, status, newest row, stats per segment. Params: `asset_class`, `filters`, `sort_by`, `order` |
+| `get_model` | `/v1/models/{slug}` | One model: rules, newest row with change markers, stats with yearly returns. Param: `slug` |
+| `get_model_history` | `/v1/models/{slug}/history` | Rows over time. Params: `slug`, `start`, `end`, `fields`, `order`, `limit` |
+| `get_model_holdings` | `/v1/models/{slug}/holdings` | The book on a date: held, entering, exiting. Each held row has `return_zone`, `age_zone`, `weight_zone`, `max_gain_pct`, `max_loss_pct`. Params: `slug`, `date`, `state` |
+| `get_model_trades` | `/v1/models/{slug}/trades` | Trades, open and closed, with bands per trade (exit type, outcome, path, result against the benchmark, duration, entry market regime). Params: `slug`, `status`, `segment`, `ticker`, `exit_type`, `outcome_zone`, `path_zone`, `relative_zone`, `duration_zone`, `entry_market_regime_zone`, `start`, `end`, `order`, `limit`, `offset` |
+| `get_models_holdings` | `/v1/models/holdings` | Holdings across models, each at its newest date. Params: `ticker`, `asset_class`, `state`, `return_zone`, `weight_zone`, `limit`, `offset` |
 
-The band filters take one label or a comma-separated list (`outcome_zone=big_win,win`). Trade percentiles and `duration_zone` rank a trade against the model's earlier closed trades only (null until 10 exist); the benchmark fields are null for shorts; an open trade carries only its entry context and its best and worst return so far. Position bands are null on `entering` rows.
+Reading the rows:
 
-Backtest rows are replays of a model's rules over history; live rows are what the model decided on the day (`model_segment` on every row). Both current models were activated on 2026-11-09; `stats.live` is null until two live rows exist. Model output is a record of what fixed rules did. It is not investment advice or a recommendation.
+- **Backtest and live.** `model_segment` on every row says which. A backtest row replays the model's rules over history; a live row is what the model decided on the day. Both current models went live on 2026-11-09. `stats.live` is `null` until two live rows exist.
+- **Band filters** take one label or a comma-separated list: `outcome_zone=big_win,win`.
+- **Trade percentiles and `duration_zone`** rank a trade against the model's earlier closed trades, and are `null` until 10 exist.
+- **Benchmark fields** are `null` for shorts.
+- **An open trade** has its entry context and its best and worst return so far.
+- **Position bands** are `null` on `entering` rows.
 
-### Upgrading from 2.x
+These endpoints report what each model did. They are not investment advice or a recommendation.
 
-3.0 replaces the one-tool-per-route list. These tool names are gone: `get_search` and `get_universe` (use `query`, or `call_tool` with the same name for the raw route), and `get_changes`, `get_insiders`, `get_insider_trades`, `get_funds`, `get_fund_holdings`, `get_fund_holders`, `get_indexes`, `get_index_members`, `get_status`, `get_account` (use `call_tool` with the same name; its params are the route's query params). New: `get_insider_holdings` through `call_tool`. `get_schema`, `get_summary`, `get_market` and `get_ohlcv` keep their names.
+## Why bands, and not only raw bars
 
-## Quick start
+An agent can compute RSI from price bars. Other things aren't in the bars at all: that three insiders bought last month, what a company's P/E was on a date in 2021 using only what was public then, which stocks were in the S&P 500 that week. And some are in the bars but cost a lot to find, like a bull flag, or a support level that has held four times.
 
-Connect TickerDB to Claude, ChatGPT, or another MCP client, then try:
+TickerDB has done that work already. The agent reads `pattern_bull_flag_state: "mature"` and starts on the question you asked. The numbers behind each band are there when it needs them.
 
-> **"Show me oversold large-cap stocks near support"**
-
-The agent looks up the field names with `get_schema`, then calls `query` with filters for `momentum_rsi_zone = oversold` and `market_cap_tier in [large, mega]`, and follows up with `get_summary` on individual results. The filtering happens on the server, not in the agent's context.
-
-> **"What usually happens when AAPL goes oversold?"**
-
-`get_summary` with `field=momentum_rsi_zone`, `band=oversold`, `stats=true` returns aggregate aftermath distributions: how the stock performed 5, 10, 20, 50, and 100 days after each oversold entry across the history your plan reads (all history from 2019 on Pro and Commercial).
-
-> **"Weekly P/E of every S&P 500 stock since 2019"**
-
-`query` with `fields=["fundamentals_pe_ratio"]`, `member_of=sp500`, `start`/`end`, `store_as=pe` and `fetch_all=true` pulls the whole history into a table in one call; the agent then answers with SQL in `query_data` instead of reading hundreds of thousands of rows.
-
-## Why not just pass raw OHLCV?
-
-A model can compute RSI from raw bars. But ask "Does AAPL look bullish?" with raw OHLCV and it burns its context on arithmetic — computing indicators one by one — instead of doing what you actually asked: noticing that RSI just hit oversold while institutions are accumulating, that the pullback is sharp but the 200-day uptrend is intact, that insiders have been selling all quarter. That's the analysis. Raw bars bury it under computation.
-
-With TickerDB, the model sees `"oversold"`, `"accumulation"`, `"strong_uptrend"` and connects them immediately.
-
-**State transitions** go further. "What happened the last time BTC was this oversold?" means computing RSI across 7 years of daily bars, finding every oversold entry, and calculating what happened after each one. With TickerDB it's one call: `get_summary` with `field=momentum_rsi_zone`, `band=oversold`, `stats=true`.
+History works the same way. Finding every time NVDA began an uptrend since 2019 is one `get_summary` call.
 
 ## Documentation
 
-Full API docs, endpoint details, and field reference at [tickerdb.com/docs](https://tickerdb.com/docs).
+Endpoints, fields and data quality are documented at [tickerdb.com/docs](https://tickerdb.com/docs). The source is at [github.com/tickerdb/tickerdb-mcp](https://github.com/tickerdb/tickerdb-mcp).
