@@ -140,7 +140,8 @@ export default {
     const isInit = parsedBody !== undefined && isInitializeRequest(parsedBody);
     const rpcInfo = getRpcInfo(parsedBody);
     const requestId = crypto.randomUUID().slice(0, 8);
-    const allowPublicDiscovery = isPublicDiscoveryRequest(url.pathname, request.method, isInit, rpcInfo.method);
+    const allowPublicDiscovery =
+      env.MCP_PUBLIC_DISCOVERY === "1" && isPublicDiscoveryRequest(url.pathname, request.method, isInit, rpcInfo.method);
 
     const authHeader = request.headers.get("Authorization");
     const xApiKey = request.headers.get("x-api-key");
@@ -168,7 +169,9 @@ export default {
       });
 
       if (!allowPublicDiscovery) {
-        if (rpcInfo.method === "tools/call") {
+        // With public discovery on, an unsigned tools/call is answered in-band (ChatGPT's mixed auth);
+        // with it off (the default) every unsigned request gets the 401 challenge below.
+        if (env.MCP_PUBLIC_DISCOVERY === "1" && rpcInfo.method === "tools/call") {
           const response = oauthRequiredToolResponse(parsedBody, env);
           logRequest("finish", {
             requestId,
