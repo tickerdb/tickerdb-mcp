@@ -2,7 +2,7 @@
   "name": "tickerdb-mcp",
   "version": "3.0.0",
   "private": true,
-  "description": "Connect your agent to pre-computed market context that improves reasoning and reduces token usage.",
+  "description": "Point-in-time market data for AI agents: stocks, ETFs and crypto as named bands plus raw values.",
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
