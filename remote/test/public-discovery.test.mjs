@@ -60,7 +60,7 @@ const initAs = (name) => ({ ...initializeBody, params: { ...initializeBody.param
 // when the connector is added; directories and other scanners keep the open handshake.
 test("Claude.ai and ChatGPT get the 401 sign-in challenge on initialize", async (t) => {
   const worker = await startWorker(t);
-  for (const name of ["claude-ai", "openai-mcp", "ChatGPT"]) {
+  for (const name of ["Anthropic", "claude-ai", "claude-code", "openai-mcp", "ChatGPT"]) {
     const res = await rawPost(worker, initAs(name));
     assert.equal(res.statusCode, 401, `${name} initialize returned ${res.statusCode}`);
     assert.match(res.headers["www-authenticate"] ?? "", /resource_metadata=/);

@@ -153,6 +153,15 @@ export default {
     let authMode: AuthMode;
     let apiKey: string;
 
+    if (!authHeadersPresent && isInit) {
+      // Which client handshakes without sign-in (decides signsInFirst): its name and user agent only.
+      const info = (parsedBody as { params?: { clientInfo?: { name?: unknown; version?: unknown } } } | null)?.params?.clientInfo;
+      console.log("[mcp] unsigned-initialize", JSON.stringify({
+        requestId, client: String(info?.name ?? ""), version: String(info?.version ?? ""),
+        userAgent: (request.headers.get("User-Agent") ?? "").slice(0, 120), signInFirst: signsInFirst(parsedBody),
+      }));
+    }
+
     if (!authHeadersPresent) {
       authMode = allowPublicDiscovery ? "public_discovery" : "missing_auth";
       logRequest("start", {
@@ -478,10 +487,11 @@ function getAuthMode(bearerToken: string, xApiKey: string | null): "api_key" | "
 /**
  * Clients that must sign in before the handshake (owner 2026-11-12): Claude.ai and ChatGPT read an
  * open initialize as "no sign-in needed", so a new connector failed its first tool call. A 401 on
- * their initialize makes them start OAuth when the connector is added. Every other client (MCP
+ * their initialize makes them start OAuth when the connector is added. Claude.ai's connector check names itself "Anthropic"
+ * (seen 2026-11-12), Claude Code "claude-code", ChatGPT "openai-mcp". Every other client (MCP
  * directories and scanners) keeps the open initialize + tools/list; tool calls need sign-in for all.
  */
-const SIGN_IN_FIRST_CLIENTS = /claude|openai|chatgpt/i;
+const SIGN_IN_FIRST_CLIENTS = /claude|anthropic|openai|chatgpt/i;
 
 function signsInFirst(parsedBody: unknown): boolean {
   const info = (parsedBody as { params?: { clientInfo?: { name?: unknown } } } | null)?.params?.clientInfo;
