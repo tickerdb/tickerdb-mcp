@@ -97,6 +97,8 @@ export async function callTickerDb(
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
+        // Names the caller on tickerdb.com's /stats (owner 2026-11-12).
+        "User-Agent": "tickerdb-mcp",
       },
       ...(options?.body ? { body: JSON.stringify(options.body) } : {}),
     });
