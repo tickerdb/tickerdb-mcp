@@ -4,6 +4,8 @@
 	// and the production MCP_URL below, but "tickerdb-mcp-staging" as its name --
 	// so a bare `wrangler deploy` pushed the production configuration onto the
 	// staging worker, and no production environment existed at all.
+	// The staging worker (tickerdb-mcp-staging) was retired on 2026-11-13: its build is disconnected
+	// and the worker deleted, so there is no staging environment here any more.
 	"name": "tickerdb-mcp",
 	"main": "remote/src/index.ts",
 	"compatibility_date": "2026-03-10",
@@ -83,37 +85,6 @@
 				{
 					"binding": "HYPERDRIVE",
 					"id": "27f510b1cca14457ac0342bad68ee634"
-				}
-			]
-		},
-		"staging": {
-			"name": "tickerdb-mcp-staging",
-			"durable_objects": {
-				"bindings": [
-					{
-						"name": "TICKERDB_STORE",
-						"class_name": "TickerDbStore"
-					}
-				]
-			},
-			"migrations": [
-				{
-					"tag": "v1-table-store",
-					"new_sqlite_classes": [
-						"TickerDbStore"
-					]
-				}
-			],
-			"services": [
-				{
-					"binding": "TICKERDB",
-					"service": "tickerdb-staging"
-				}
-			],
-			"hyperdrive": [
-				{
-					"binding": "HYPERDRIVE",
-					"id": "97bf253be82a4c3a86be795ede4dbfcb"
 				}
 			]
 		}
