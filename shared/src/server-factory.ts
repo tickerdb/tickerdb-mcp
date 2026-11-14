@@ -152,14 +152,14 @@ export function createTickerDbServer(apiKey: string | (() => string), options: S
 
   meta(server.tool(
     "get_summary",
-    "One ticker's state: latest snapshot, one date, a start/end series (up to 50 rows; for a longer range add sample=even or use query), or band events. For events give field and optionally band: each says when the band was entered, what it left and how long that had lasted; stats=true returns how often each band was entered. fields trims to sections or paths, e.g. trend, momentum.rsi_zone, fundamentals.pe_ratio. Market regimes are in get_market.",
+    "One ticker's state: latest snapshot, one date, a start/end series (up to 50 rows; for a longer range add sample=even or use query), or band events. For events give field and optionally band: each says when the band was entered, what it left and how long that had lasted; stats=true returns how often each band was entered. fields trims to sections, paths or field names, e.g. trend, momentum.rsi_zone, fundamentals_pe_ratio. Field names are the get_schema names everywhere (no aliases). Market regimes are in get_market.",
     {
       ticker: z.string().describe("e.g. AAPL, BTCUSD, SPY"),
       timeframe: tf,
       date: day("Snapshot date"),
       start: day("Series start"),
       end: day("Series end"),
-      fields: z.array(z.string()).optional().describe("Sections or dotted paths."),
+      fields: z.array(z.string()).optional().describe("Sections, dotted paths, or get_schema field names."),
       meta: z.boolean().optional().describe("Add stability metadata (_meta) to every band."),
       field: z.string().optional().describe("Band field for events, e.g. momentum_rsi_zone."),
       band: z.string().optional().describe("Only changes into this value, e.g. oversold."),
