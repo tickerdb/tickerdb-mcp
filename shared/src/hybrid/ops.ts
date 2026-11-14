@@ -20,6 +20,8 @@ export interface Op {
   /** Long-tail ops only: parameters for search_tools and call_tool validation. */
   params?: Record<string, ParamSpec>;
   request(args: Args): { path: string; query: Query; body?: Record<string, unknown> };
+  /** POST with the parameters in the query string (watchlist add/remove). Default GET, or POST when request() gives a body. */
+  method?: "POST";
   /** Routing ops (query): pick the concrete op and its args for this call. Throws on bad input. */
   resolve?(args: Args): { op: Op; args: Args };
   /** Filters the MCP server applies to each page's rows (the route cannot). */
@@ -40,6 +42,10 @@ const str = (v: unknown) => (v === undefined || v === null || v === "" ? undefin
 const upper = (v: unknown) => str(v)?.trim().toUpperCase();
 const lower = (v: unknown) => str(v)?.trim().toLowerCase();
 const json = (v: unknown) => (v === undefined || v === null ? undefined : typeof v === "string" ? v : JSON.stringify(v));
+
+/** ["nvda", "AMD"] or "nvda,AMD" -> "NVDA,AMD". */
+const tickerList = (v: unknown) =>
+  Array.isArray(v) ? v.map((t) => String(t).trim().toUpperCase()).filter(Boolean).join(",") || undefined : upper(v);
 
 const ROW_KEYS = ["rows", "results", "bars", "trades", "insiders", "funds", "holdings", "members", "indexes", "models", "events", "fields"];
 
@@ -212,6 +218,42 @@ export const OPS: Record<string, Op> = {
         (Array.isArray(list) ? list : []).map((c) => ({ ticker, ...(c as Row) })),
       );
     },
+  },
+  // ---- The account's watchlist (website routes /v1/watchlist*) ----
+  // add/remove are first-class tools (they change the account, so they are not read-only);
+  // the list and the digest are long-tail reads through call_tool.
+  add_watchlist_tickers: {
+    name: "add_watchlist_tickers",
+    apiRoute: "/watchlist/add",
+    method: "POST",
+    request: (a) => ({ path: "/watchlist/add", query: { tickers: tickerList(a.tickers) } }),
+    rows: (d) => (Array.isArray(d?.tickers) ? d.tickers : undefined),
+  },
+  remove_watchlist_tickers: {
+    name: "remove_watchlist_tickers",
+    apiRoute: "/watchlist/remove",
+    method: "POST",
+    request: (a) => ({ path: "/watchlist/remove", query: { tickers: tickerList(a.tickers) } }),
+    rows: (d) => (Array.isArray(d?.tickers) ? d.tickers : undefined),
+  },
+  get_watchlist: {
+    name: "get_watchlist",
+    apiRoute: "/watchlist",
+    purpose: "The account's watchlist (the tickers it tracks, shared with the website's Track buttons and Claude/ChatGPT watchlist links), its limit and plan. Costs no credits. Change it with add_watchlist_tickers / remove_watchlist_tickers.",
+    params: {},
+    request: () => ({ path: "/watchlist", query: {} }),
+    rows: (d) => (Array.isArray(d?.tickers) ? d.tickers : undefined),
+  },
+  get_watchlist_changes: {
+    name: "get_watchlist_changes",
+    apiRoute: "/watchlist/changes",
+    purpose: "What changed that matters for each watchlist ticker since the last check: big moves, band flips, a reported quarter, 8-K events, insider buys/sells, score/upside/downside changes, next earnings date (earnings.offer_alert: offer the user an update on that report). A full check remembers what it reported. 1 credit plus 1 per 10 tickers.",
+    params: {
+      since: { type: "YYYY-MM-DD", desc: "report what happened after this date (max 31 days back); default the last check" },
+      tickers: { type: "string[]", desc: "only these watchlist tickers; does not move the last-check state" },
+    },
+    request: (a) => ({ path: "/watchlist/changes", query: { since: str(a.since), tickers: tickerList(a.tickers) } }),
+    rows: (d) => (Array.isArray(d?.tickers) ? d.tickers : undefined),
   },
   get_insiders: {
     name: "get_insiders",

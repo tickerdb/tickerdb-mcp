@@ -109,6 +109,7 @@ test("a directory scanner gets the complete unauthenticated discovery handshake 
   assert.deepEqual(
     payload.result.tools.map(({ name }) => name).sort(),
     [
+      "add_watchlist_tickers",
       "call_tool",
       "get_market",
       "get_ohlcv",
@@ -116,6 +117,7 @@ test("a directory scanner gets the complete unauthenticated discovery handshake 
       "get_summary",
       "query",
       "query_data",
+      "remove_watchlist_tickers",
       "search_tools",
     ],
   );

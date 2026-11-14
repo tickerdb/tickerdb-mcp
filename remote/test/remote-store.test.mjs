@@ -49,7 +49,7 @@ async function sql(query, extra = {}, key) {
 
 test("remote serves the same tools; query_data has format but no output_path", async () => {
   const { tools } = await rpc("tools/list", {});
-  assert.deepEqual(tools.map((t) => t.name).sort(), ["call_tool", "get_market", "get_ohlcv", "get_schema", "get_summary", "query", "query_data", "search_tools"]);
+  assert.deepEqual(tools.map((t) => t.name).sort(), ["add_watchlist_tickers", "call_tool", "get_market", "get_ohlcv", "get_schema", "get_summary", "query", "query_data", "remove_watchlist_tickers", "search_tools"]);
   const qd = tools.find((t) => t.name === "query_data");
   assert.deepEqual(Object.keys(qd.inputSchema.properties).sort(), ["format", "max_rows", "sql"]);
   for (const t of tools) assert.deepEqual(t._meta?.securitySchemes, [{ type: "oauth2", scopes: ["tickerdb"] }], t.name);

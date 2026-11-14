@@ -78,10 +78,11 @@ function hasMorePages(data: any): boolean {
   return Boolean(data.has_more || data.next_cursor || data.next_page_token || (Array.isArray(data.page_tokens) && data.page_tokens.length));
 }
 
-/** One API call for an op (GET with a query string, or POST with a JSON body). */
+/** One API call for an op: GET with a query string, POST with a JSON body, or POST with a query string (op.method). */
 async function callOp(apiKey: string, op: Op, args: Args) {
   const { path, query, body } = op.request(args);
-  return body ? callTickerDb(apiKey, path, undefined, { method: "POST", body }) : callTickerDb(apiKey, path, query);
+  if (body) return callTickerDb(apiKey, path, undefined, { method: "POST", body });
+  return callTickerDb(apiKey, path, query, op.method === "POST" ? { method: "POST" } : undefined);
 }
 
 const rawCounts = new WeakMap<object, number>();

@@ -236,3 +236,16 @@ test("what each first-class tool sends is accepted by its route", { skip }, () =
     for (const k of expectedParams(route)) assert.ok(covered.has(`${route}:${k}`), `query never sends ${k} to /v1${route}`);
   }
 });
+
+test("the watchlist write tools POST their tickers in the query string; the reads stay GET", { skip }, () => {
+  for (const [name, path] of [["add_watchlist_tickers", "/watchlist/add"], ["remove_watchlist_tickers", "/watchlist/remove"]]) {
+    const op = shared.OPS[name];
+    assert.equal(op.method, "POST", `${name} must POST`);
+    assert.deepEqual(op.request({ tickers: ["nvda", " AMD "] }), { path, query: { tickers: "NVDA,AMD" } });
+    const tool = tools.find((t) => t.name === name);
+    assert.equal(tool.annotations.readOnlyHint, false, `${name} changes the account`);
+  }
+  for (const name of ["get_watchlist", "get_watchlist_changes"]) assert.equal(shared.OPS[name].method, undefined);
+  assert.deepEqual(shared.OPS.get_watchlist_changes.request({ since: "2026-11-10", tickers: ["nvda"] }).query, { since: "2026-11-10", tickers: "NVDA" });
+  assert.equal(tools.find((t) => t.name === "call_tool").annotations.readOnlyHint, true);
+});
