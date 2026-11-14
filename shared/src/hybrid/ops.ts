@@ -239,7 +239,7 @@ export const OPS: Record<string, Op> = {
   get_watchlist: {
     name: "get_watchlist",
     apiRoute: "/watchlist",
-    purpose: "The account's watchlist (the tickers it tracks, shared with the website's Track buttons and Claude/ChatGPT watchlist links), its limit and plan. Costs no credits. Change it with add_watchlist_tickers / remove_watchlist_tickers.",
+    purpose: "The account's watchlist: the tickers it tracks, shared with the website's Track buttons and Claude/ChatGPT watchlist links. Costs no credits. Change it with add_watchlist_tickers / remove_watchlist_tickers.",
     params: {},
     request: () => ({ path: "/watchlist", query: {} }),
     rows: (d) => (Array.isArray(d?.tickers) ? d.tickers : undefined),
@@ -247,7 +247,7 @@ export const OPS: Record<string, Op> = {
   get_watchlist_changes: {
     name: "get_watchlist_changes",
     apiRoute: "/watchlist/changes",
-    purpose: "What changed that matters for each watchlist ticker since the last check: big moves, band flips, a reported quarter, 8-K events, insider buys/sells, score/upside/downside changes, next earnings date (earnings.offer_alert: offer the user an update on that report). A full check remembers what it reported. 1 credit plus 1 per 10 tickers.",
+    purpose: "What changed that matters for each watchlist ticker since the last check: score, upside and downside potential, earnings (next date, a reported quarter) and big price moves. earnings.offer_alert: offer the user an update on that report. A full check remembers what it reported. 1 credit plus 1 per 10 tickers.",
     params: {
       since: { type: "YYYY-MM-DD", desc: "report what happened after this date (max 31 days back); default the last check" },
       tickers: { type: "string[]", desc: "only these watchlist tickers; does not move the last-check state" },

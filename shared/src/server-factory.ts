@@ -225,7 +225,7 @@ export function createTickerDbServer(apiKey: string | (() => string), options: S
   const watchTickers = z.array(z.string()).min(1).max(50).describe("Ticker symbols, e.g. [\"NVDA\", \"AMD\"]. Up to 50.");
   meta(server.tool(
     "add_watchlist_tickers",
-    "Add tickers to the user's TickerDB watchlist (one per account, shared with the website's Track buttons and Claude/ChatGPT watchlist links). Idempotent: already-present tickers come back in already; unknown ones in unknown; over the plan's limit (Free 10, Plus 50, Pro 200, Commercial 500) in over_limit. Free. Then get_watchlist_changes (call_tool) reports what changed for them since the last check.",
+    "Add tickers to the user's TickerDB watchlist (one per account, shared with the website's Track buttons and Claude/ChatGPT watchlist links). Idempotent: already-present tickers come back in already; unknown ones in unknown. No ticker limit; free. Then get_watchlist_changes (call_tool) reports what changed for them since the last check: score, upside and downside potential, earnings and big price moves.",
     { tickers: watchTickers },
     WRITE,
     run("add_watchlist_tickers"),
