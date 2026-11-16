@@ -105,7 +105,7 @@ export function createTickerDbServer(apiKey: string | (() => string), options: S
 
   meta(server.tool(
     "get_schema",
-    "Look up field names, descriptions, units and band values. Search rather than pulling everything (~230 KB): search=\"bull flag\", category=patterns, level=market. Names are <group>_<name>[_<unit>]; bands end in a category word (_zone, _state, _trend), raw numbers in a unit (_pct, _ratio, _usd). Every band (tracked: true) also has _prev, _periods, _flips_recent_count, _flips_lookback and _stability, usable as fields and filters; lookups omit those rows unless markers=true. Over 25 matches lists names only: search again by exact name for a description.",
+    "Look up field names, descriptions, units and band values. Search rather than pulling everything (~230 KB): search=\"bull flag\", category=patterns, level=market. Names are <group>_<name>[_<unit>]; bands end in a category word (_zone, _state, _trend), raw numbers in a unit (_pct, _ratio, _usd). category=fundamentals (stocks, from SEC statements) covers margins, returns on capital (ROE, ROA, ROIC), FCF, buyback, dividend and shareholder yields, P/S, EV/EBITDA, interest coverage, liquidity, earnings quality, growth, valuation, a revenue size tier and USD amounts (TTM revenue, net income, FCF; debt, cash). Every band (tracked: true) also has _prev, _periods, _flips_recent_count, _flips_lookback and _stability, usable as fields and filters; lookups omit those rows unless markers=true. Over 25 matches lists names only: search again by exact name for a description.",
     {
       search: z.string().optional().describe("Words that must all appear in name, category or description."),
       category: z.string().optional().describe("Comma-separated, e.g. patterns,volume."),
@@ -120,7 +120,7 @@ export function createTickerDbServer(apiKey: string | (() => string), options: S
 
   meta(server.tool(
     "query",
-    "Any cross-section or history (one ticker's full snapshot: get_summary). Give fields and filters (names from get_schema), then EITHER date (default latest) OR start+end. One date with filters, tickers, sort_by or limit: a ranked screen. One date with only fields: every asset. A range: every row in it, weekly by default past ~6 months; market_/macro_ filters keep only dates in that regime, other filters apply after the rows are fetched, so narrow with tickers, member_of or asset_class. Big pulls: store_as + fetch_all, then query_data.",
+    "Any cross-section or history (one ticker's full snapshot: get_summary). Give fields and filters (names from get_schema, e.g. fundamentals_revenue_ttm_usd gte 1e9, fundamentals_returns_zone in [high, very_high]), then EITHER date (default latest) OR start+end. One date with filters, tickers, sort_by or limit: a ranked screen. One date with only fields: every asset. A range: every row in it, weekly by default past ~6 months; market_/macro_ filters keep only dates in that regime, other filters apply after the rows are fetched, so narrow with tickers, member_of or asset_class. Big pulls: store_as + fetch_all, then query_data.",
     {
       fields: z.array(z.string()).optional().describe('Columns, e.g. ["market_cap_usd","momentum_rsi_zone"]. Max 30.'),
       filters: z
