@@ -404,6 +404,51 @@ export const OPS: Record<string, Op> = {
     paging: "offset",
     maxLimit: 1000,
   },
+  get_statements: {
+    name: "get_statements",
+    apiRoute: "/statements/[ticker]",
+    purpose: "One company's income statement, balance sheet and cash flow from its own SEC filings (10-Q, 10-K, 20-F), quarterly, annual or TTM, as known on any date (as_of): latest or first_reported version, every version with revisions=true. Each period has its filing, acceptance second and notes. Line names: get_schema level=statement.",
+    params: {
+      ticker: { type: "string", required: true },
+      statement: { type: "string", desc: "income, balance_sheet, cash_flow (comma list); default all" },
+      period: { type: "quarterly|annual|ttm", desc: "default quarterly" },
+      limit: { type: "integer", desc: "periods, newest first; default 8, max 40" },
+      as_of: { type: "string", desc: "YYYY-MM-DD or a timestamp with a zone; only filings public by then count (Plus and higher)" },
+      version: { type: "latest|first_reported", desc: "default latest" },
+      revisions: { type: "boolean", desc: "every version of each period" },
+      lines: { type: "string", desc: "comma list of line names, e.g. revenue,net_income,free_cash_flow" },
+      provenance: { type: "boolean", desc: "XBRL tag and flags behind each value" },
+    },
+    request: (a) => ({
+      path: `/statements/${encodeURIComponent(upper(a.ticker) ?? "")}`,
+      query: {
+        statement: str(a.statement), period: str(a.period), limit: str(a.limit), as_of: str(a.as_of), version: str(a.version),
+        revisions: str(a.revisions), lines: Array.isArray(a.lines) ? a.lines.join(",") : str(a.lines), provenance: str(a.provenance),
+      },
+    }),
+    rows: (d) => d?.statements,
+    hoist: (_d, a) => ({ ticker: upper(a.ticker) }),
+  },
+  get_statement_lines: {
+    name: "get_statement_lines",
+    apiRoute: "/statements",
+    purpose: "Chosen financial-statement lines (e.g. revenue, net_income) for up to 50 companies, one row per company and period, from their SEC filings, as known on any date (as_of).",
+    params: {
+      tickers: { type: "string[]", required: true, desc: "up to 50" },
+      lines: { type: "string[]", required: true, desc: "up to 30 line names (get_schema level=statement)" },
+      period: { type: "quarterly|annual|ttm", desc: "default quarterly" },
+      limit: { type: "integer", desc: "periods per company; default 8, max 40" },
+      as_of: { type: "string", desc: "YYYY-MM-DD or a timestamp with a zone (Plus and higher)" },
+      version: { type: "latest|first_reported", desc: "default latest" },
+    },
+    request: (a) => ({
+      path: "/statements",
+      query: {
+        tickers: tickerList(a.tickers), lines: Array.isArray(a.lines) ? a.lines.join(",") : str(a.lines),
+        period: str(a.period), limit: str(a.limit), as_of: str(a.as_of), version: str(a.version),
+      },
+    }),
+  },
   get_indexes: {
     name: "get_indexes",
     apiRoute: "/indexes",
