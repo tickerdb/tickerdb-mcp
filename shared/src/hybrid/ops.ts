@@ -419,13 +419,14 @@ export const OPS: Record<string, Op> = {
       lines: { type: "string", desc: "comma list of line names, e.g. revenue,net_income,free_cash_flow" },
       provenance: { type: "boolean", desc: "XBRL tag and flags behind each value" },
       share_basis: { type: "as_filed|as_of", desc: "as_of: per-share values and share counts restated for splits up to as_of" },
+      bands: { type: "boolean", desc: "attach the snapshot's fundamentals bands as of each filing date" },
     },
     request: (a) => ({
       path: `/statements/${encodeURIComponent(upper(a.ticker) ?? "")}`,
       query: {
         statement: str(a.statement), period: str(a.period), limit: str(a.limit), as_of: str(a.as_of), version: str(a.version),
         revisions: str(a.revisions), lines: Array.isArray(a.lines) ? a.lines.join(",") : str(a.lines), provenance: str(a.provenance),
-        share_basis: str(a.share_basis),
+        share_basis: str(a.share_basis), bands: str(a.bands),
       },
     }),
     rows: (d) => d?.statements,
