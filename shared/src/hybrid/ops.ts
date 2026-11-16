@@ -432,22 +432,24 @@ export const OPS: Record<string, Op> = {
   get_statement_lines: {
     name: "get_statement_lines",
     apiRoute: "/statements",
-    purpose: "Chosen financial-statement lines (e.g. revenue, net_income) for up to 50 companies, one row per company and period, from their SEC filings, as known on any date (as_of).",
+    purpose: "Chosen financial-statement lines (e.g. revenue, net_income) for up to 50 companies, one row per company and period, from their SEC filings, as known on any date (as_of). With since: what reported since a time (new filings and amendments, newest first).",
     params: {
-      tickers: { type: "string[]", required: true, desc: "up to 50" },
-      lines: { type: "string[]", required: true, desc: "up to 30 line names (get_schema level=statement)" },
+      tickers: { type: "string[]", desc: "up to 50; required unless since" },
+      lines: { type: "string[]", desc: "up to 30 line names (get_schema level=statement); required unless since" },
       period: { type: "quarterly|annual|ttm", desc: "default quarterly" },
-      limit: { type: "integer", desc: "periods per company; default 8, max 40" },
+      limit: { type: "integer", desc: "periods per company (default 8, max 40); with since: rows (default 100, max 1000)" },
       as_of: { type: "string", desc: "YYYY-MM-DD or a timestamp with a zone (Plus and higher)" },
       version: { type: "latest|first_reported", desc: "default latest" },
+      since: { type: "string", desc: "timestamp: every version public after it, newest first, with public_at and available_at (what reported since)" },
     },
     request: (a) => ({
       path: "/statements",
       query: {
         tickers: tickerList(a.tickers), lines: Array.isArray(a.lines) ? a.lines.join(",") : str(a.lines),
-        period: str(a.period), limit: str(a.limit), as_of: str(a.as_of), version: str(a.version),
+        period: str(a.period), limit: str(a.limit), as_of: str(a.as_of), version: str(a.version), since: str(a.since),
       },
     }),
+    rows: (d) => d?.rows,
   },
   get_indexes: {
     name: "get_indexes",
