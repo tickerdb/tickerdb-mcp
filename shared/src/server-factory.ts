@@ -122,7 +122,7 @@ export function createTickerDbServer(apiKey: string | (() => string), options: S
     "query",
     "Any cross-section or history (one ticker's full snapshot: get_summary). Give fields and filters (names from get_schema, e.g. fundamentals_revenue_ttm_usd gte 1e9, fundamentals_returns_zone in [high, very_high]), then EITHER date (default latest) OR start+end. One date with filters, tickers, sort_by or limit: a ranked screen. One date with only fields: every asset. A range: every row in it, weekly by default past ~6 months; market_/macro_ filters keep only dates in that regime, other filters apply after the rows are fetched, so narrow with tickers, member_of or asset_class. Big pulls: store_as + fetch_all, then query_data.",
     {
-      fields: z.array(z.string()).optional().describe('Columns, e.g. ["market_cap_usd","momentum_rsi_zone"]. Max 30.'),
+      fields: z.array(z.string()).optional().describe('Columns, e.g. ["market_cap_usd","momentum_rsi_zone"]. Max 30. On a daily range, statement lines too as statement.<line> (e.g. statement.revenue; get_schema level=statement).'),
       filters: z
         .array(z.object({ field: z.string(), op: z.enum(["eq", "neq", "in", "gt", "gte", "lt", "lte"]), value: z.unknown() }))
         .optional()
