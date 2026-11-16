@@ -418,12 +418,14 @@ export const OPS: Record<string, Op> = {
       revisions: { type: "boolean", desc: "every version of each period" },
       lines: { type: "string", desc: "comma list of line names, e.g. revenue,net_income,free_cash_flow" },
       provenance: { type: "boolean", desc: "XBRL tag and flags behind each value" },
+      share_basis: { type: "as_filed|as_of", desc: "as_of: per-share values and share counts restated for splits up to as_of" },
     },
     request: (a) => ({
       path: `/statements/${encodeURIComponent(upper(a.ticker) ?? "")}`,
       query: {
         statement: str(a.statement), period: str(a.period), limit: str(a.limit), as_of: str(a.as_of), version: str(a.version),
         revisions: str(a.revisions), lines: Array.isArray(a.lines) ? a.lines.join(",") : str(a.lines), provenance: str(a.provenance),
+        share_basis: str(a.share_basis),
       },
     }),
     rows: (d) => d?.statements,
@@ -441,12 +443,13 @@ export const OPS: Record<string, Op> = {
       as_of: { type: "string", desc: "YYYY-MM-DD or a timestamp with a zone (Plus and higher)" },
       version: { type: "latest|first_reported", desc: "default latest" },
       since: { type: "string", desc: "timestamp: every version public after it, newest first, with public_at and available_at (what reported since)" },
+      share_basis: { type: "as_filed|as_of", desc: "as_of: per-share values and share counts restated for splits up to as_of" },
     },
     request: (a) => ({
       path: "/statements",
       query: {
         tickers: tickerList(a.tickers), lines: Array.isArray(a.lines) ? a.lines.join(",") : str(a.lines),
-        period: str(a.period), limit: str(a.limit), as_of: str(a.as_of), version: str(a.version), since: str(a.since),
+        period: str(a.period), limit: str(a.limit), as_of: str(a.as_of), version: str(a.version), since: str(a.since), share_basis: str(a.share_basis),
       },
     }),
     rows: (d) => d?.rows,
