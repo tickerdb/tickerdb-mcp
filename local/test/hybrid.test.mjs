@@ -178,10 +178,11 @@ async function sql(query, extra = {}) {
 test("lists the tools with short descriptions and instructions", async () => {
   const { tools } = await client.listTools();
   assert.deepEqual(tools.map((t) => t.name).sort(), [
-    "call_tool", "get_market", "get_ohlcv", "get_schema", "get_summary", "query", "query_data", "search_tools",
+    "add_watchlist_tickers", "call_tool", "get_market", "get_ohlcv", "get_schema", "get_summary", "query", "query_data",
+    "remove_watchlist_tickers", "search_tools",
   ]);
   for (const t of tools) assert.ok(t.description.length < 600, `${t.name}: ${t.description.length} chars`);
-  assert.ok(client.getInstructions().length < 1000);
+  assert.ok(client.getInstructions().length < 1200);
 });
 
 test("get_ohlcv store_as + fetch_all follows the cursor into one table", async () => {

@@ -9,6 +9,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 
 const expectedTools = [
+  "add_watchlist_tickers",
   "call_tool",
   "get_market",
   "get_ohlcv",
@@ -16,6 +17,7 @@ const expectedTools = [
   "get_summary",
   "query",
   "query_data",
+  "remove_watchlist_tickers",
   "search_tools",
 ];
 const CLI = fileURLToPath(new URL("../bin/cli.js", import.meta.url));
