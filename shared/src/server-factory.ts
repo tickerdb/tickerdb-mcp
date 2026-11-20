@@ -240,7 +240,7 @@ export function createTickerDbServer(apiKey: string | (() => string), options: S
 
   meta(server.tool(
     "search_tools",
-    "Find the other TickerDB endpoints: changes, the watchlist and what changed for it, insiders, insider trades and holdings, funds, fund holdings and holders, indexes, index members, TickerDB's trading models (list, detail, history, holdings, trades; Pro and Commercial plans), status, account, and the raw search and universe routes. Returns each match's name, purpose and params (* = required). Empty query lists all. Run one with call_tool.",
+    "Find the other TickerDB endpoints: changes, the watchlist and what changed for it, insiders, insider trades and holdings, funds, fund holdings and holders, indexes, index members, TickerDB's trading models (list, detail, history, holdings, trades; Pro and Commercial plans, except a model's newest holdings, on every plan), status, account, and the raw search and universe routes. Returns each match's name, purpose and params (* = required). Empty query lists all. Run one with call_tool.",
     { query: z.string().optional().describe("Words, e.g. insider trades.") },
     RO,
     async ({ query }) => {
