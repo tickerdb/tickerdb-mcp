@@ -469,7 +469,7 @@ export const OPS: Record<string, Op> = {
   get_model_holdings: {
     name: "get_model_holdings",
     apiRoute: "/models/[slug]/holdings",
-    purpose: "A trading model's book on a date (default newest): held positions plus what the decision at that close will buy (entering) or sell (exiting) at the next open, each held row with return_zone, age_zone, weight_zone and its best and worst return so far. Pro and Commercial plans.",
+    purpose: "A trading model's book on a date (default newest): held positions plus what the decision at that close will buy (entering) or sell (exiting) at the next open, each held row with return_zone, age_zone, weight_zone and its best and worst return so far. The newest book (no date) is on every plan; a date is Pro and Commercial.",
     params: {
       slug: { type: "string", required: true, desc: "model id from get_models" },
       date: { type: "YYYY-MM-DD" },
