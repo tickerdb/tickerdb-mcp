@@ -407,7 +407,7 @@ export const OPS: Record<string, Op> = {
   get_statements: {
     name: "get_statements",
     apiRoute: "/statements/[ticker]",
-    purpose: "One company's income statement, balance sheet and cash flow from its own SEC filings (10-Q, 10-K, 20-F), quarterly, annual or TTM, as known on any date (as_of): latest or first_reported version, every version with revisions=true. Each period has its filing, acceptance second and notes. Line names: get_schema level=statement.",
+    purpose: "One company's income statement, balance sheet and cash flow from its own SEC filings (10-Q, 10-K, 20-F), quarterly, annual or TTM, as known on any date (as_of): latest or first_reported version, every version with revisions=true. Each period has its filing, acceptance second and notes. Line names: get_schema level=statement. Signs: payments and charges are positive (capital_expenditure, share_repurchases, dividends_paid, interest_expense, ...); deferred_income_taxes, other_nonoperating_income, fx_effect_on_cash, discontinued_operations_income and income_tax_expense keep the filer's sign; change_in_receivables/_inventory/_payables keep the XBRL tag's sign (a rise is positive).",
     params: {
       ticker: { type: "string", required: true },
       statement: { type: "string", desc: "income, balance_sheet, cash_flow (comma list); default all" },
