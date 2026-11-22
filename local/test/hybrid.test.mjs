@@ -377,6 +377,14 @@ test("call_tool get_changes stores one row per ticker and change", async () => {
   assert.deepEqual(r.rows, [["AAPL", "oversold"], ["MSFT", "oversold"]]);
 });
 
+test("call_tool get_changes passes start and end for a two-date comparison", async () => {
+  await call("call_tool", { name: "get_changes", params: { tickers: ["aapl"], start: "2026-06-01", end: "2026-11-01" } });
+  assert.equal(requests.at(-1).query.start, "2026-06-01");
+  assert.equal(requests.at(-1).query.end, "2026-11-01");
+  const { text } = await call("search_tools", { query: "changes" });
+  assert.match(text, /start/);
+});
+
 test("store_as flattens nested fields, append adds rows", async () => {
   const { json } = await call("query", { fields: ["momentum_rsi_zone"], store_as: "uni" });
   assert.equal(json.row_count, UNIVERSE_ROWS);
