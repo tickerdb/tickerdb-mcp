@@ -245,7 +245,7 @@ test("the watchlist write tools POST their tickers in the query string; the read
     const tool = tools.find((t) => t.name === name);
     assert.equal(tool.annotations.readOnlyHint, false, `${name} changes the account`);
   }
-  for (const name of ["get_watchlist", "get_watchlist_changes"]) assert.equal(shared.OPS[name].method, undefined);
-  assert.deepEqual(shared.OPS.get_watchlist_changes.request({ since: "2026-11-10", tickers: ["nvda"] }).query, { since: "2026-11-10", tickers: "NVDA" });
+  for (const name of ["get_watchlist", "get_watchlist_diff"]) assert.equal(shared.OPS[name].method, undefined);
+  assert.deepEqual(shared.OPS.get_watchlist_diff.request({ since: "2026-11-10", tickers: ["nvda"] }).query, { since: "2026-11-10", tickers: "NVDA" });
   assert.equal(tools.find((t) => t.name === "call_tool").annotations.readOnlyHint, true);
 });

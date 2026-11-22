@@ -41,8 +41,8 @@ export const SERVER_INSTRUCTIONS =
   "Use query for any cross-section or history: filter and sort on the server rather than pulling rows and filtering yourself. " +
   "For multi-year research prefer timeframe=weekly. " +
   "For large pulls pass store_as=<table> plus fetch_all=true: rows go into a SQLite table, you get a short summary, and query_data reads it with SQL. " +
-  "The user's watchlist (one per account): add_watchlist_tickers and remove_watchlist_tickers change it; get_watchlist_changes (call_tool) says what changed since the last check, for a daily check. " +
-  "Other endpoints (changes, watchlist, insiders, holdings, funds, indexes, TickerDB's own trading models, status, account): search_tools, then call_tool. " +
+  "The user's watchlist (one per account): add_watchlist_tickers and remove_watchlist_tickers change it; get_watchlist_diff (call_tool) says what changed since the last check, for a daily check. " +
+  "Other endpoints (diff, watchlist, insiders, holdings, funds, indexes, TickerDB's own trading models, status, account): search_tools, then call_tool. " +
   "A row dated D is known on D+1: act at the next session's open.";
 
 export interface ServerOptions {
@@ -225,7 +225,7 @@ export function createTickerDbServer(apiKey: string | (() => string), options: S
   const watchTickers = z.array(z.string()).min(1).max(50).describe("Ticker symbols, e.g. [\"NVDA\", \"AMD\"]. Up to 50.");
   meta(server.tool(
     "add_watchlist_tickers",
-    "Add tickers to the user's TickerDB watchlist (one per account, shared with the website's Track buttons and Claude/ChatGPT watchlist links). Idempotent: already-present tickers come back in already; unknown ones in unknown. No ticker limit; free. Then get_watchlist_changes (call_tool) reports what changed for them since the last check: score, upside and downside potential, earnings, big price moves, trend changes, RSI oversold, volume spikes, insider trades, analyst changes, serious 8-K filings and dividend cuts.",
+    "Add tickers to the user's TickerDB watchlist (one per account, shared with the website's Track buttons and Claude/ChatGPT watchlist links). Idempotent: already-present tickers come back in already; unknown ones in unknown. No ticker limit; free. Then get_watchlist_diff (call_tool) reports what changed for them since the last check: score, upside and downside potential, earnings, big price moves, trend changes, RSI oversold, volume spikes, insider trades, analyst changes, serious 8-K filings and dividend cuts.",
     { tickers: watchTickers },
     WRITE,
     run("add_watchlist_tickers"),
@@ -240,7 +240,7 @@ export function createTickerDbServer(apiKey: string | (() => string), options: S
 
   meta(server.tool(
     "search_tools",
-    "Find the other TickerDB endpoints: changes, the watchlist and what changed for it, insiders, insider trades and holdings, funds, fund holdings and holders, indexes, index members, TickerDB's trading models (list, detail, history, holdings, trades; Pro and Commercial plans, except a model's newest holdings, on every plan), status, account, and the raw search and universe routes. Returns each match's name, purpose and params (* = required). Empty query lists all. Run one with call_tool.",
+    "Find the other TickerDB endpoints: diff (what changed for your tickers), the watchlist and what changed for it, insiders, insider trades and holdings, funds, fund holdings and holders, indexes, index members, TickerDB's trading models (list, detail, history, holdings, trades; Pro and Commercial plans, except a model's newest holdings, on every plan), status, account, and the raw search and universe routes. Returns each match's name, purpose and params (* = required). Empty query lists all. Run one with call_tool.",
     { query: z.string().optional().describe("Words, e.g. insider trades.") },
     RO,
     async ({ query }) => {

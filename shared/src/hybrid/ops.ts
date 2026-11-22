@@ -197,10 +197,10 @@ export const OPS: Record<string, Op> = {
   },
 
   // ---- Long tail: reached through search_tools / call_tool ----
-  get_changes: {
-    name: "get_changes",
-    apiRoute: "/changes",
-    purpose: "Band changes for up to 50 tickers: the newest date (day-over-day or week-over-week), or between two dates with start/end (each ticker's last row on or before each date, with transitions in between); one row per ticker and changed field.",
+  get_diff: {
+    name: "get_diff",
+    apiRoute: "/diff",
+    purpose: "What changed (band changes) for up to 50 tickers: the newest date (day-over-day or week-over-week), or between two dates with start/end (each ticker's last row on or before each date, with transitions in between); one row per ticker and changed field.",
     params: {
       tickers: { type: "string[]", required: true, desc: "up to 50" },
       timeframe: { type: "daily|weekly" },
@@ -208,7 +208,7 @@ export const OPS: Record<string, Op> = {
       end: { type: "string", desc: "YYYY-MM-DD, with start; default today" },
     },
     request: (a) => ({
-      path: "/changes",
+      path: "/diff",
       query: {
         tickers: Array.isArray(a.tickers) ? a.tickers.map((t) => String(t).trim().toUpperCase()).join(",") : upper(a.tickers),
         timeframe: str(a.timeframe),
@@ -248,15 +248,15 @@ export const OPS: Record<string, Op> = {
     request: () => ({ path: "/watchlist", query: {} }),
     rows: (d) => (Array.isArray(d?.tickers) ? d.tickers : undefined),
   },
-  get_watchlist_changes: {
-    name: "get_watchlist_changes",
-    apiRoute: "/watchlist/changes",
+  get_watchlist_diff: {
+    name: "get_watchlist_diff",
+    apiRoute: "/watchlist/diff",
     purpose: "What changed that matters for each watchlist ticker since the last check: score, upside and downside potential, earnings (next date, a reported quarter), big price moves, trend changes, RSI first oversold (daily/weekly), extreme volume, insider trades, analyst consensus changes, serious 8-K filings, dividend cuts or suspensions. earnings.offer_alert: offer the user an update on that report. A full check remembers what it reported. 1 credit plus 1 per 10 tickers.",
     params: {
       since: { type: "YYYY-MM-DD", desc: "report what happened after this date (max 31 days back); default the last check" },
       tickers: { type: "string[]", desc: "only these watchlist tickers; does not move the last-check state" },
     },
-    request: (a) => ({ path: "/watchlist/changes", query: { since: str(a.since), tickers: tickerList(a.tickers) } }),
+    request: (a) => ({ path: "/watchlist/diff", query: { since: str(a.since), tickers: tickerList(a.tickers) } }),
     rows: (d) => (Array.isArray(d?.tickers) ? d.tickers : undefined),
   },
   get_insiders: {

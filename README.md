@@ -82,9 +82,9 @@ Ten tools. Field lists live in `get_schema`, and the less common endpoints sit b
 | `get_summary` | One ticker: its latest snapshot, one date, a series, or each time a band was entered (`field`, `band`, `stats=true`) |
 | `get_market` | Market (`market_*`) and economy (`macro_*`) regime rows, one per date, and the dates a regime changed |
 | `get_ohlcv` | Daily or weekly end-of-day candles |
-| `add_watchlist_tickers` | Adds tickers to your watchlist (one per account, the same list as the website's Track buttons). `call_tool` with `get_watchlist_changes` then says what changed for them since your last check: score, upside and downside potential, earnings, big price moves, trend changes, RSI oversold, volume spikes, insider trades, analyst changes, serious 8-K filings and dividend cuts |
+| `add_watchlist_tickers` | Adds tickers to your watchlist (one per account, the same list as the website's Track buttons). `call_tool` with `get_watchlist_diff` then says what changed for them since your last check: score, upside and downside potential, earnings, big price moves, trend changes, RSI oversold, volume spikes, insider trades, analyst changes, serious 8-K filings and dividend cuts |
 | `remove_watchlist_tickers` | Removes tickers from your watchlist |
-| `search_tools` | Finds the other endpoints and their parameters: changes, the watchlist and what changed for it, insiders, insider trades and holdings, funds, fund holdings and holders, indexes, index members, TickerDB's own trading models, status, account, and the raw search and universe routes |
+| `search_tools` | Finds the other endpoints and their parameters: diff (what changed for your tickers), the watchlist and what changed for it, insiders, insider trades and holdings, funds, fund holdings and holders, indexes, index members, TickerDB's own trading models, status, account, and the raw search and universe routes |
 | `call_tool` | Runs an endpoint found with `search_tools` |
 | `query_data` | Read-only SQL (SQLite) over results saved with `store_as` |
 

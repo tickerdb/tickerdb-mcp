@@ -52,7 +52,7 @@ function handle(url, res) {
   if (path === "/insiders") {
     return send({ limit: 20, offset: 0, has_more: false, row_count: 1, insiders: [{ slug: "jeffrey-p-bezos", name: "Bezos Jeffrey P", companies: [{ ticker: "AMZN" }] }] });
   }
-  if (path === "/changes") {
+  if (path === "/diff") {
     const tickers = (p.get("tickers") ?? "").split(",");
     const changes = Object.fromEntries(tickers.map((t) => [t, [{ field: "momentum_rsi_zone", from: "neutral", to: "oversold" }, { field: "trend_direction", from: "up", to: "flat" }]]));
     return send({ timeframe: "daily", run_date: "2026-11-05", changes, tickers_checked: tickers.length, tickers_changed: tickers.length });
@@ -261,7 +261,7 @@ test("search_tools finds long-tail endpoints with params", async () => {
   assert.match(text, /insider\*: string/);
 
   const all = (await call("search_tools", {})).text;
-  for (const name of ["get_changes", "get_insiders", "get_insider_trades", "get_insider_holdings", "get_funds", "get_fund_holdings", "get_fund_holders", "get_indexes", "get_index_members", "get_status", "get_account",
+  for (const name of ["get_diff", "get_watchlist_diff", "get_insiders", "get_insider_trades", "get_insider_holdings", "get_funds", "get_fund_holdings", "get_fund_holders", "get_indexes", "get_index_members", "get_status", "get_account",
     "get_models", "get_model", "get_model_history", "get_model_holdings", "get_model_trades", "get_models_holdings"]) {
     assert.match(all, new RegExp(`^${name}:`, "m"));
   }
@@ -369,16 +369,16 @@ test("offset paging takes several pages when limit is small", async () => {
   assert.deepEqual(requests.slice(before).map((r) => r.query.offset), ["0", "100", "200"]);
 });
 
-test("call_tool get_changes stores one row per ticker and change", async () => {
-  const { json } = await call("call_tool", { name: "get_changes", params: { tickers: ["aapl", "msft"] }, store_as: "chg" });
+test("call_tool get_diff stores one row per ticker and change", async () => {
+  const { json } = await call("call_tool", { name: "get_diff", params: { tickers: ["aapl", "msft"] }, store_as: "chg" });
   assert.equal(json.row_count, 4);
   assert.equal(requests.at(-1).query.tickers, "AAPL,MSFT");
   const r = await sql("SELECT ticker, \"to\" FROM chg WHERE field = 'momentum_rsi_zone' ORDER BY ticker");
   assert.deepEqual(r.rows, [["AAPL", "oversold"], ["MSFT", "oversold"]]);
 });
 
-test("call_tool get_changes passes start and end for a two-date comparison", async () => {
-  await call("call_tool", { name: "get_changes", params: { tickers: ["aapl"], start: "2026-06-01", end: "2026-11-01" } });
+test("call_tool get_diff passes start and end for a two-date comparison", async () => {
+  await call("call_tool", { name: "get_diff", params: { tickers: ["aapl"], start: "2026-06-01", end: "2026-11-01" } });
   assert.equal(requests.at(-1).query.start, "2026-06-01");
   assert.equal(requests.at(-1).query.end, "2026-11-01");
   const { text } = await call("search_tools", { query: "changes" });
