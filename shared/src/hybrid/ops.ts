@@ -200,16 +200,20 @@ export const OPS: Record<string, Op> = {
   get_changes: {
     name: "get_changes",
     apiRoute: "/changes",
-    purpose: "Band changes on the newest date (day-over-day or week-over-week) for up to 50 tickers; one row per ticker and changed field.",
+    purpose: "Band changes for up to 50 tickers: the newest date (day-over-day or week-over-week), or between two dates with start/end (each ticker's last row on or before each date, with transitions in between); one row per ticker and changed field.",
     params: {
       tickers: { type: "string[]", required: true, desc: "up to 50" },
       timeframe: { type: "daily|weekly" },
+      start: { type: "string", desc: "YYYY-MM-DD: compare this date with end instead of the newest run (plan history applies; 1 credit per ticker)" },
+      end: { type: "string", desc: "YYYY-MM-DD, with start; default today" },
     },
     request: (a) => ({
       path: "/changes",
       query: {
         tickers: Array.isArray(a.tickers) ? a.tickers.map((t) => String(t).trim().toUpperCase()).join(",") : upper(a.tickers),
         timeframe: str(a.timeframe),
+        start: str(a.start),
+        end: str(a.end),
       },
     }),
     rows: (d) => {
