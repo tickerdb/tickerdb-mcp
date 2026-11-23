@@ -1,0 +1,45 @@
+# CI (owner 2026-11-23): type check and the tests on every push and pull request.
+#
+# Runs on our own host (the engine repo's deploy/ci-runner: a throwaway runner per job in an OS
+# sandbox), which costs no runner minutes. Host down? Set the variable CI_RUNS_ON to
+# "ubuntu-24.04" (with the quotes), or start the workflow by hand and pick github-hosted.
+#
+# The API parity test (remote/test/api-parity.test.mjs) needs the website's source beside this
+# repository and skips itself without it. It is not checked out here: that needs a token for a
+# second private repository. Run it locally with ../tickerdb.com checked out before a release.
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: Where to run
+        type: choice
+        options: [self-hosted, github-hosted]
+        default: self-hosted
+
+concurrency:
+  group: ci-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Type check and tests
+    # Never a fork's code on our own machine.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ${{ inputs.runner == 'github-hosted' && 'ubuntu-24.04' || fromJSON(vars.CI_RUNS_ON || '["self-hosted","tickerdb-1"]') }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Type check
+        run: npx tsc -p tsconfig.json --noEmit
+      - name: Tests
+        run: npm test
