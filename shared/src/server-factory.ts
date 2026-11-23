@@ -126,7 +126,7 @@ export function createTickerDbServer(apiKey: string | (() => string), options: S
       filters: z
         .array(z.object({ field: z.string(), op: z.enum(["eq", "neq", "in", "gt", "gte", "lt", "lte"]), value: z.unknown() }))
         .optional()
-        .describe('Up to 10; a row must match all of them, and null matches none. E.g. [{"field":"momentum_rsi_zone","op":"in","value":["oversold"]}].'),
+        .describe('Up to 10; a row must match all of them. A null value matches none, but eq/neq null finds missing/present values. E.g. [{"field":"momentum_rsi_zone","op":"in","value":["oversold"]}].'),
       tickers: z.array(z.string()).optional().describe("Only these tickers."),
       date: day("One date; default latest"),
       start: day("Range start, with end"),
@@ -140,7 +140,7 @@ export function createTickerDbServer(apiKey: string | (() => string), options: S
       limit: z.number().int().min(1).optional().describe("Rows on one date (default 20, max 250); rows per page on a range."),
       offset: z.number().int().min(0).optional().describe("One date: skip this many ranked rows."),
       page_token: z.string().optional().describe("Range: a token from page_tokens or next_page_token (same params)."),
-      dry_run: z.boolean().optional().describe("Range: returns what it would cost in credits. No data, no charge."),
+      dry_run: z.boolean().optional().describe("Range without a market_/macro_ filter: returns what it would cost in credits. No data, no charge."),
       ohlcv: z.boolean().optional().describe("Range only: add ohlcv_open/high/low/close/volume."),
       adjustment: z.enum(["split", "split_dividend", "raw"]).optional().describe("With ohlcv: split (default), split_dividend (total return) or raw (as traded)."),
       ...storeParams,

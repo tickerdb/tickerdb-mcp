@@ -53,6 +53,9 @@ export const ok = (data: unknown, body = JSON.stringify(data)): ToolResult => ({
 
 const tablePrefix = (op: Op) => op.name.replace(/^get_/, "");
 
+/** /v1/search's page size when no limit is sent. */
+const SEARCH_DEFAULT_LIMIT = 20;
+
 function dayShift(date: string, days: number): string {
   const d = new Date(`${date.slice(0, 10)}T00:00:00Z`);
   d.setUTCDate(d.getUTCDate() + days);
@@ -124,6 +127,13 @@ export async function runOp(ctx: RunContext, baseOp: Op, args: Args, opts: Store
     if (status !== 200) return formatApiError(status, data);
     const rows = pageRows(op, data);
     if (op.route && data && typeof data === "object" && !Array.isArray(data)) (data as any).route = op.route;
+    // A full /v1/search page has no has_more: say there may be more, so 20 rows never look complete (audit K4).
+    if (op.paging === "offset_full" && data && typeof data === "object" && !Array.isArray(data)) {
+      const served = rawCounts.get(data) ?? rows?.length ?? 0;
+      if (served > 0 && served >= Number(args.limit ?? SEARCH_DEFAULT_LIMIT)) {
+        (data as any).more_pages = `A full page (${served} rows): there may be more. Page with offset, or store_as with fetch_all to get every row.`;
+      }
+    }
     const body = JSON.stringify(data);
     if (store && ctx.limits.inlineMaxChars > 0 && body.length > ctx.limits.inlineMaxChars && rows && rows.length > 0) {
       const auto = await store.autoName(tablePrefix(op));
