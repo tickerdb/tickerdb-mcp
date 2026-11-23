@@ -1,0 +1,37 @@
+# CI (owner 2026-11-23): type check and the tests on every push and pull request.
+#
+# Runs on GitHub's own runners: this repository is public, so they cost nothing, and a public
+# repository must never run on our own host (anyone can open a pull request against it; the
+# organization's runner group refuses public repositories and must keep doing so).
+#
+# The API parity test (remote/test/api-parity.test.mjs) needs the website's source beside this
+# repository and skips itself without it. It is not checked out here: that needs a token for a
+# second private repository. Run it locally with ../tickerdb.com checked out before a release.
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Type check and tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Type check
+        run: npx tsc -p tsconfig.json --noEmit
+      - name: Tests
+        run: npm test
