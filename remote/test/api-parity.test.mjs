@@ -49,6 +49,7 @@ const PATH_ARGS = {
   "/models/[slug]/history": ["slug"],
   "/models/[slug]/holdings": ["slug"],
   "/models/[slug]/trades": ["slug"],
+  "/statements/[ticker]": ["ticker"],
 };
 
 function routes(dir, prefix = "") {

@@ -42,7 +42,7 @@ export const SERVER_INSTRUCTIONS =
   "For multi-year research prefer timeframe=weekly. " +
   "For large pulls pass store_as=<table> plus fetch_all=true: rows go into a SQLite table, you get a short summary, and query_data reads it with SQL. " +
   "The user's watchlist (one per account): add_watchlist_tickers and remove_watchlist_tickers change it; get_watchlist_diff (call_tool) says what changed since the last check, for a daily check. " +
-  "Other endpoints (diff, watchlist, insiders, holdings, funds, indexes, TickerDB's own trading models, status, account): search_tools, then call_tool. " +
+  "Other endpoints (diff, watchlist, financial statements, insiders, holdings, funds, indexes, TickerDB's own trading models, status, account): search_tools, then call_tool. " +
   "A row dated D is known on D+1: act at the next session's open.";
 
 export interface ServerOptions {
@@ -105,11 +105,11 @@ export function createTickerDbServer(apiKey: string | (() => string), options: S
 
   meta(server.tool(
     "get_schema",
-    "Look up field names, descriptions, units and band values. Search rather than pulling everything (~230 KB): search=\"bull flag\", category=patterns, level=market. Names are <group>_<name>[_<unit>]; bands end in a category word (_zone, _state, _trend), raw numbers in a unit (_pct, _ratio, _usd). Every band (tracked: true) also has _prev, _periods, _flips_recent_count, _flips_lookback and _stability, usable as fields and filters; lookups omit those rows unless markers=true. Over 25 matches lists names only: search again by exact name for a description.",
+    "Look up field names, descriptions, units and band values. Search rather than pulling everything (~400 KB): search=\"bull flag\", category=patterns, level=market. Names are <group>_<name>[_<unit>]; bands end in a category word (_zone, _state, _trend), raw numbers in a unit (_pct, _ratio, _usd). SEC statement ratios: category=fundamentals. Every band (tracked: true) also has _prev, _periods, _flips_recent_count, _flips_lookback and _stability, usable as fields and filters; lookups omit those rows unless markers=true. Over 25 matches lists names only: search again by exact name for a description.",
     {
       search: z.string().optional().describe("Words that must all appear in name, category or description."),
       category: z.string().optional().describe("Comma-separated, e.g. patterns,volume."),
-      level: z.enum(["ticker", "market", "model"]).optional().describe("ticker = per-asset fields; market = market_*/macro_*; model = model_* (TickerDB's trading models)."),
+      level: z.enum(["ticker", "market", "model", "statement"]).optional().describe("ticker = per-asset fields; market = market_*/macro_*; model = model_* (TickerDB's trading models); statement = financial-statement lines (get_statements)."),
       compact: z.boolean().optional().describe("Name, type, values and description only."),
       markers: z.boolean().optional().describe("Include change-marker fields."),
       ...storeParams,
@@ -120,9 +120,9 @@ export function createTickerDbServer(apiKey: string | (() => string), options: S
 
   meta(server.tool(
     "query",
-    "Any cross-section or history (one ticker's full snapshot: get_summary). Give fields and filters (names from get_schema), then EITHER date (default latest) OR start+end. One date with filters, tickers, sort_by or limit: a ranked screen. One date with only fields: every asset. A range: every row in it, weekly by default past ~6 months; market_/macro_ filters keep only dates in that regime, other filters apply after the rows are fetched, so narrow with tickers, member_of or asset_class. Big pulls: store_as + fetch_all, then query_data.",
+    "Any cross-section or history (one ticker's full snapshot: get_summary). Give fields and filters (names from get_schema, e.g. fundamentals_returns_zone in [high, very_high]), then EITHER date (default latest) OR start+end. One date with filters, tickers, sort_by or limit: a ranked screen. One date with only fields: every asset. A range: every row in it, weekly by default past ~6 months; market_/macro_ filters keep only dates in that regime, other filters apply after the rows are fetched, so narrow with tickers, member_of or asset_class. Big pulls: store_as + fetch_all, then query_data.",
     {
-      fields: z.array(z.string()).optional().describe('Columns, e.g. ["market_cap_usd","momentum_rsi_zone"]. Max 30.'),
+      fields: z.array(z.string()).optional().describe('Columns, e.g. ["market_cap_usd","momentum_rsi_zone"]. Max 30. On a daily range, statement lines too as statement.<line> (e.g. statement.revenue; get_schema level=statement).'),
       filters: z
         .array(z.object({ field: z.string(), op: z.enum(["eq", "neq", "in", "gt", "gte", "lt", "lte"]), value: z.unknown() }))
         .optional()
@@ -240,7 +240,7 @@ export function createTickerDbServer(apiKey: string | (() => string), options: S
 
   meta(server.tool(
     "search_tools",
-    "Find the other TickerDB endpoints: diff (what changed for your tickers), the watchlist and what changed for it, insiders, insider trades and holdings, funds, fund holdings and holders, indexes, index members, TickerDB's trading models (list, detail, history, holdings, trades; Pro and Commercial plans, except a model's newest holdings, on every plan), status, account, and the raw search and universe routes. Returns each match's name, purpose and params (* = required). Empty query lists all. Run one with call_tool.",
+    "Find the other TickerDB endpoints: diff (what changed for your tickers), the watchlist and what changed for it, financial statements (income, balance sheet, cash flow; point in time), insiders, insider trades and holdings, funds, fund holdings and holders, indexes, index members, TickerDB's trading models (list, detail, history, holdings, trades; Pro and Commercial plans, except a model's newest holdings, on every plan), status, account, and the raw search and universe routes. Returns each match's name, purpose and params (* = required). Empty query lists all. Run one with call_tool.",
     { query: z.string().optional().describe("Words, e.g. insider trades.") },
     RO,
     async ({ query }) => {
