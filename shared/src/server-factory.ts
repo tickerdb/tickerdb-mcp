@@ -126,13 +126,13 @@ export function createTickerDbServer(apiKey: string | (() => string), options: S
       filters: z
         .array(z.object({ field: z.string(), op: z.enum(["eq", "neq", "in", "gt", "gte", "lt", "lte"]), value: z.unknown() }))
         .optional()
-        .describe('Up to 10; a row must match all of them, and null matches none. E.g. [{"field":"momentum_rsi_zone","op":"in","value":["oversold"]}].'),
+        .describe('Up to 10; a row must match all of them, and null matches none. E.g. [{"field":"momentum_rsi_zone","op":"in","value":["oversold"]}]. As-filed fundamentals only: fundamentals_statement_source eq "sec".'),
       tickers: z.array(z.string()).optional().describe("Only these tickers."),
       date: day("One date; default latest"),
       start: day("Range start, with end"),
       end: day("Range end"),
       timeframe: z.enum(["daily", "weekly"]).optional().describe("Default: weekly for ranges over ~6 months, else daily."),
-      asset_class: z.enum(["stock", "etf", "crypto"]).optional().describe("Only this asset class."),
+      asset_class: z.enum(["stock", "etf", "crypto"]).optional().describe("Only this asset class (etf includes ETNs)."),
       member_of: z.string().optional().describe("Only members of this index on the row's date, e.g. sp500. Ids: get_indexes."),
       held_by: z.string().optional().describe("Only assets this fund held on the row's date: fund ticker (IVV) or SEC series id."),
       sort_by: z.string().optional().describe("Ticker field to rank by (one date)."),

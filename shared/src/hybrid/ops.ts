@@ -357,7 +357,7 @@ export const OPS: Record<string, Op> = {
     params: {
       q: { type: "string" },
       ticker: { type: "string", desc: "fund ticker or SEC series id" },
-      etf_only: { type: "boolean" },
+      etf_only: { type: "boolean", desc: "true: only ETFs" },
       limit: { type: "integer", desc: "max 100" },
       offset: { type: "integer" },
     },
@@ -393,7 +393,7 @@ export const OPS: Record<string, Op> = {
     params: {
       ticker: { type: "string", required: true },
       date: { type: "YYYY-MM-DD" },
-      etf_only: { type: "boolean" },
+      etf_only: { type: "boolean", desc: "true: only ETFs" },
       limit: { type: "integer", desc: "max 1000" },
       offset: { type: "integer" },
     },
