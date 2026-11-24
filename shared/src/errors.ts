@@ -1,13 +1,22 @@
+/**
+ * An API error as a tool result: the message first (what an agent reads), then the
+ * whole error on a second line as JSON, so status, error type and the route's extras
+ * (retry_after_seconds, credits_required, credit_balance, upgrade_url, buy_credits_url,
+ * max_limit, requested_date ...) reach the agent instead of being dropped (audit K13).
+ */
 export function formatApiError(
   status: number,
   data: any,
 ): { isError: true; content: Array<{ type: "text"; text: string }> } {
-  const errorObj = data?.error;
+  const errorObj = data?.error && typeof data.error === "object" ? data.error : undefined;
   let message: string;
 
   switch (status) {
     case 401:
       message = errorObj?.message ?? "Authentication failed. Check your API key.";
+      break;
+    case 402:
+      message = errorObj?.message ?? "Your credits are used up. See get_account; paid plans can add credits.";
       break;
     case 403:
       message =
@@ -27,8 +36,10 @@ export function formatApiError(
       message = errorObj?.message ?? `API error (${status})`;
   }
 
+  const { message: _message, ...rest } = errorObj ?? {};
+  const detail = { status, ...(typeof data === "string" && !errorObj ? { body: data } : {}), ...rest };
   return {
     isError: true,
-    content: [{ type: "text", text: message }],
+    content: [{ type: "text", text: `${message}\nerror: ${JSON.stringify(detail)}` }],
   };
 }
