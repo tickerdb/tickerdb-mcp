@@ -101,6 +101,8 @@ Where the tables live:
 
 Every plan has every tool, field and timeframe except the [trading model data](#trading-models), which needs Pro or Commercial. Plans differ by credits and by how far back they read: Free reads the last 30 days (250 credits a month), Plus the last 3 years, Pro and Commercial everything from 2019. See [pricing](https://tickerdb.com/pricing).
 
+No account? The same endpoints can be paid per request in USDC on Base with [x402](https://tickerdb.com/docs/x402), at `https://api.tickerdb.com/x402/v1/...`. That is the REST API, not this MCP server, which uses an API key or sign-in.
+
 ## Trading models
 
 TickerDB runs trading models of its own and publishes what each holds and how it has performed (the model level, `model_*` fields). Six endpoints read that record. They need a **Pro or Commercial** plan; on Free and Plus they return `403 tier_restricted`. Run them with `call_tool`. `slug` is the model id from `get_models`, for example `garp-core-10`.

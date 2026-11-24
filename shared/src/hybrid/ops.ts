@@ -618,7 +618,7 @@ export const OPS: Record<string, Op> = {
   get_account: {
     name: "get_account",
     apiRoute: "/account",
-    purpose: "Your plan, credits used and left, and when they renew. Costs no credits.",
+    purpose: "Your plan, credits used and left, and when they renew. Costs no credits. Out of credits or no account: the REST API also sells each request for USDC over x402 (tickerdb.com/docs/x402).",
     params: {},
     request: () => ({ path: "/account", query: {} }),
   },

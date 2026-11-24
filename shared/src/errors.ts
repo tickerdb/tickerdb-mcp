@@ -16,7 +16,7 @@ export function formatApiError(
       message = errorObj?.message ?? "Authentication failed. Check your API key.";
       break;
     case 402:
-      message = errorObj?.message ?? "Your credits are used up. See get_account; paid plans can add credits.";
+      message = errorObj?.message ?? "Your credits are used up. See get_account; paid plans can add credits, or the REST API sells each request for USDC over x402 (tickerdb.com/docs/x402).";
       break;
     case 403:
       message =
