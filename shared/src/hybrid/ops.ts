@@ -480,7 +480,7 @@ export const OPS: Record<string, Op> = {
   get_guidance: {
     name: "get_guidance",
     apiRoute: "/guidance",
-    purpose: "Company guidance (the company's own forecast, from its earnings press releases; not analyst estimates): per guided fiscal year or quarter, every guide the company gave oldest first, each with its range, its revision against the previous guide (initiated, raised, maintained, lowered, withdrawn) and, once the result is out, whether the company delivered (beat, met, missed), as known on any date (as_of). Covers every guided metric. Period status: open, delivered, withdrawn, ended. To screen (who raised guidance this week): query with guidance_direction = raised and guidance_direction_periods <= 5.",
+    purpose: "Company guidance (the company's own forecast, from its earnings press releases; not analyst estimates): per guided fiscal year or quarter, every guide the company gave oldest first, each with its range, its revision against the previous guide (initiated, raised, maintained, lowered, withdrawn) and, once the result is out, whether the company delivered (beat, met, missed), as known on any date (as_of). Covers every guided metric. Period status: open, delivered, withdrawn, ended. To screen (who raised guidance this week): query with guidance_direction = raised and guidance_direction_periods <= 5; get_diff reports a raise on your own tickers (guidance_direction -> raised).",
     params: {
       tickers: { type: "string[]", required: true, desc: "up to 50" },
       limit: { type: "integer", desc: "guided periods per company, newest period first; default 4, max 20" },
