@@ -464,7 +464,7 @@ export const OPS: Record<string, Op> = {
       limit: { type: "integer", desc: "quarters per company, newest first; default 8, max 40" },
       as_of: { type: "string", desc: "YYYY-MM-DD or a timestamp with a zone; only releases public by then count (Plus and higher)" },
       metrics: { type: "string[]", desc: "revenue, eps_diluted, net_income, operating_income, operating_margin, ebitda, free_cash_flow; default all" },
-      reconciliation: { type: "boolean", desc: "the company's GAAP-to-adjusted lines of each adjusted figure, where held" },
+      reconciliation: { type: "boolean", desc: "the company's GAAP-to-adjusted lines of each adjusted figure, where held (kind: start, adjustment, divisor, result)" },
       share_basis: { type: "as_filed|as_of", desc: "default as_filed (as printed); as_of: per-share values restated for splits up to as_of" },
     },
     request: (a) => ({
@@ -480,7 +480,7 @@ export const OPS: Record<string, Op> = {
   get_guidance: {
     name: "get_guidance",
     apiRoute: "/guidance",
-    purpose: "Company guidance (the company's own forecast, from its earnings press releases; not analyst estimates): per guided fiscal year or quarter, every guide the company gave oldest first, each with its range, its revision against the previous guide (initiated, raised, maintained, lowered, withdrawn) and, once the result is out, whether the company delivered (beat, met, missed), as known on any date (as_of). Covers every guided metric. Period status: open, delivered, withdrawn, ended. To screen (who raised guidance this week): query with guidance_direction = raised and guidance_direction_periods <= 5; get_diff reports a raise on your own tickers (guidance_direction -> raised).",
+    purpose: "Company guidance (the company's own forecast, from its earnings press releases; not analyst estimates): per guided fiscal year or quarter, every guide the company gave oldest first, each with its range, its revision against the previous guide (initiated, raised, maintained, lowered, withdrawn) and, once the result is out, whether the company delivered (beat, met, missed) against its last guide for the period before the result, as known on any date (as_of). Covers every guided metric. Period status: open, delivered, withdrawn, ended. To screen (who raised guidance this week): query with guidance_direction = raised and guidance_direction_periods <= 5; get_diff reports a raise on your own tickers (guidance_direction -> raised).",
     params: {
       tickers: { type: "string[]", required: true, desc: "up to 50" },
       limit: { type: "integer", desc: "guided periods per company, newest period first; default 4, max 20" },
