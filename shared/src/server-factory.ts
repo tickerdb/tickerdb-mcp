@@ -42,7 +42,7 @@ export const SERVER_INSTRUCTIONS =
   "For multi-year research prefer timeframe=weekly. " +
   "For large pulls pass store_as=<table> plus fetch_all=true: rows go into a SQLite table, you get a short summary, and query_data reads it with SQL. " +
   "The user's watchlist (one per account): add_watchlist_tickers and remove_watchlist_tickers change it; get_watchlist_diff (call_tool) says what changed since the last check, for a daily check. " +
-  "Other endpoints (diff, watchlist, financial statements, insiders, holdings, funds, indexes, TickerDB's own trading models, status, account): search_tools, then call_tool. " +
+  "Other endpoints (diff, watchlist, financial statements, earnings, company guidance, insiders, holdings, funds, indexes, TickerDB's own trading models, status, account): search_tools, then call_tool. " +
   "A row dated D is known on D+1: act at the next session's open.";
 
 export interface ServerOptions {
@@ -155,7 +155,7 @@ export function createTickerDbServer(apiKey: string | (() => string), options: S
 
   meta(server.tool(
     "get_summary",
-    "One ticker's state: latest snapshot, one date, a start/end series (up to 50 rows; for a longer range add sample=even or use query), or band events. For events give field and optionally band: each says when the band was entered, what it left and how long that had lasted; stats=true returns how often each band was entered. fields trims to sections, paths or field names, e.g. trend, momentum.rsi_zone, fundamentals_pe_ratio. Field names are the get_schema names everywhere (no aliases). Market regimes are in get_market.",
+    "One ticker's state: latest snapshot, one date, a start/end series (up to 50 rows; for a longer range add sample=even or use query), or band events. For events give field and optionally band: each says when the band was entered, what it left and how long that had lasted; stats=true returns how often each band was entered. fields trims to sections, paths or field names, e.g. trend, momentum.rsi_zone, fundamentals_pe_ratio, guidance. Field names are the get_schema names everywhere (no aliases). Market regimes are in get_market.",
     {
       ticker: z.string().describe("e.g. AAPL, BTCUSD, SPY"),
       timeframe: tf,
@@ -240,7 +240,7 @@ export function createTickerDbServer(apiKey: string | (() => string), options: S
 
   meta(server.tool(
     "search_tools",
-    "Find the other TickerDB endpoints: diff (what changed for your tickers), the watchlist and what changed for it, financial statements (income, balance sheet, cash flow; point in time), insiders, insider trades and holdings, funds, fund holdings and holders, indexes, index members, TickerDB's trading models (list, detail, history, holdings, trades; Pro and Commercial plans, except a model's newest holdings, on every plan), status, account, and the raw search and universe routes. Returns each match's name, purpose and params (* = required). Empty query lists all. Run one with call_tool.",
+    "Find the other TickerDB endpoints: diff (what changed for your tickers), the watchlist and what changed for it, financial statements (point in time), earnings releases (GAAP and adjusted), company guidance, insiders (trades, holdings), funds (holdings, holders), indexes (members), TickerDB's trading models (list, detail, history, holdings, trades; Pro and Commercial plans, except a model's newest holdings, on every plan), status, account, and the raw search and universe routes. Returns each match's name, purpose and params (* = required). Empty query lists all. Run one with call_tool.",
     { query: z.string().optional().describe("Words, e.g. insider trades.") },
     RO,
     async ({ query }) => {

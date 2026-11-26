@@ -271,6 +271,21 @@ test("search_tools finds long-tail endpoints with params", async () => {
   assert.match(none, /No match/);
 });
 
+test("earnings releases and company guidance run through call_tool with the routes' own parameters", async () => {
+  const found = (await call("search_tools", { query: "guidance" })).text;
+  assert.match(found, /^get_guidance:/m);
+  assert.match(found, /tickers\*: string\[\]/);
+  assert.match((await call("search_tools", { query: "adjusted earnings" })).text, /^get_earnings:/m);
+
+  await call("call_tool", { name: "get_earnings", params: { tickers: ["aapl", "msft"], limit: 4, metrics: ["revenue", "eps_diluted"], reconciliation: true } });
+  assert.deepEqual(requests.at(-1).path, "/v1/earnings");
+  assert.deepEqual(requests.at(-1).query, { tickers: "AAPL,MSFT", limit: "4", metrics: "revenue,eps_diluted", reconciliation: "true" });
+
+  await call("call_tool", { name: "get_guidance", params: { tickers: ["nvda"], period: "annual", as_of: "2026-06-30", share_basis: "as_reported" } });
+  assert.deepEqual(requests.at(-1).path, "/v1/guidance");
+  assert.deepEqual(requests.at(-1).query, { tickers: "NVDA", period: "annual", as_of: "2026-06-30", share_basis: "as_reported" });
+});
+
 test("the model endpoints run through call_tool: slug in the path, paging, one-row detail", async () => {
   const names = (await call("search_tools", { query: "trading models" })).text;
   assert.match(names, /^get_models?(_\w+)?:/);

@@ -455,6 +455,50 @@ export const OPS: Record<string, Op> = {
     }),
     rows: (d) => d?.rows,
   },
+  get_earnings: {
+    name: "get_earnings",
+    apiRoute: "/earnings",
+    purpose: "What each company's earnings press release (8-K) said, per fiscal quarter: GAAP and the company's adjusted (non-GAAP) revenue, diluted EPS, net income, operating income and margin, EBITDA and free cash flow side by side, public from the second the SEC accepted the release (weeks before the 10-Q), as known on any date (as_of). Adjusted figures are the company's own measures. A metric key that is absent = not printed; null and listed in not_verified = printed but failed our checks. The filed statements are get_statements; the same figures as screenable fields are fundamentals_*_adjusted_* (query).",
+    params: {
+      tickers: { type: "string[]", required: true, desc: "up to 50" },
+      limit: { type: "integer", desc: "quarters per company, newest first; default 8, max 40" },
+      as_of: { type: "string", desc: "YYYY-MM-DD or a timestamp with a zone; only releases public by then count (Plus and higher)" },
+      metrics: { type: "string[]", desc: "revenue, eps_diluted, net_income, operating_income, operating_margin, ebitda, free_cash_flow; default all" },
+      reconciliation: { type: "boolean", desc: "the company's GAAP-to-adjusted lines of each adjusted figure, where held" },
+      share_basis: { type: "current|as_reported", desc: "default current: per-share values restated for splits up to as_of; as_reported: as printed" },
+    },
+    request: (a) => ({
+      path: "/earnings",
+      query: {
+        tickers: tickerList(a.tickers), limit: str(a.limit), as_of: str(a.as_of),
+        metrics: Array.isArray(a.metrics) ? a.metrics.join(",") : str(a.metrics),
+        reconciliation: str(a.reconciliation), share_basis: str(a.share_basis),
+      },
+    }),
+    rows: (d) => d?.data,
+  },
+  get_guidance: {
+    name: "get_guidance",
+    apiRoute: "/guidance",
+    purpose: "Company guidance (the company's own forecast, from its earnings press releases; not analyst estimates): per guided fiscal year or quarter, every guide the company gave oldest first, each with its range, its revision against the previous guide (initiated, raised, maintained, lowered, withdrawn) and, once the result is out, whether the company delivered (beat, met, missed), as known on any date (as_of). Covers every guided metric. Period status: open, delivered, withdrawn, ended. To screen (who raised guidance this week): query with guidance_direction = raised and guidance_direction_periods <= 5.",
+    params: {
+      tickers: { type: "string[]", required: true, desc: "up to 50" },
+      limit: { type: "integer", desc: "guided periods per company, newest period first; default 4, max 20" },
+      period: { type: "all|annual|quarter", desc: "default all" },
+      metrics: { type: "string[]", desc: "revenue, eps_diluted, net_income, operating_income, operating_margin, gross_margin, ebitda, free_cash_flow, operating_expenses, capex, tax_rate; default all" },
+      as_of: { type: "string", desc: "YYYY-MM-DD or a timestamp with a zone; a delivery shows only when the result was public by then (Plus and higher)" },
+      share_basis: { type: "current|as_reported", desc: "default current: per-share guides restated for splits up to as_of; as_reported: as printed" },
+    },
+    request: (a) => ({
+      path: "/guidance",
+      query: {
+        tickers: tickerList(a.tickers), limit: str(a.limit), period: str(a.period),
+        metrics: Array.isArray(a.metrics) ? a.metrics.join(",") : str(a.metrics),
+        as_of: str(a.as_of), share_basis: str(a.share_basis),
+      },
+    }),
+    rows: (d) => d?.data,
+  },
   get_indexes: {
     name: "get_indexes",
     apiRoute: "/indexes",
