@@ -465,7 +465,7 @@ export const OPS: Record<string, Op> = {
       as_of: { type: "string", desc: "YYYY-MM-DD or a timestamp with a zone; only releases public by then count (Plus and higher)" },
       metrics: { type: "string[]", desc: "revenue, eps_diluted, net_income, operating_income, operating_margin, ebitda, free_cash_flow; default all" },
       reconciliation: { type: "boolean", desc: "the company's GAAP-to-adjusted lines of each adjusted figure, where held" },
-      share_basis: { type: "current|as_reported", desc: "default current: per-share values restated for splits up to as_of; as_reported: as printed" },
+      share_basis: { type: "as_filed|as_of", desc: "default as_filed (as printed); as_of: per-share values restated for splits up to as_of" },
     },
     request: (a) => ({
       path: "/earnings",
@@ -487,7 +487,7 @@ export const OPS: Record<string, Op> = {
       period: { type: "all|annual|quarter", desc: "default all" },
       metrics: { type: "string[]", desc: "revenue, eps_diluted, net_income, operating_income, operating_margin, gross_margin, ebitda, free_cash_flow, operating_expenses, capex, tax_rate; default all" },
       as_of: { type: "string", desc: "YYYY-MM-DD or a timestamp with a zone; a delivery shows only when the result was public by then (Plus and higher)" },
-      share_basis: { type: "current|as_reported", desc: "default current: per-share guides restated for splits up to as_of; as_reported: as printed" },
+      share_basis: { type: "as_filed|as_of", desc: "default as_filed (as printed); as_of: per-share guides restated for splits up to as_of" },
     },
     request: (a) => ({
       path: "/guidance",

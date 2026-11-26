@@ -281,9 +281,9 @@ test("earnings releases and company guidance run through call_tool with the rout
   assert.deepEqual(requests.at(-1).path, "/v1/earnings");
   assert.deepEqual(requests.at(-1).query, { tickers: "AAPL,MSFT", limit: "4", metrics: "revenue,eps_diluted", reconciliation: "true" });
 
-  await call("call_tool", { name: "get_guidance", params: { tickers: ["nvda"], period: "annual", as_of: "2026-06-30", share_basis: "as_reported" } });
+  await call("call_tool", { name: "get_guidance", params: { tickers: ["nvda"], period: "annual", as_of: "2026-06-30", share_basis: "as_of" } });
   assert.deepEqual(requests.at(-1).path, "/v1/guidance");
-  assert.deepEqual(requests.at(-1).query, { tickers: "NVDA", period: "annual", as_of: "2026-06-30", share_basis: "as_reported" });
+  assert.deepEqual(requests.at(-1).query, { tickers: "NVDA", period: "annual", as_of: "2026-06-30", share_basis: "as_of" });
 });
 
 test("the model endpoints run through call_tool: slug in the path, paging, one-row detail", async () => {
