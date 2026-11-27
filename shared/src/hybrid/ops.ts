@@ -200,7 +200,7 @@ export const OPS: Record<string, Op> = {
   get_diff: {
     name: "get_diff",
     apiRoute: "/diff",
-    purpose: "What changed (band changes) for up to 50 tickers: the newest date (day-over-day or week-over-week), or between two dates with start/end (each ticker's last row on or before each date, with transitions in between); one row per ticker and changed field.",
+    purpose: "What changed (band changes) for up to 50 tickers: the newest date (day-over-day or week-over-week), or between two dates with start/end (each ticker's last row on or before each date, with transitions in between out of ticker_context.periods_between rows, the split-adjusted close on both dates, and a breakout's level_price); one row per ticker and changed field. Fields that only started or stopped having a value are in coverage_changes, not rows.",
     params: {
       tickers: { type: "string[]", required: true, desc: "up to 50" },
       timeframe: { type: "daily|weekly" },
