@@ -99,7 +99,7 @@ Where the tables live:
 
 ### Plans
 
-Every plan has every tool, field and timeframe except the [trading model data](#trading-models), which needs Pro or Commercial. Plans differ by credits and by how far back they read: Free reads the last 30 days (250 credits a month), Plus the last 3 years, Pro and Commercial everything from 2019. See [pricing](https://tickerdb.com/pricing).
+Every plan has every tool and timeframe. Pro and Commercial add financial statements, earnings, guidance, the non-GAAP and guidance fields, and the [trading model data](#trading-models); on Free and Plus those return `403 tier_restricted`. Plans also differ by credits and by how far back they read: Free reads the last 30 days (250 credits a month), Plus the last 5 years, Pro and Commercial everything from 2019. See [pricing](https://tickerdb.com/pricing).
 
 No account? The same endpoints can be paid per request in USDC on Base with [x402](https://tickerdb.com/docs/x402), at `https://api.tickerdb.com/x402/v1/...`. That is the REST API, not this MCP server, which uses an API key or sign-in.
 

@@ -407,13 +407,13 @@ export const OPS: Record<string, Op> = {
   get_statements: {
     name: "get_statements",
     apiRoute: "/statements/[ticker]",
-    purpose: "One company's income statement, balance sheet and cash flow from its own SEC filings (10-Q, 10-K, 20-F), quarterly, annual or TTM, as known on any date (as_of): latest or first_reported version, every version with revisions=true. Each period has its filing, acceptance second and notes. Line names: get_schema level=statement. Signs: payments and charges are positive (capital_expenditure, share_repurchases, dividends_paid, interest_expense, ...); deferred_income_taxes, other_nonoperating_income, fx_effect_on_cash, discontinued_operations_income and income_tax_expense keep the filer's sign; change_in_receivables/_inventory/_payables keep the XBRL tag's sign (a rise is positive).",
+    purpose: "One company's income statement, balance sheet and cash flow from its own SEC filings (10-Q, 10-K, 20-F), quarterly, annual or TTM, as known on any date (as_of): latest or first_reported version, every version with revisions=true. Each period has its filing, acceptance second and notes. Pro and Commercial plans (Free and Plus: 403 tier_restricted). Line names: get_schema level=statement. Signs: payments and charges are positive (capital_expenditure, share_repurchases, dividends_paid, interest_expense, ...); deferred_income_taxes, other_nonoperating_income, fx_effect_on_cash, discontinued_operations_income and income_tax_expense keep the filer's sign; change_in_receivables/_inventory/_payables keep the XBRL tag's sign (a rise is positive).",
     params: {
       ticker: { type: "string", required: true },
       statement: { type: "string", desc: "income, balance_sheet, cash_flow (comma list); default all" },
       period: { type: "quarterly|annual|ttm", desc: "default quarterly" },
       limit: { type: "integer", desc: "periods, newest first; default 8, max 40" },
-      as_of: { type: "string", desc: "YYYY-MM-DD or a timestamp with a zone; only filings public by then count (Plus and higher)" },
+      as_of: { type: "string", desc: "YYYY-MM-DD or a timestamp with a zone; only filings public by then count (from 2019-01-01)" },
       version: { type: "latest|first_reported", desc: "default latest" },
       revisions: { type: "boolean", desc: "every version of each period" },
       lines: { type: "string", desc: "comma list of line names, e.g. revenue,net_income,free_cash_flow" },
@@ -435,13 +435,13 @@ export const OPS: Record<string, Op> = {
   get_statement_lines: {
     name: "get_statement_lines",
     apiRoute: "/statements",
-    purpose: "Chosen financial-statement lines (e.g. revenue, net_income) for up to 50 companies, one row per company and period, from their SEC filings, as known on any date (as_of). With since: what reported since a time (new filings, amendments, restatements), oldest first, paged with next_since.",
+    purpose: "Chosen financial-statement lines (e.g. revenue, net_income) for up to 50 companies, one row per company and period, from their SEC filings, as known on any date (as_of). With since: what reported since a time (new filings, amendments, restatements), oldest first, paged with next_since. Pro and Commercial plans (Free and Plus: 403 tier_restricted).",
     params: {
       tickers: { type: "string[]", desc: "up to 50; required unless since" },
       lines: { type: "string[]", desc: "up to 30 line names (get_schema level=statement); required unless since" },
       period: { type: "quarterly|annual|ttm", desc: "default quarterly" },
       limit: { type: "integer", desc: "periods per company (default 8, max 40); with since: rows (default 100, max 1000)" },
-      as_of: { type: "string", desc: "YYYY-MM-DD or a timestamp with a zone (Plus and higher)" },
+      as_of: { type: "string", desc: "YYYY-MM-DD or a timestamp with a zone (from 2019-01-01)" },
       version: { type: "latest|first_reported", desc: "default latest" },
       since: { type: "string", desc: "timestamp (exclusive): every version public after it, oldest first, with public_at and available_at; pass next_since back to page or poll" },
       share_basis: { type: "as_filed|as_of", desc: "as_of: per-share values and share counts restated for splits up to as_of" },
