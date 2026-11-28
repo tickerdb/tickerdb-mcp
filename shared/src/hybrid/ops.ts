@@ -440,7 +440,7 @@ export const OPS: Record<string, Op> = {
       tickers: { type: "string[]", desc: "up to 50; required unless since" },
       lines: { type: "string[]", desc: "up to 30 line names (get_schema level=statement); required unless since" },
       period: { type: "quarterly|annual|ttm", desc: "default quarterly" },
-      limit: { type: "integer", desc: "periods per company (default 8, max 40); with since: rows (default 100, max 1000)" },
+      limit: { type: "integer", desc: "periods per company (default 8, max 40); with since: rows (default 100; max 1000 with lines, max 250 without lines, which returns every line)" },
       as_of: { type: "string", desc: "YYYY-MM-DD or a timestamp with a zone (from 2019-01-01)" },
       version: { type: "latest|first_reported", desc: "default latest" },
       since: { type: "string", desc: "timestamp (exclusive): every version public after it, oldest first, with public_at and available_at; pass next_since back to page or poll" },
